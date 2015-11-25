@@ -4,6 +4,7 @@ title: Summary of Google Code-In 2014 and Welcome GSoC 2015
 created: 1424051844
 ---
 **tl;dr** Quick links
+
 - Google Code-In 2014 results: http://google-opensource.blogspot.in/2015/02/google-code-in-2014-welcome-to-winners.html
 - Google Summer of Code announcement: https://groups.drupal.org/node/456563
 - Google Summer of Code Task Wiki: https://groups.drupal.org/node/455978
