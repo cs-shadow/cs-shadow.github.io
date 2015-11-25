@@ -4,7 +4,7 @@ redcarpet:
     extensions:
         - smart
         - autolink
-    
+
 highlighter: pygments
 gems:
   - jemoji
@@ -24,7 +24,7 @@ name: 'Chandan Singh'
 author: 'Chandan Singh'
 author_image: "/assets/images/author.jpg"
 
-paginate:	5
+paginate:	10
 
 url: "http://chandansingh.net" # the base hostname & protocol for your site
 baseurl: ""
