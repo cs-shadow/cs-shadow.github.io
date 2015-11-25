@@ -32,7 +32,7 @@ baseurl: ""
 twitter_handle: '@csshadow27'
 
 #fill in disqus shortname to use disqus
-#disqus: disqus-shortname
+disqus: chandansingh
 
 # social icons and sharing options
 social:
