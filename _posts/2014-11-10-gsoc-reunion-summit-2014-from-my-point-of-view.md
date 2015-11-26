@@ -2,6 +2,8 @@
 layout: post
 title: GSoC Reunion Summit 2014 from my point of view
 created: 1415648670
+redirect_from:
+  - blog/gsoc-reunion-summit-2014-my-point/
 ---
 I was very lucky to be provided with wonderful opportunity of attending [GSoC 2014 Reunion Summit](https://sites.google.com/site/gsocmentorsummitstudentreunion/home "Google Summer of Code Reunion") as a Drupal delegate. The event was celebration of ten-year anniversary of Google Summer of Code program. It was an amazing event and also my first trip to the states. I had very high expectations from this event and was very excited to attend it, and I was not disappointed after I did. I totally enjoyed my time there and will try to describe my experiences in more detail below. I'll stick to a chronological order to describe my experiences since that makes it easier for me to recollect all the things that were going on.
 

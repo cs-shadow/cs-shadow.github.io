@@ -2,6 +2,8 @@
 layout: post
 title: Summary of Google Code-In 2014 and Welcome GSoC 2015
 created: 1424051844
+redirect_from:
+  - blog/summary-google-code-2014-and-welcome/
 ---
 **tl;dr** Quick links
 

@@ -2,6 +2,8 @@
 layout: post
 title: Locked and loaded for GSoC Reunion summit
 created: 1410960844
+redirect_from:
+  - blog/locked-and-loaded-gsoc-reunion/
 ---
 GSoC 2014 is over and it was a great summer for me. As a student, I lead the development of [Entity Embed](http://drupal.org/project/entity_embed) module for Drupal 8. I learnt a lot about Drupal 8 and the core values of Drupal community. Apart from working on my project, I also got involved with the Media Team and now I'm also trying to contribute to some of the other projects of the Drupal 8 Media initiative. It's been a fun journey with Drupal so far and I expect it to become even better.
 

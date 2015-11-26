@@ -2,6 +2,8 @@
 layout: post
 title: Google Code-In 2014 starts now
 created: 1417459636
+redirect_from:
+  - blog/google-code-2014-starts-now/
 ---
 Google Code-In (GCI) just started. For those of you who are not aware of this program, its a contest where students (ages 13-17) work on tasks for Drupal (and other open source open source organizations).
 

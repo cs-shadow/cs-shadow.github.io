@@ -2,6 +2,8 @@
 layout: post
 title: 'Entity Embed: A module to allow any entity to be embedded.'
 created: 1400594799
+redirect_from:
+  - blog/entity-embed-module-allow-any-entity-be-embedded/
 ---
 <p>Hello Drupal!</p>
 

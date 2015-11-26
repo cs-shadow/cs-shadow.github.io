@@ -2,6 +2,8 @@
 layout: post
 title: Beginner Python at BITS-Hyderabad
 created: 1395691938
+redirect_from:
+  - blog/beginner-python-bits-hyderabad/
 ---
 <p>So, this past Saturday and Sunday (15-16 March), I was at <a href="http://www.bits-pilani.ac.in/hyderabad/">BITS-Hyderabad</a> to attend a session on Beginner Python. Oh wait, did I say attend, that's not completely true. I was there actually one of the speakers of the session. The session was actually spanned over 2 days. This was first time I took a session on Python.</p>
 <p>So, here's the full story. Me and four other undergrads from IIIT-H went to BITS Hyderabad to conduct a session on Beginner Python. To begin with, we were a bit late to reach there due to trafiic and stuff (keeping up the IIIT tradition :P). But their reception was very warm and the organizers helped us get started as soon as we reached there. We were completely surprised to see that a good number of participants were still there despite the fact that we were late by an hour or so. But we did make up for the dealy by pushing the end time of session by a couple of hours.</p>
