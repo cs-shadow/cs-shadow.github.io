@@ -9,6 +9,7 @@ highlighter: pygments
 gems:
   - jemoji
   - jekyll-redirect-from
+  - jekyll-sitemap
 
 # Site settings
 title: "Chandan Singh"
