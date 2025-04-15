@@ -31,19 +31,19 @@ paginate:	10
 url: "https://chandansingh.net" # the base hostname & protocol for your site
 baseurl: ""
 #used to display twitter cards
-twitter_handle: '@csshadow27'
+twitter_handle: ''
 
 #fill in disqus shortname to use disqus
 disqus: chandansingh
 
 # social icons and sharing options
 social:
-  - icon:	twitter
-    url:	https://twitter.com/csshadow27
-    desc: Follow me on twitter
-    share_url: http://twitter.com/share
-    share_title: ?text=
-    share_link: "&amp;url="
+#  - icon:	twitter
+#    url:	https://twitter.com/csshadow27
+#    desc: Follow me on twitter
+#    share_url: http://twitter.com/share
+#    share_title: ?text=
+#    share_link: "&amp;url="
 
 #  - icon:	facebook
 #    url:	https://facebook.com/???
