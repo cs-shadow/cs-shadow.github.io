@@ -1,15 +1,26 @@
 # Build settings
-markdown: redcarpet
-redcarpet:
-    extensions:
-        - smart
-        - autolink
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
 
-highlighter: pygments
-gems:
+highlighter: rouge
+plugins:
   - jemoji
   - jekyll-redirect-from
   - jekyll-sitemap
+  - jekyll-paginate
+
+exclude:
+  - .bundle
+  - ci
+  - docs
+  - Gemfile
+  - Gemfile.lock
+  - scripts
+  - netlify.toml
+  - vendor
 
 # Site settings
 title: "Chandan Singh"
