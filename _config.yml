@@ -6,6 +6,7 @@ kramdown:
   syntax_highlighter: rouge
 
 highlighter: rouge
+permalink: /:title/
 plugins:
   - jemoji
   - jekyll-redirect-from
