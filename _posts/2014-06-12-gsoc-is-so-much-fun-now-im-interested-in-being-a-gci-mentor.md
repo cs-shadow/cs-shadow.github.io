@@ -1,7 +1,6 @@
 ---
 layout: post
 title: GSoC is so much fun, now I'm interested in being a GCI mentor
-created: 1402607892
 redirect_from:
   - blog/gsoc-so-much-fun-now-im-interested/
 ---

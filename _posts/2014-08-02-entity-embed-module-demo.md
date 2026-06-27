@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Entity Embed module demo
-created: 1407012557
 redirect_from:
   - blog/entity-embed-module-demo/
 ---

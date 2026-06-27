@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Tips for Google Summer of Code
-created: 1422052872
 redirect_from:
   - blog/tips-google-summer-code-0/
 ---

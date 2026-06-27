@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Beginner Python at BITS-Hyderabad
-created: 1395691938
 redirect_from:
   - blog/beginner-python-bits-hyderabad/
 ---

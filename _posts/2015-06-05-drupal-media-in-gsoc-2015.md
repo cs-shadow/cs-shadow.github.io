@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Drupal Media in GSoC 2015
-created: 1433527148
 redirect_from:
   - blog/drupal-media-gsoc-2015/
 ---
