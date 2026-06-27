@@ -1,8 +1,6 @@
 _site
 _site_preview
 .bundle
-.sass-cache
 .jekyll-metadata
 vendor
-_drafts
 .DS_Store
