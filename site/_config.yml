@@ -13,12 +13,8 @@ plugins:
   - jekyll-sitemap
   - jekyll-paginate
 
-exclude:
-  - .bundle
-  - Gemfile
-  - Gemfile.lock
-  - netlify.toml
-  - vendor
+include:
+  - CNAME
 
 # Site settings
 title: "Chandan Singh"
