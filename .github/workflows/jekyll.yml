@@ -26,10 +26,10 @@ jobs:
         run: bundle exec jekyll build --trace --strict_front_matter
 
       - name: Verify preserved URLs
-        run: ruby scripts/check_preserved_urls.rb
+        run: ruby .github/scripts/check_preserved_urls.rb
 
       - name: Check internal links
-        run: ruby scripts/check_internal_links.rb
+        run: ruby .github/scripts/check_internal_links.rb
 
       - name: Build preview site
         env:
@@ -37,4 +37,4 @@ jobs:
         run: bundle exec jekyll build --trace --strict_front_matter --destination _site_preview
 
       - name: Verify preview noindex
-        run: ruby scripts/check_preview_noindex.rb _site_preview
+        run: ruby .github/scripts/check_preview_noindex.rb _site_preview

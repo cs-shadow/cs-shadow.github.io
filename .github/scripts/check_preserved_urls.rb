@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 site_dir = ARGV[0] || "_site"
-list_path = ARGV[1] || "ci/preserved_urls.txt"
+list_path = ARGV[1] || ".github/ci/preserved_urls.txt"
 netlify_config_path = ARGV[2] || "netlify.toml"
 
 def netlify_redirects(path)
