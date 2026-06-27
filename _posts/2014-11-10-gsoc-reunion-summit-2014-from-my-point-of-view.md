@@ -19,7 +19,7 @@ There was also a dinner planned that night, but by the time I got there only des
 ## 24th October
 
 ### Trip to Great America
-![Me and Angie at California's Great America](http://chandansingh.net/images/great-america.jpg "Me and Angie at California's Great America")
+![Me and Angie at California's Great America](/assets/images/posts/great-america.jpg "Me and Angie at California's Great America")
 Just after the breakfast, we boarded shuttles to the Great America amusement park. While in other amusement parks, the problem is the long queue for the rides, the major problem there was to identify whether or not a ride was open that day. This was because of the fact that the park was closed for common public that day. Yes, you heard me right - Google had booked the entire park that for the Reunion attendees which was pretty awesome. That also meant free access to the Arcade and we all got a chance to show off their skills on the Pacman and other games. After having a satisfying lunch, we headed back to the hotel.
 
 ### Dressy Dinner Reception
@@ -39,7 +39,7 @@ Just after our session, someone asked me "Are you cs_shadow" and I was like "...
 ![Me, Angie and David][Me, Angie and David]
 
 <!-- Images -->
-[Me, Angie and David]: http://chandansingh.net/images/chandan-angie-david.jpg "Me, Angie and David"
+[Me, Angie and David]: /assets/images/posts/chandan-angie-david.jpg "Me, Angie and David"
 
 After our session, I went attended some other sessions such as best practices for open source documentation, codejam session and feedback session for Melange and GSoC.
 
@@ -60,5 +60,5 @@ The Summit was officially over but I had planned to stay around for a little mor
 
 To sum it all up, it was an awesome trip to the States and a big thanks to everyone who provided me this wonderful opportunity.
 
-[Me and Slurpee]: http://chandansingh.net/images/chandan-slurpee.jpg
-[10 year t-shirt wall]: http://chandansingh.net/images/t-shirt-wall.jpg
+[Me and Slurpee]: /assets/images/posts/chandan-slurpee.jpg
+[10 year t-shirt wall]: /assets/images/posts/t-shirt-wall.jpg
