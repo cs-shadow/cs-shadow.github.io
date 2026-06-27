@@ -15,11 +15,8 @@ plugins:
 
 exclude:
   - .bundle
-  - ci
-  - docs
   - Gemfile
   - Gemfile.lock
-  - scripts
   - netlify.toml
   - vendor
 
