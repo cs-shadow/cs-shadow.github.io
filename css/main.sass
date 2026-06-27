@@ -1,12 +1,11 @@
 ---
 ---
 
-@import 'syntax-highlighting'
-
-@import 'bourbon/bourbon'
-
 .cf
-  @include clearfix
+  &:after
+    content: ""
+    display: table
+    clear: both
 
 $rs: 16px
 
@@ -21,6 +20,146 @@ $font-sans: Open Sans, MundoSans, "Helvetica Neue", Arial, Helvetica, sans-serif
 // Only needed for syntax highlighting
 %vertical-rhythm
   margin-bottom: $rs
+
+/**
+ * Syntax highlighting styles
+ */
+.highlight
+  background: #fff
+  @extend %vertical-rhythm
+  .c
+    color: #998
+    font-style: italic
+  .err
+    color: #a61717
+    background-color: #e3d2d2
+  .k
+    font-weight: bold
+  .o
+    font-weight: bold
+  .cm
+    color: #998
+    font-style: italic
+  .cp
+    color: #999
+    font-weight: bold
+  .c1
+    color: #998
+    font-style: italic
+  .cs
+    color: #999
+    font-weight: bold
+    font-style: italic
+  .gd
+    color: #000
+    background-color: #fdd
+  .gd .x
+    color: #000
+    background-color: #faa
+  .ge
+    font-style: italic
+  .gr
+    color: #a00
+  .gh
+    color: #999
+  .gi
+    color: #000
+    background-color: #dfd
+  .gi .x
+    color: #000
+    background-color: #afa
+  .go
+    color: #888
+  .gp
+    color: #555
+  .gs
+    font-weight: bold
+  .gu
+    color: #aaa
+  .gt
+    color: #a00
+  .kc
+    font-weight: bold
+  .kd
+    font-weight: bold
+  .kp
+    font-weight: bold
+  .kr
+    font-weight: bold
+  .kt
+    color: #458
+    font-weight: bold
+  .m
+    color: #099
+  .s
+    color: #d14
+  .na
+    color: #008080
+  .nb
+    color: #0086B3
+  .nc
+    color: #458
+    font-weight: bold
+  .no
+    color: #008080
+  .ni
+    color: #800080
+  .ne
+    color: #900
+    font-weight: bold
+  .nf
+    color: #900
+    font-weight: bold
+  .nn
+    color: #555
+  .nt
+    color: #000080
+  .nv
+    color: #008080
+  .ow
+    font-weight: bold
+  .w
+    color: #bbb
+  .mf
+    color: #099
+  .mh
+    color: #099
+  .mi
+    color: #099
+  .mo
+    color: #099
+  .sb
+    color: #d14
+  .sc
+    color: #d14
+  .sd
+    color: #d14
+  .s2
+    color: #d14
+  .se
+    color: #d14
+  .sh
+    color: #d14
+  .si
+    color: #d14
+  .sx
+    color: #d14
+  .sr
+    color: #009926
+  .s1
+    color: #d14
+  .ss
+    color: #990073
+  .bp
+    color: #999
+  .vc
+    color: #008080
+  .vg
+    color: #008080
+  .vi
+    color: #008080
+  .il
+    color: #099
 
 main
   display: block
@@ -80,7 +219,7 @@ body
   margin: 0 auto
   position: relative
   padding: 0
-  @include box-sizing(border-box)
+  box-sizing: border-box
   @include respond-to(800)
     padding: 0 $rs
   .blog-logo
@@ -132,7 +271,7 @@ body
   width: 100%
   max-width: 640px
   margin: 0 auto
-  @include box-sizing(border-box)
+  box-sizing: border-box
   @include respond-to(800)
     padding: 0 $rs*2
   article
@@ -257,7 +396,7 @@ body
       right: 30%
       z-index: 9
       font-family: $font-sans
-      @include box-sizing(border-box)
+      box-sizing: border-box
       @include respond-to(800)
         left: $rs
         right: $rs
@@ -444,7 +583,7 @@ body
     .isLeft
       float: left
       width: 47%
-      @include box-sizing(border-box)
+      box-sizing: border-box
       @include respond-to(800)
         width: 100%
         padding-bottom: $rs*2
@@ -483,7 +622,7 @@ body
     .isRight
       float: right
       width: 47%
-      @include box-sizing(border-box)
+      box-sizing: border-box
       @include respond-to(800)
         width: 100%
       .index-headline
