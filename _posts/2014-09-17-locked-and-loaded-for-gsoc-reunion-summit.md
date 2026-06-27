@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Locked and loaded for GSoC Reunion summit
-created: 1410960844
 redirect_from:
   - blog/locked-and-loaded-gsoc-reunion/
 ---

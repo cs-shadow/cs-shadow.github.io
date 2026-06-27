@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Google Code-In 2014 starts now
-created: 1417459636
 redirect_from:
   - blog/google-code-2014-starts-now/
 ---

@@ -1,7 +1,6 @@
 ---
 layout: post
 title: 'Three weeks down with GSoC: Entity Embed shaping up well'
-created: 1402601668
 redirect_from:
   - blog/three-weeks-down-gsoc-entity-embed/
 ---

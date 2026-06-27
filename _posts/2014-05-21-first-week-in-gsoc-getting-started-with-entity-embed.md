@@ -1,7 +1,6 @@
 ---
 layout: post
 title: 'First Week in GSOC: Getting started with Entity Embed'
-created: 1400661566
 redirect_from:
   - blog/first-week-gsoc-getting-started-entity-embed/
 ---

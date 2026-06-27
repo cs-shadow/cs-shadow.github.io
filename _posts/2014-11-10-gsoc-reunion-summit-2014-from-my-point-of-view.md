@@ -1,7 +1,6 @@
 ---
 layout: post
 title: GSoC Reunion Summit 2014 from my point of view
-created: 1415648670
 redirect_from:
   - blog/gsoc-reunion-summit-2014-my-point/
 ---

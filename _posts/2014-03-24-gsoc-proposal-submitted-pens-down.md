@@ -1,7 +1,6 @@
 ---
 layout: post
 title: GSoC Proposal Submitted, Pens down
-created: 1395679093
 redirect_from:
   - blog/gsoc-proposal-submitted-pens-down/
 ---

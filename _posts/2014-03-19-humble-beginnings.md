@@ -1,7 +1,6 @@
 ---
 layout: post
 title: Humble Beginnings
-created: 1395257232
 redirect_from:
   - blog/humble-beginnings/
 ---
