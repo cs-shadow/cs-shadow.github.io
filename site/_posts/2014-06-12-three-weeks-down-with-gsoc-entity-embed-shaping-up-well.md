@@ -1,6 +1,7 @@
 ---
 layout: post
 title: 'Three weeks down with GSoC: Entity Embed shaping up well'
+disqus_url: /2014/06/12/three-weeks-down-with-gsoc-entity-embed-shaping-up-well.html
 redirect_from:
   - blog/three-weeks-down-gsoc-entity-embed/
   - 2014/06/12/three-weeks-down-with-gsoc-entity-embed-shaping-up-well.html

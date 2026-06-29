@@ -1,6 +1,7 @@
 ---
 layout: post
 title: 'First Week in GSOC: Getting started with Entity Embed'
+disqus_url: /2014/05/21/first-week-in-gsoc-getting-started-with-entity-embed.html
 redirect_from:
   - blog/first-week-gsoc-getting-started-entity-embed/
   - 2014/05/21/first-week-in-gsoc-getting-started-with-entity-embed.html

@@ -1,6 +1,7 @@
 ---
 layout: post
 title: GSoC Proposal Submitted, Pens down
+disqus_url: /2014/03/24/gsoc-proposal-submitted-pens-down.html
 redirect_from:
   - blog/gsoc-proposal-submitted-pens-down/
   - 2014/03/24/gsoc-proposal-submitted-pens-down.html

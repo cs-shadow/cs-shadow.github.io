@@ -1,6 +1,7 @@
 ---
 layout: post
 title: GSoC Reunion Summit 2014 from my point of view
+disqus_url: /2014/11/10/gsoc-reunion-summit-2014-from-my-point-of-view.html
 redirect_from:
   - blog/gsoc-reunion-summit-2014-my-point/
   - 2014/11/10/gsoc-reunion-summit-2014-from-my-point-of-view.html

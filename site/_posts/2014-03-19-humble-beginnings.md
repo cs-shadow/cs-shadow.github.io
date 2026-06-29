@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Humble Beginnings
+disqus_url: /2014/03/19/humble-beginnings.html
 redirect_from:
   - blog/humble-beginnings/
   - 2014/03/19/humble-beginnings.html
