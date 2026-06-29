@@ -3,6 +3,7 @@ layout: post
 title: Beginner Python at BITS-Hyderabad
 redirect_from:
   - blog/beginner-python-bits-hyderabad/
+  - 2014/03/24/beginner-python-at-bits-hyderabad.html
 ---
 So, this past Saturday and Sunday (15-16 March), I was at [BITS-Hyderabad](http://www.bits-pilani.ac.in/hyderabad/) to attend a session on Beginner Python. Oh wait, did I say attend, that's not completely true. I was there actually one of the speakers of the session. The session was actually spanned over 2 days. This was first time I took a session on Python.
 

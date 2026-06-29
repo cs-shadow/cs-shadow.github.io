@@ -3,6 +3,7 @@ layout: post
 title: Tips for Google Summer of Code
 redirect_from:
   - blog/tips-google-summer-code-0/
+  - 2015/01/23/tips-for-google-summer-of-code.html
 ---
 [Google Summer of Code 2015](https://www.google-melange.com/gsoc/homepage/google/gsoc2015 "Google Summer of Code 2015 - Homepage") is approaching and few people started asking me about how to get selected in GSoC 2015 and where to start. So I though to go ahead and write a blog post so that others can also benefit. This post targets students who have never participated in GSoC before and want to know how to get started with the application process and open source in general.
 

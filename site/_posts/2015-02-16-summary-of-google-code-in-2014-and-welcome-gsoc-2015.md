@@ -3,6 +3,7 @@ layout: post
 title: Summary of Google Code-In 2014 and Welcome GSoC 2015
 redirect_from:
   - blog/summary-google-code-2014-and-welcome/
+  - 2015/02/16/summary-of-google-code-in-2014-and-welcome-gsoc-2015.html
 ---
 **tl;dr** Quick links
 

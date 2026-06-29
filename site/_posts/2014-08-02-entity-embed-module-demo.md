@@ -3,6 +3,7 @@ layout: post
 title: Entity Embed module demo
 redirect_from:
   - blog/entity-embed-module-demo/
+  - 2014/08/02/entity-embed-module-demo.html
 ---
 Midterm evaluations for GSoC are over and I've released a short demo for the entity embed module: [Introducing Entity Embed module for Drupal 8](https://www.youtube.com/watch?v=T26oz9H-VBY). This screencast explains the basic idea behind the module and its usage.
 
