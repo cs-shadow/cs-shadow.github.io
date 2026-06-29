@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Beginner Python at BITS-Hyderabad
+disqus_url: /2014/03/24/beginner-python-at-bits-hyderabad.html
 redirect_from:
   - blog/beginner-python-bits-hyderabad/
   - 2014/03/24/beginner-python-at-bits-hyderabad.html

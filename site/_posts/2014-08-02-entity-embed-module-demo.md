@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Entity Embed module demo
+disqus_url: /2014/08/02/entity-embed-module-demo.html
 redirect_from:
   - blog/entity-embed-module-demo/
   - 2014/08/02/entity-embed-module-demo.html

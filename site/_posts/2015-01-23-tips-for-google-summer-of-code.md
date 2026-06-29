@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Tips for Google Summer of Code
+disqus_url: /2015/01/23/tips-for-google-summer-of-code.html
 redirect_from:
   - blog/tips-google-summer-code-0/
   - 2015/01/23/tips-for-google-summer-of-code.html

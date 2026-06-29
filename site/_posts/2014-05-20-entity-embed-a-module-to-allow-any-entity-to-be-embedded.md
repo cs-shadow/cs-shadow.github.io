@@ -1,6 +1,7 @@
 ---
 layout: post
 title: 'Entity Embed: A module to allow any entity to be embedded.'
+disqus_url: /2014/05/20/entity-embed-a-module-to-allow-any-entity-to-be-embedded.html
 redirect_from:
   - blog/entity-embed-module-allow-any-entity-be-embedded/
   - 2014/05/20/entity-embed-a-module-to-allow-any-entity-to-be-embedded.html

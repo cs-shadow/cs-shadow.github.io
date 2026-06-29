@@ -1,6 +1,7 @@
 ---
 layout: post
 title: GSoC is so much fun, now I'm interested in being a GCI mentor
+disqus_url: /2014/06/12/gsoc-is-so-much-fun-now-im-interested-in-being-a-gci-mentor.html
 redirect_from:
   - blog/gsoc-so-much-fun-now-im-interested/
   - 2014/06/12/gsoc-is-so-much-fun-now-im-interested-in-being-a-gci-mentor.html

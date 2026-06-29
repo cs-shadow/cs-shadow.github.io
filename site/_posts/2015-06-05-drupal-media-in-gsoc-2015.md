@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Drupal Media in GSoC 2015
+disqus_url: /2015/06/05/drupal-media-in-gsoc-2015.html
 redirect_from:
   - blog/drupal-media-gsoc-2015/
   - 2015/06/05/drupal-media-in-gsoc-2015.html

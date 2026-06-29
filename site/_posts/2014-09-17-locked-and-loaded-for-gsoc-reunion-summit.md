@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Locked and loaded for GSoC Reunion summit
+disqus_url: /2014/09/17/locked-and-loaded-for-gsoc-reunion-summit.html
 redirect_from:
   - blog/locked-and-loaded-gsoc-reunion/
   - 2014/09/17/locked-and-loaded-for-gsoc-reunion-summit.html

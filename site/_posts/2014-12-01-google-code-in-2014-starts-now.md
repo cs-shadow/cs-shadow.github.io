@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Google Code-In 2014 starts now
+disqus_url: /2014/12/01/google-code-in-2014-starts-now.html
 redirect_from:
   - blog/google-code-2014-starts-now/
   - 2014/12/01/google-code-in-2014-starts-now.html
