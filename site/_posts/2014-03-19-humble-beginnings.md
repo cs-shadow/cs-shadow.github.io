@@ -3,6 +3,7 @@ layout: post
 title: Humble Beginnings
 redirect_from:
   - blog/humble-beginnings/
+  - 2014/03/19/humble-beginnings.html
 ---
 Voila! Finally after a long wait, I'm able to start a blog. But as they say it *Better late than never*. In the same spirit, I'm satrting this blog in hope to update this at least once every week. As the title says, this is just a humble beginnning, stay tuned for fresh updates.
 

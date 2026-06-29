@@ -3,6 +3,7 @@ layout: post
 title: GSoC is so much fun, now I'm interested in being a GCI mentor
 redirect_from:
   - blog/gsoc-so-much-fun-now-im-interested/
+  - 2014/06/12/gsoc-is-so-much-fun-now-im-interested-in-being-a-gci-mentor.html
 ---
 I'm about to complete four weeks with my GSoC project and its been a great experience. I'm working on the [Entity Embed](https://drupal.org/project/entity_embed) module for Drupal 8. Dave Reid ([davereid](https://drupal.org/u/dave-reid)), Janez Urevc ([slashrsm](http://drupal.org/u/slashrsm)) and Shashwat Srivastava ([darklrd](https://drupal.org/u/darklrd)) are my mentors for this project and all of them are extremely helpful. Besides my mentors, I'm also recieving excellent support from the Drupal community expecially the [Drupal Media Initiative](https://groups.drupal.org/media/media-initiative).
 

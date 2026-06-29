@@ -3,6 +3,7 @@ layout: post
 title: GSoC Proposal Submitted, Pens down
 redirect_from:
   - blog/gsoc-proposal-submitted-pens-down/
+  - 2014/03/24/gsoc-proposal-submitted-pens-down.html
 ---
 Proposal submitted for GSoC, pens down (at least for now!). I submitted proposal for 'WYSIWYG Inline entity' to [Drupal](https://drupal.org/). With a list that contained more than 10 organizations at a time but in the end I just shortlisted Drupal. Fingers crossed, wating for 21st April when Google will announce the result.
 

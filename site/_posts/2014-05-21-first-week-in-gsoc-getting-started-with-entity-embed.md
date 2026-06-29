@@ -3,6 +3,7 @@ layout: post
 title: 'First Week in GSOC: Getting started with Entity Embed'
 redirect_from:
   - blog/first-week-gsoc-getting-started-entity-embed/
+  - 2014/05/21/first-week-in-gsoc-getting-started-with-entity-embed.html
 ---
 Its roughly been a week since I've been working on [Entity Embed](https://drupal.org/project/entity_embed) module and about time I provide some updates. We're off to a good start since the module is already functional. Though it still lacks a UI but its working fine in terms of embedding entities through text format. There's a still a lot of work to do including better error handling and providing test coverage apart from the UI but nevertheless, its a pretty decent start in my opinion.
 
