@@ -8,8 +8,6 @@ redirect_from:
 ---
 [Google Summer of Code 2015](https://www.google-melange.com/gsoc/homepage/google/gsoc2015 "Google Summer of Code 2015 - Homepage") is approaching and few people started asking me about how to get selected in GSoC 2015 and where to start. So I though to go ahead and write a blog post so that others can also benefit. This post targets students who have never participated in GSoC before and want to know how to get started with the application process and open source in general.
 
-![Google Summer of Code 2015 logo][Google Summer of Code 2015 logo]
-
 ## What is Google Summer of Code? How it works?
 
 The [GSoC FAQ page](http://www.google-melange.com/gsoc/document/show/gsoc_program/google/gsoc2015/help_page "Google Summer of Code 2015 Frequently Asked Questions") should suffice to answer most of your queries and I strongly suggest to go through it before looking anywhere else for answers.
@@ -79,6 +77,3 @@ If you follow the steps mentioned above sincerely, you'll have a great chance of
 
 I was a Google Summer of Code student with Drupal in 2014 and mentor for Drupal in [Google Code-In 2014](http://www.google-melange.com/gci/homepage/google/gci2014).
 
-
-<!-- Images -->
-[Google Summer of Code 2015 logo]: http://1-ps.googleusercontent.com/xk/lUi00NOiZZtaYcm5-HDw_Ypz0k/s.google-melange.appspot.com/www.google-melange.com/soc/content/2-1-20150114-p1-2-gabbdf90-head/images/gsoc/logo/banner-gsoc2015.png.pagespeed.ce.1-XG35qq3Rvu7vgd5gq6.png
