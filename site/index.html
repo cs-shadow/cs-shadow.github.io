@@ -17,8 +17,9 @@ layout: default
     <div class="custom-links">
       {% for social in site.social %}
         {% if social.url %}
-            <a class="icon-{{ social.icon }}" href="{{ social.url }}" {% if social.desc %} title="{{ social.desc }}"{% endif %}">
-              <i class="fa fa-{{ social.icon }}"></i>
+            <a class="icon-{{ social.icon }}" href="{{ social.url }}"{% if social.desc %} title="{{ social.desc }}" aria-label="{{ social.desc }}"{% endif %}>
+              {% include icon.html name=social.icon %}
+              <span class="hidden">{{ social.icon }}</span>
             </a>
             &nbsp;&nbsp;·&nbsp;&nbsp;
         {% endif %}
@@ -35,7 +36,7 @@ layout: default
 
     <div class="container featured">
       {% for post in site.tags.featured %}
-        <article class="post" itemscope itemtype="http://schema.org/BlogPosting" role="article">
+        <article class="post" itemscope itemtype="https://schema.org/BlogPosting" role="article">
           <div class="article-item">
             <header class="post-header">
               <h2 class="post-title" itemprop="name"><a href="{{ post.url }}" itemprop="url">{{ post.title }}</a></h2>
@@ -56,7 +57,7 @@ layout: default
 
     <div class="cf frame">
       {% for post in paginator.posts %}
-        <article class="post" itemscope itemtype="http://schema.org/BlogPosting" role="article">
+        <article class="post" itemscope itemtype="https://schema.org/BlogPosting" role="article">
           <div class="article-item">
             <header class="post-header">
               <h2 class="post-title" itemprop="name"><a href="{{ post.url }}" itemprop="url">{{ post.title }}</a></h2>
