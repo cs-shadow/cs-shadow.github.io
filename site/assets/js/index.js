@@ -104,20 +104,6 @@
     });
   }
 
-  function updateHeaderImage() {
-    var top = window.pageYOffset || document.documentElement.scrollTop;
-    var images = document.querySelectorAll(".post-image-image, .teaserimage-image");
-
-    if (top < 0 || top > 1500) {
-      return;
-    }
-
-    Array.prototype.forEach.call(images, function (image) {
-      image.style.transform = "translate3d(0px, " + (top / 3) + "px, 0px)";
-      image.style.opacity = 1 - Math.max(top / 700, 0);
-    });
-  }
-
   function updatePostContentPadding() {
     var articleImage = document.querySelector(".article-image");
     var postContent = document.querySelector(".post-content");
@@ -172,10 +158,8 @@
       wrapImageCaptions(postContent);
     }
 
-    updateHeaderImage();
     updatePostContentPadding();
 
-    window.addEventListener("scroll", updateHeaderImage);
     window.addEventListener("resize", updatePostContentPadding);
     document.addEventListener("click", handleAnchorClick);
   });
