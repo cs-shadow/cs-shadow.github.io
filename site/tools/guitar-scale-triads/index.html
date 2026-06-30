@@ -1,0 +1,76 @@
+---
+layout: default
+title: Guitar Scale Triads
+permalink: /tools/guitar-scale-triads/
+---
+
+<main class="content tool-page guitar-scale-triads" role="main">
+  <header class="tool-header">
+    <p class="tool-eyebrow"><a href="/tools/">Tools</a></p>
+    <h1>Guitar Scale Triads</h1>
+  </header>
+
+  <section class="scale-tool" aria-labelledby="scale-tool-heading">
+    <h2 id="scale-tool-heading">Scale or mode</h2>
+
+    <form class="scale-form" id="scale-form" novalidate>
+      <div class="scale-controls">
+        <div>
+          <label for="scale-root">Root</label>
+          <select id="scale-root" name="root"></select>
+        </div>
+
+        <div>
+          <label for="scale-type">Scale</label>
+          <select id="scale-type" name="scale"></select>
+        </div>
+
+        <button type="submit">Show</button>
+      </div>
+
+      <p class="scale-error" id="scale-error" role="alert"></p>
+    </form>
+  </section>
+
+  <section class="scale-results" id="scale-results" aria-live="polite">
+    <div class="result-section">
+      <div class="result-heading">
+        <h2 id="result-title">A major</h2>
+      </div>
+      <ol class="note-pills" id="scale-notes" aria-label="Scale notes"></ol>
+      <div class="mode-feel" id="mode-feel" aria-label="Suggested feel"></div>
+    </div>
+
+    <section class="result-section fretboard-section" aria-labelledby="scale-map-heading">
+      <div class="result-heading">
+        <h2 id="scale-map-heading">Fretboard map</h2>
+        <p>Standard tuning, frets 0-15</p>
+      </div>
+      <div class="fretboard-scroll">
+        <div class="fretboard full-fretboard" id="scale-fretboard"></div>
+      </div>
+    </section>
+
+    <section class="result-section" aria-labelledby="chords-heading">
+      <div class="result-heading">
+        <h2 id="chords-heading">Diatonic chords</h2>
+      </div>
+      <ol class="chord-summary" id="chord-summary" aria-label="Diatonic chords"></ol>
+    </section>
+
+    <section class="result-section" aria-labelledby="triads-heading">
+      <div class="result-heading">
+        <h2 id="triads-heading">Triad fingerings</h2>
+      </div>
+      <div class="string-set-selector" id="string-set-selector" aria-label="String set">
+        <button type="button" data-string-set="strings-1-2-3" aria-pressed="true">E-B-G</button>
+        <button type="button" data-string-set="strings-2-3-4" aria-pressed="false">B-G-D</button>
+        <button type="button" data-string-set="strings-3-4-5" aria-pressed="false">G-D-A</button>
+        <button type="button" data-string-set="strings-4-5-6" aria-pressed="false">D-A-E</button>
+      </div>
+      <div class="triad-list" id="triad-list"></div>
+    </section>
+  </section>
+</main>
+
+<script src="/assets/js/guitar-scale-triads.js"></script>
