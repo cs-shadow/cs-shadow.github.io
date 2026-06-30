@@ -348,6 +348,321 @@ body
     &:hover
       color: #333
 
+.tools-index,
+.tool-page
+  padding-top: $rs*4
+  color: #333
+  h1,
+  h2,
+  h3
+    font-family: $font-sans
+  h1
+    margin: 0 0 $rs*2
+    font-size: 42px
+    line-height: 1.1
+  h2
+    margin: 0
+    font-size: 24px
+    line-height: 1.2
+  p
+    margin: 0
+    color: #666
+    line-height: 1.5
+
+.tools-list
+  padding-bottom: $rs*4
+
+.tool-listing
+  padding: $rs*2 0
+  border-top: 1px solid #eee
+  h2
+    margin: 0 0 $rs/2
+    font-size: 26px
+    a
+      color: #333
+      text-decoration: none
+      &:hover
+        text-decoration: underline
+
+.tool-header
+  margin-bottom: $rs*2
+
+.tool-eyebrow
+  margin-bottom: $rs/2 !important
+  font-size: 14px
+  font-family: $font-sans
+  text-transform: uppercase
+  letter-spacing: 1px
+  a
+    color: #888
+    text-decoration: none
+
+.scale-tool
+  margin-bottom: $rs*3
+  padding: $rs*1.5
+  border: 1px solid #e5e5e5
+  border-radius: 8px
+  background: #fafafa
+  h2
+    margin-bottom: $rs
+
+.scale-form
+  font-family: $font-sans
+  label
+    display: block
+    margin-bottom: 6px
+    color: #555
+    font-size: 14px
+    font-weight: 700
+  input,
+  select,
+  button
+    width: 100%
+    min-height: 42px
+    box-sizing: border-box
+    border: 1px solid #d6d6d6
+    border-radius: 6px
+    background: #fff
+    color: #333
+    font: inherit
+  input,
+  select
+    padding: 8px 10px
+  button
+    align-self: end
+    border-color: #333
+    background: #333
+    color: #fff
+    cursor: pointer
+    &:hover
+      background: #111
+
+.scale-controls
+  display: grid
+  grid-template-columns: 1fr 1.6fr 120px
+  gap: $rs
+  @include respond-to(640)
+    grid-template-columns: 1fr
+
+.scale-error
+  min-height: 24px
+  padding-top: 8px
+  color: #a61717 !important
+  font-size: 14px
+
+.result-section
+  margin-bottom: $rs*3
+
+.result-heading
+  display: flex
+  justify-content: space-between
+  align-items: baseline
+  gap: $rs
+  margin-bottom: $rs
+  @include respond-to(640)
+    display: block
+  p
+    font-size: 14px
+
+.note-pills
+  display: flex
+  flex-wrap: wrap
+  gap: 8px
+  margin: 0
+  padding: 0
+  list-style: none
+  li
+    min-width: 44px
+    margin: 0
+    padding: 8px 10px
+    border: 1px solid #ddd
+    border-radius: 999px
+    font-family: $font-sans
+    font-size: 16px
+    line-height: 1
+    text-align: center
+    background: #fff
+    &.root-note
+      border-color: #333
+      background: #333
+      color: #fff
+
+.mode-feel
+  display: grid
+  gap: 4px
+  margin-top: $rs
+  padding: 12px 14px
+  border: 1px solid #e4e4e4
+  border-radius: 8px
+  background: #fafafa
+  font-family: $font-sans
+  strong
+    color: #333
+    font-size: 14px
+  span
+    color: #666
+    font-size: 15px
+    line-height: 1.45
+
+.fretboard-scroll
+  overflow-x: auto
+  padding-bottom: 8px
+
+.fretboard,
+.triad-strip
+  --fret-count: 16
+  min-width: 780px
+  font-family: $font-sans
+
+.triad-strip
+  min-width: 340px
+
+.fretboard-row,
+.fret-number-row
+  display: grid
+  grid-template-columns: 34px repeat(var(--fret-count), minmax(42px, 1fr))
+
+.string-label,
+.fret-cell,
+.fret-number
+  min-height: 34px
+  box-sizing: border-box
+
+.string-label
+  display: flex
+  align-items: center
+  justify-content: center
+  color: #777
+  font-size: 13px
+  font-weight: 700
+
+.fret-cell
+  position: relative
+  display: flex
+  align-items: center
+  justify-content: center
+  border-top: 1px solid #b9b9b9
+  border-right: 1px solid #ddd
+  background: linear-gradient(#fff, #f8f8f8)
+  &.active span
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    width: 28px
+    height: 28px
+    border-radius: 50%
+    background: #eef5ff
+    color: #1d4f86
+    font-size: 12px
+    font-weight: 700
+  &.root span
+    background: #333
+    color: #fff
+
+.fretboard-row:first-child .fret-cell
+  border-top: 0
+
+.fret-number
+  display: flex
+  align-items: center
+  justify-content: center
+  color: #888
+  font-size: 12px
+
+.chord-summary
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
+  gap: 10px
+  margin: 0
+  padding: 0
+  list-style: none
+  font-family: $font-sans
+  li
+    display: grid
+    grid-template-columns: auto 1fr
+    gap: 2px 8px
+    align-items: baseline
+    padding: 10px
+    border: 1px solid #e4e4e4
+    border-radius: 8px
+    background: #fff
+  span
+    color: #888
+    font-size: 13px
+  strong
+    color: #333
+    font-size: 18px
+  small
+    grid-column: 2
+    color: #777
+    font-size: 12px
+
+.triad-list
+  display: grid
+  gap: $rs*1.5
+
+.string-set-selector
+  display: flex
+  flex-wrap: wrap
+  gap: 8px
+  margin-bottom: $rs
+  font-family: $font-sans
+  button
+    min-height: 36px
+    padding: 0 12px
+    border: 1px solid #d6d6d6
+    border-radius: 999px
+    background: #fff
+    color: #333
+    cursor: pointer
+    font: inherit
+    font-size: 14px
+    &:hover
+      border-color: #999
+  button.active
+    border-color: #333
+    background: #333
+    color: #fff
+
+.triad-card
+  padding: $rs*1.25 0
+  border-top: 1px solid #eee
+
+.triad-card-heading
+  display: flex
+  justify-content: space-between
+  align-items: baseline
+  gap: $rs
+  margin-bottom: $rs
+  @include respond-to(640)
+    display: block
+  h3
+    margin: 0
+    font-size: 22px
+  p
+    font-size: 14px
+
+.triad-strips
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
+  gap: $rs
+
+.triad-strip
+  padding: 10px
+  border: 1px solid #e4e4e4
+  border-radius: 8px
+  background: #fff
+  overflow-x: auto
+  .fret-cell.active span
+    background: #333
+    color: #fff
+
+.empty-state
+  padding: $rs
+  border: 1px solid #eee
+  border-radius: 8px
+  font-size: 14px
+
 .post-reading
   position: absolute
   top: 10px
