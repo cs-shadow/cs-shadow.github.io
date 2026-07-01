@@ -625,10 +625,6 @@
 
   buildIndexes();
   populateControls();
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    render();
-  });
   rootSelect.addEventListener("change", function () {
     render();
   });
