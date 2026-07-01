@@ -369,6 +369,17 @@ body
     color: #666
     line-height: 1.5
 
+.guitar-scale-triads
+  max-width: 1040px
+  padding-left: $rs*2
+  padding-right: $rs*2
+  @include respond-to(1040)
+    padding-left: $rs
+    padding-right: $rs
+  @include respond-to(800)
+    padding-left: $rs
+    padding-right: $rs
+
 .tools-list
   padding-bottom: $rs*4
 
@@ -602,7 +613,7 @@ body
 
 .triad-list
   display: grid
-  gap: $rs*1.5
+  gap: 0
 
 .string-set-selector
   display: flex
@@ -628,7 +639,7 @@ body
     color: #fff
 
 .triad-card
-  padding: $rs*1.25 0
+  padding: $rs 0
   border-top: 1px solid #eee
 
 .triad-card-heading
@@ -643,20 +654,41 @@ body
     margin: 0
     font-size: 22px
   p
+    padding-right: $rs
     font-size: 14px
+    @include respond-to(640)
+      padding-right: 0
 
 .triad-strips
   display: grid
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
-  gap: $rs
+  grid-template-columns: repeat(auto-fill, 220px)
+  gap: 12px
+  @include respond-to(1040)
+    grid-auto-columns: 220px
+    grid-auto-flow: column
+    grid-template-columns: none
+    overflow-x: auto
+    padding-bottom: 8px
 
 .triad-strip
+  width: 220px
+  min-width: 0
+  box-sizing: border-box
   padding: 10px
   border: 1px solid #e4e4e4
   border-radius: 8px
   background: #fff
   overflow-x: auto
+  .fretboard-row,
+  .fret-number-row
+    grid-template-columns: 30px repeat(var(--fret-count), minmax(34px, 1fr))
+  .string-label,
+  .fret-cell,
+  .fret-number
+    min-height: 30px
   .fret-cell.active span
+    width: 26px
+    height: 26px
     background: #333
     color: #fff
 

@@ -19,7 +19,7 @@
     { id: "strings-4-5-6", label: "D-A-E", strings: TUNING.slice(3, 6) }
   ];
   var MAX_FRET = 15;
-  var MAX_TRIAD_SPAN = 4;
+  var MAX_TRIAD_SPAN = 3;
   var SCALE_GROUPS = ["Major Modes", "Pentatonic & Blues", "Minor & Exotic"];
 
   var SCALES = [
@@ -359,7 +359,7 @@
   function renderTriadStrip(voicing, strings) {
     var strip = document.createElement("div");
     var startFret = voicing.minFret === 0 ? 0 : voicing.minFret;
-    var endFret = Math.min(MAX_FRET, Math.max(startFret + 4, voicing.maxFret));
+    var endFret = Math.min(MAX_FRET, Math.max(startFret + 3, voicing.maxFret));
     strip.className = "triad-strip";
     strip.style.setProperty("--fret-count", endFret - startFret + 1);
 
