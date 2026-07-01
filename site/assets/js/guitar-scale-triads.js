@@ -3,6 +3,16 @@
 
   var SHARP_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   var FLAT_NOTES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  var NOTE_LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
+  var NATURAL_PITCHES = {
+    C: 0,
+    D: 2,
+    E: 4,
+    F: 5,
+    G: 7,
+    A: 9,
+    B: 11
+  };
   var ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
   var TUNING = [
     { name: "E", pitch: 4 },
@@ -30,9 +40,9 @@
     { id: "mixolydian", name: "Mixolydian", group: "Major Modes", intervals: [0, 2, 4, 5, 7, 9, 10], feel: "Major with a relaxed flat 7. Good for blues, rock, country, and dominant-chord grooves." },
     { id: "aeolian", name: "Natural Minor / Aeolian", group: "Major Modes", intervals: [0, 2, 3, 5, 7, 8, 10], feel: "Classic minor: darker, direct, and grounded. Good for melancholy melodies and minor-key progressions." },
     { id: "locrian", name: "Locrian", group: "Major Modes", intervals: [0, 1, 3, 5, 6, 8, 10], feel: "Unstable and tense because of the flat 2 and flat 5. Good for dissonant, unresolved passages." },
-    { id: "major-pentatonic", name: "Major Pentatonic", group: "Pentatonic & Blues", intervals: [0, 2, 4, 7, 9], feel: "Open, simple, and consonant. Good for melodic hooks, country, folk, pop, and major blues phrasing." },
-    { id: "minor-pentatonic", name: "Minor Pentatonic", group: "Pentatonic & Blues", intervals: [0, 3, 5, 7, 10], feel: "Direct, earthy, and flexible. Good for blues, rock, funk, and minor-key soloing." },
-    { id: "blues", name: "Blues", group: "Pentatonic & Blues", intervals: [0, 3, 5, 6, 7, 10], feel: "Gritty and expressive because of the blue note. Good for blues tension, bends, riffs, and call-and-response lines." },
+    { id: "major-pentatonic", name: "Major Pentatonic", group: "Pentatonic & Blues", intervals: [0, 2, 4, 7, 9], degreeLetters: [0, 1, 2, 4, 5], feel: "Open, simple, and consonant. Good for melodic hooks, country, folk, pop, and major blues phrasing." },
+    { id: "minor-pentatonic", name: "Minor Pentatonic", group: "Pentatonic & Blues", intervals: [0, 3, 5, 7, 10], degreeLetters: [0, 2, 3, 4, 6], feel: "Direct, earthy, and flexible. Good for blues, rock, funk, and minor-key soloing." },
+    { id: "blues", name: "Blues", group: "Pentatonic & Blues", intervals: [0, 3, 5, 6, 7, 10], degreeLetters: [0, 2, 3, 4, 4, 6], feel: "Gritty and expressive because of the blue note. Good for blues tension, bends, riffs, and call-and-response lines." },
     { id: "harmonic-minor", name: "Harmonic Minor", group: "Minor & Exotic", intervals: [0, 2, 3, 5, 7, 8, 11], feel: "Minor with a strong leading tone and exotic pull. Good for dramatic cadences and neoclassical lines." },
     { id: "melodic-minor", name: "Melodic Minor", group: "Minor & Exotic", intervals: [0, 2, 3, 5, 7, 9, 11], feel: "Minor at the root with a smoother, brighter upper half. Good for jazz minor sounds and altered harmony." },
     { id: "double-harmonic-major", name: "Double Harmonic Major", group: "Minor & Exotic", intervals: [0, 1, 4, 5, 7, 8, 11], feel: "Bright but tense, with two augmented seconds and a strong exotic pull. Good for dramatic, Middle Eastern-leaning colors." },
@@ -47,6 +57,7 @@
   var scaleSelect = document.getElementById("scale-type");
   var form = document.getElementById("scale-form");
   var error = document.getElementById("scale-error");
+  var notice = document.getElementById("scale-notice");
   var title = document.getElementById("result-title");
   var notesTarget = document.getElementById("scale-notes");
   var modeFeelTarget = document.getElementById("mode-feel");
@@ -73,6 +84,34 @@
 
   function pitchName(pitch, preferFlats) {
     return (preferFlats ? FLAT_NOTES : SHARP_NOTES)[normalizePitch(pitch)];
+  }
+
+  function rootLetter(root) {
+    return root.charAt(0).toUpperCase();
+  }
+
+  function accidentalForPitch(targetPitch, naturalPitch) {
+    var difference = normalizePitch(targetPitch - naturalPitch);
+
+    if (difference === 0) {
+      return "";
+    }
+
+    if (difference <= 6) {
+      return new Array(difference + 1).join("#");
+    }
+
+    return new Array(13 - difference).join("b");
+  }
+
+  function spelledPitchName(root, scale, pitch, index) {
+    var rootIndex = NOTE_LETTERS.indexOf(rootLetter(root));
+    var degreeLetters = scale.degreeLetters || scale.intervals.map(function (_, degreeIndex) {
+      return degreeIndex;
+    });
+    var letter = NOTE_LETTERS[(rootIndex + degreeLetters[index]) % NOTE_LETTERS.length];
+
+    return letter + accidentalForPitch(pitch, NATURAL_PITCHES[letter]);
   }
 
   function buildIndexes() {
@@ -124,7 +163,6 @@
 
   function scaleNotes(root, scale) {
     var rootPitch = notePitch(root);
-    var preferFlats = root.indexOf("b") !== -1;
 
     return scale.intervals.map(function (interval, index) {
       var pitch = normalizePitch(rootPitch + interval);
@@ -133,10 +171,68 @@
         degree: index + 1,
         interval: interval,
         pitch: pitch,
-        name: pitchName(pitch, preferFlats),
+        name: spelledPitchName(root, scale, pitch, index),
         isRoot: interval === 0
       };
     });
+  }
+
+  function hasDoubleAccidentals(notes) {
+    return notes.some(function (note) {
+      return note.name.indexOf("bb") !== -1 || note.name.indexOf("##") !== -1;
+    });
+  }
+
+  function accidentalComplexity(notes) {
+    return notes.reduce(function (score, note) {
+      var doubleAccidentals = (note.name.match(/bb|##/g) || []).length;
+      var singleAccidentals = (note.name.match(/b|#/g) || []).length - (doubleAccidentals * 2);
+
+      return score + (doubleAccidentals * 100) + singleAccidentals;
+    }, 0);
+  }
+
+  function enharmonicRootOptions(root) {
+    var rootPitch = notePitch(root);
+
+    return ROOTS.filter(function (candidate) {
+      return notePitch(candidate) === rootPitch;
+    });
+  }
+
+  function resolvedScaleSelection(selection) {
+    var notes = scaleNotes(selection.root, selection.scale);
+    var best = {
+      root: selection.root,
+      scale: selection.scale,
+      notes: notes,
+      complexity: accidentalComplexity(notes)
+    };
+
+    if (!hasDoubleAccidentals(notes)) {
+      return best;
+    }
+
+    enharmonicRootOptions(selection.root).forEach(function (root) {
+      var candidateNotes = scaleNotes(root, selection.scale);
+      var candidateComplexity = accidentalComplexity(candidateNotes);
+
+      if (candidateComplexity < best.complexity) {
+        best = {
+          root: root,
+          scale: selection.scale,
+          notes: candidateNotes,
+          complexity: candidateComplexity,
+          originalRoot: selection.root
+        };
+      }
+    });
+
+    if (best.root !== selection.root) {
+      best.originalRoot = selection.root;
+    }
+
+    return best;
   }
 
   function chordQuality(intervals) {
@@ -210,14 +306,24 @@
     });
   }
 
-  function fretNote(string, fret, preferFlats) {
+  function noteNamesByPitch(notes) {
+    var names = {};
+
+    notes.forEach(function (note) {
+      names[note.pitch] = note.name;
+    });
+
+    return names;
+  }
+
+  function fretNote(string, fret, preferFlats, scaleNoteNames) {
     var pitch = normalizePitch(string.pitch + fret);
 
     return {
       string: string.name,
       fret: fret,
       pitch: pitch,
-      name: pitchName(pitch, preferFlats)
+      name: scaleNoteNames && scaleNoteNames[pitch] ? scaleNoteNames[pitch] : pitchName(pitch, preferFlats)
     };
   }
 
@@ -247,6 +353,7 @@
 
   function renderScaleFretboard(notes, rootPitch, preferFlats) {
     var scalePitches = notes.map(function (note) { return note.pitch; });
+    var scaleNoteNames = noteNamesByPitch(notes);
 
     fretboardTarget.innerHTML = "";
     fretboardTarget.style.setProperty("--fret-count", MAX_FRET + 1);
@@ -262,7 +369,7 @@
 
       for (var fret = 0; fret <= MAX_FRET; fret += 1) {
         var cell = document.createElement("div");
-        var note = fretNote(string, fret, preferFlats);
+        var note = fretNote(string, fret, preferFlats, scaleNoteNames);
         var inScale = scalePitches.indexOf(note.pitch) !== -1;
         cell.className = "fret-cell" + (inScale ? " active" : "") + (note.pitch === rootPitch ? " root" : "");
         cell.setAttribute("aria-label", string.name + " string fret " + fret + (inScale ? " " + note.name : ""));
@@ -299,12 +406,12 @@
     target.appendChild(row);
   }
 
-  function combinationsByString(strings, chordPitches, preferFlats) {
+  function combinationsByString(strings, chordPitches, preferFlats, scaleNoteNames) {
     return strings.map(function (string) {
       var matches = [];
 
       for (var fret = 0; fret <= MAX_FRET; fret += 1) {
-        var note = fretNote(string, fret, preferFlats);
+        var note = fretNote(string, fret, preferFlats, scaleNoteNames);
 
         if (chordPitches.indexOf(note.pitch) !== -1) {
           matches.push(note);
@@ -315,8 +422,8 @@
     });
   }
 
-  function triadVoicings(chord, strings, preferFlats) {
-    var choices = combinationsByString(strings, chord.pitches, preferFlats);
+  function triadVoicings(chord, strings, preferFlats, scaleNoteNames) {
+    var choices = combinationsByString(strings, chord.pitches, preferFlats, scaleNoteNames);
     var voicings = [];
 
     choices[0].forEach(function (first) {
@@ -422,7 +529,7 @@
     });
   }
 
-  function renderTriads(triads, preferFlats) {
+  function renderTriads(triads, preferFlats, scaleNoteNames) {
     var stringSet = currentStringSet();
     triadTarget.innerHTML = "";
     updateStringSetSelector();
@@ -430,7 +537,7 @@
     triads.forEach(function (triad) {
       var item = document.createElement("article");
       var heading = document.createElement("header");
-      var voicings = triadVoicings(triad, stringSet.strings, preferFlats);
+      var voicings = triadVoicings(triad, stringSet.strings, preferFlats, scaleNoteNames);
       item.className = "triad-card";
 
       heading.className = "triad-card-heading";
@@ -483,22 +590,32 @@
   function render() {
     try {
       var selection = currentSelection();
-      var preferFlats = selection.root.indexOf("b") !== -1;
-      var rootPitch = notePitch(selection.root);
-      var notes = scaleNotes(selection.root, selection.scale);
+      var resolvedSelection = resolvedScaleSelection(selection);
+      var preferFlats = resolvedSelection.root.indexOf("b") !== -1;
+      var rootPitch = notePitch(resolvedSelection.root);
+      var notes = resolvedSelection.notes;
       var triads = buildTriads(notes);
+      var scaleNoteNames = noteNamesByPitch(notes);
 
       error.textContent = "";
-      rootSelect.value = selection.root;
+      if (notice) {
+        notice.textContent = resolvedSelection.originalRoot
+          ? "Showing " + resolvedSelection.root + " " + selection.scale.name + " instead of " + resolvedSelection.originalRoot + " " + selection.scale.name + " to avoid double accidentals."
+          : "";
+      }
+      rootSelect.value = resolvedSelection.root;
       scaleSelect.value = selection.scale.id;
-      title.textContent = selection.root + " " + selection.scale.name;
+      title.textContent = resolvedSelection.root + " " + selection.scale.name;
       renderNotes(notes);
       renderModeFeel(selection.scale);
       renderScaleFretboard(notes, rootPitch, preferFlats);
       renderChordSummary(triads);
-      renderTriads(triads, preferFlats);
+      renderTriads(triads, preferFlats, scaleNoteNames);
     } catch (err) {
       error.textContent = err.message;
+      if (notice) {
+        notice.textContent = "";
+      }
     }
   }
 
