@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Currently reading</title>
+    <item>
+      <title>The Left Hand of Darkness</title>
+      <author_name>Ursula K. Le Guin</author_name>
+      <book_id>18423</book_id>
+      <book_large_image_url>https://images.example/18423.jpg</book_large_image_url>
+      <link>https://www.goodreads.com/book/show/18423</link>
+      <user_date_added>Tue, 07 Jul 2026 12:00:00 +0000</user_date_added>
+    </item>
+  </channel>
+</rss>
