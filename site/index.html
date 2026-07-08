@@ -33,6 +33,36 @@ layout: default
 
 <main class="content" role="main">
 
+    {% if site.data.goodreads_books.size > 0 %}
+    <section class="reading-teaser" aria-labelledby="recent-reading">
+      <h5 class="index-headline"><span id="recent-reading">Recent reading</span></h5>
+      <div class="reading-teaser-list">
+        {% for book in site.data.goodreads_books limit: 12 %}
+          {% assign review = nil %}
+          {% assign book_id = book.id | append: "" %}
+          {% for post in site.posts %}
+            {% assign post_book_id = post.goodreads_id | append: "" %}
+            {% if post.goodreads_id and post_book_id == book_id %}
+              {% assign review = post %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          <article class="reading-teaser-book">
+            <img
+              src="{{ book.cover_url | default: '/assets/images/book-cover-placeholder.svg' }}"
+              alt="Cover of {{ book.title | escape }}"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='/assets/images/book-cover-placeholder.svg';">
+            <div>
+              <h3>{{ book.title }}</h3>
+              <p>{{ book.author }}{% if review %} · <a href="{{ review.url }}">Review</a>{% endif %}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
     {% if site.tags.featured %}
     <h5 class="index-headline featured"><span>Featured</span></h5>
 
