@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180" viewBox="0 0 120 180" role="img" aria-labelledby="title">
+  <title id="title">Book cover unavailable</title>
+  <rect width="120" height="180" rx="4" fill="#ecebe7"/>
+  <path d="M34 48h52v76H34z" fill="none" stroke="#aaa79f" stroke-width="3"/>
+  <path d="M42 58h36M42 68h28" stroke="#aaa79f" stroke-width="3"/>
+  <text x="60" y="145" fill="#77746d" font-family="system-ui, sans-serif" font-size="10" text-anchor="middle">No cover</text>
+</svg>
