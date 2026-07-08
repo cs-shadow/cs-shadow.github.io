@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Read</title>
+    <item>
+      <title>Kindred</title>
+      <author_name>Octavia E. Butler</author_name>
+      <book_id>60931</book_id>
+      <book_medium_image_url>https://images.example/60931.jpg</book_medium_image_url>
+      <link>https://www.goodreads.com/book/show/60931</link>
+      <user_read_at>Mon, 06 Jul 2026 18:30:00 +0000</user_read_at>
+      <user_date_added>Wed, 01 Jul 2026 09:00:00 +0000</user_date_added>
+    </item>
+  </channel>
+</rss>

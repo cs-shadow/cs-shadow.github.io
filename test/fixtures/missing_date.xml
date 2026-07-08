@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Parable of the Sower</title>
+      <author_name>Octavia E. Butler</author_name>
+      <book_id>52397</book_id>
+      <book_image_url>https://images.example/52397.jpg</book_image_url>
+    </item>
+  </channel>
+</rss>

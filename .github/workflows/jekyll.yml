@@ -33,6 +33,12 @@ jobs:
           JEKYLL_ENV: production
         run: bundle exec jekyll build --source site --destination _site --trace --strict_front_matter
 
+      - name: Test Goodreads synchronization
+        run: ruby test/sync_goodreads_test.rb
+
+      - name: Test reading page rendering
+        run: ruby test/site_render_test.rb
+
       - name: Verify preserved URLs
         run: ruby .github/scripts/check_preserved_urls.rb
 
