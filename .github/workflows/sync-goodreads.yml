@@ -1,0 +1,40 @@
+name: Sync Goodreads reading data
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: goodreads-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Sync public Goodreads shelves
+        env:
+          GOODREADS_USER_ID: ${{ vars.GOODREADS_USER_ID }}
+        run: ruby script/sync_goodreads.rb
+
+      - name: Commit updated reading data
+        run: |
+          if git diff --quiet -- site/_data/goodreads_books.yml; then
+            echo "Reading data is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/_data/goodreads_books.yml
+          git commit -m "Update Goodreads reading data"
+          git push origin HEAD:main
