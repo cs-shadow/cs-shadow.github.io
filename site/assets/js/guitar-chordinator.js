@@ -9,7 +9,7 @@
     8: "Ab",
     10: "Bb"
   };
-  var DISPLAY_TUNING = [
+  var DEFAULT_TUNING = [
     { label: "E", pitch: 4, guitarString: 1 },
     { label: "B", pitch: 11, guitarString: 2 },
     { label: "G", pitch: 7, guitarString: 3 },
@@ -17,6 +17,13 @@
     { label: "A", pitch: 9, guitarString: 5 },
     { label: "E", pitch: 4, guitarString: 6 }
   ];
+  var PRESETS = {
+    standard: { label: "Standard", pitches: [4, 11, 7, 2, 9, 4] },
+    "drop-d": { label: "Drop D", pitches: [4, 11, 7, 2, 9, 2] },
+    "open-g": { label: "Open G", pitches: [2, 11, 7, 2, 7, 2] },
+    "open-d": { label: "Open D", pitches: [2, 9, 6, 2, 9, 2] },
+    dadgad: { label: "DADGAD", pitches: [2, 9, 7, 2, 9, 2] }
+  };
   var MAX_FRET = 15;
   var SAMPLE_SHAPE = [0, 1, 0, 2, 3, null];
 
@@ -66,7 +73,12 @@
   var shapeTarget = document.getElementById("chordinator-shape");
   var clearButton = document.getElementById("chordinator-clear");
   var sampleButton = document.getElementById("chordinator-sample");
+  var tuningDescription = document.getElementById("chordinator-tuning-description");
+  var presetSelect = document.getElementById("chordinator-preset");
   var selection = SAMPLE_SHAPE.slice();
+  var tuning = DEFAULT_TUNING.map(function (string) {
+    return { label: string.label, pitch: string.pitch, guitarString: string.guitarString };
+  });
 
   function normalizePitch(pitch) {
     return ((pitch % 12) + 12) % 12;
@@ -120,7 +132,7 @@
         return notes;
       }
 
-      var string = DISPLAY_TUNING[index];
+      var string = tuning[index];
       var pitch = normalizePitch(string.pitch + fret);
       notes.push({
         stringIndex: index,
@@ -233,6 +245,24 @@
     }).join("");
   }
 
+  function tuningPresetKey() {
+    return Object.keys(PRESETS).filter(function (key) {
+      return PRESETS[key].pitches.every(function (pitch, index) {
+        return tuning[index].pitch === pitch;
+      });
+    })[0] || "custom";
+  }
+
+  function tuningDescriptionText() {
+    var key = tuningPresetKey();
+    return key === "custom" ? "Custom tuning, frets 0-15" : PRESETS[key].label + " tuning, frets 0-15";
+  }
+
+  function renderTuningControls() {
+    presetSelect.value = tuningPresetKey();
+    tuningDescription.textContent = tuningDescriptionText();
+  }
+
   function renderFretboard() {
     fretboard.textContent = "";
     fretboard.style.setProperty("--fret-count", MAX_FRET + 1);
@@ -249,14 +279,31 @@
     }
     fretboard.appendChild(numberRow);
 
-    DISPLAY_TUNING.forEach(function (string, stringIndex) {
+    tuning.forEach(function (string, stringIndex) {
       var row = document.createElement("div");
       row.className = "fretboard-row";
 
       var label = document.createElement("div");
       label.className = "string-label chordinator-string-label";
       var name = document.createElement("span");
+      name.className = "chordinator-string-name";
       name.textContent = string.label;
+      name.title = "String " + string.guitarString + ", open " + string.label;
+      var tuningSelect = document.createElement("select");
+      tuningSelect.id = "chordinator-string-" + string.guitarString;
+      tuningSelect.setAttribute("aria-label", "String " + string.guitarString + " tuning, currently " + string.label);
+      NOTES.forEach(function (note, pitch) {
+        var option = document.createElement("option");
+        option.value = pitch;
+        option.textContent = note;
+        tuningSelect.appendChild(option);
+      });
+      tuningSelect.value = string.pitch;
+      tuningSelect.addEventListener("change", function (event) {
+        tuning[stringIndex].pitch = Number(event.currentTarget.value);
+        tuning[stringIndex].label = pitchName(tuning[stringIndex].pitch);
+        render();
+      });
       var mute = document.createElement("button");
       mute.type = "button";
       mute.className = "string-mute";
@@ -268,6 +315,7 @@
         render();
       });
       label.appendChild(name);
+      label.appendChild(tuningSelect);
       label.appendChild(mute);
       row.appendChild(label);
 
@@ -277,7 +325,7 @@
         cell.className = "fret-cell chordinator-fret";
         cell.dataset.stringIndex = stringIndex;
         cell.dataset.fret = fret;
-        cell.setAttribute("aria-label", string.label + " string fret " + fret);
+        cell.setAttribute("aria-label", string.label + " string " + string.guitarString + " fret " + fret);
 
         if (selection[stringIndex] === fret) {
           cell.className += fret === 0 ? " selected open" : " selected";
@@ -370,12 +418,13 @@
     var notes = selectedNotes();
     shapeTarget.textContent = shapeText();
     renderFretboard();
+    renderTuningControls();
     renderSelectedNotes(notes);
     renderMatches(findMatches(notes));
   }
 
   clearButton.addEventListener("click", function () {
-    selection = DISPLAY_TUNING.map(function () {
+    selection = tuning.map(function () {
       return null;
     });
     render();
@@ -383,6 +432,21 @@
 
   sampleButton.addEventListener("click", function () {
     selection = SAMPLE_SHAPE.slice();
+    render();
+  });
+
+  presetSelect.addEventListener("change", function (event) {
+    var preset = PRESETS[event.currentTarget.value];
+    if (!preset) {
+      return;
+    }
+    tuning = tuning.map(function (string, index) {
+      return {
+        label: pitchName(preset.pitches[index]),
+        pitch: preset.pitches[index],
+        guitarString: string.guitarString
+      };
+    });
     render();
   });
 
