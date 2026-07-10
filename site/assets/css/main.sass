@@ -511,6 +511,59 @@ body
       &:hover
         border-color: #999
 
+.chordinator-preset-control
+  display: flex
+  align-items: center
+  gap: 6px
+  margin-left: auto
+  font-family: $font-sans
+  label
+    color: #555
+    font-size: 12px
+    font-weight: 700
+  select
+    min-height: 38px
+    box-sizing: border-box
+    padding: 3px 8px
+    border: 1px solid #bbb
+    border-radius: 4px
+    background: #fff
+    color: #333
+    font: inherit
+    font-size: 13px
+    &:focus,
+    &:focus-visible
+      outline: 2px solid #1d4f86
+      outline-offset: 1px
+
+.chordinator-string-label
+  justify-content: flex-start
+  gap: 5px
+  .chordinator-string-name
+    flex: 0 0 15px
+  select
+    width: 50px
+    min-width: 50px
+    min-height: 28px
+    box-sizing: border-box
+    padding: 2px 18px 2px 6px
+    border: 1px solid #bbb
+    border-radius: 4px
+    background: #fff
+    color: #333
+    font: inherit
+    font-size: 12px
+    text-align: center
+    text-align-last: center
+    &:focus,
+    &:focus-visible
+      outline: 2px solid #1d4f86
+      outline-offset: 1px
+
+@include respond-to(640)
+  .chordinator-preset-control
+    margin-left: 0
+
 .scale-form
   font-family: $font-sans
   label
@@ -631,6 +684,10 @@ body
 .fret-number-row
   display: grid
   grid-template-columns: 34px repeat(var(--fret-count), minmax(42px, 1fr))
+
+.chordinator-fretboard .fretboard-row,
+.chordinator-fretboard .fret-number-row
+  grid-template-columns: 112px repeat(var(--fret-count), minmax(42px, 1fr))
 
 .string-label,
 .fret-cell,
@@ -843,6 +900,7 @@ body
 
 .chord-matches
   display: grid
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))
   gap: 10px
   font-family: $font-sans
 
