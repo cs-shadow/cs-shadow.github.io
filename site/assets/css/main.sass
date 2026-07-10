@@ -458,8 +458,34 @@ body
     margin-bottom: $rs
 
 .chordinator-tool
+  margin-bottom: $rs
   .result-heading
     margin-bottom: $rs
+
+.chordinator-results
+  .result-section:first-child
+    margin-bottom: $rs*1.5
+
+.chordinator-selected-summary
+  margin-bottom: 0
+  padding-top: $rs
+  border-top: 1px solid #eee
+  .result-heading
+    align-items: center
+    margin-bottom: 8px
+    h2
+      font-size: 18px
+    p
+      font-family: $font-sans
+      font-size: 14px
+      font-weight: 700
+      letter-spacing: .04em
+  .note-pills
+    gap: 6px
+    li
+      min-width: 36px
+      padding: 6px 8px
+      font-size: 14px
 
 .chordinator-actions
   display: flex
@@ -820,7 +846,7 @@ body
   gap: 10px
   font-family: $font-sans
 
-.chord-match
+.content .chord-match
   padding: 12px 14px
   border: 1px solid #e4e4e4
   border-radius: 8px
