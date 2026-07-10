@@ -13,12 +13,23 @@ permalink: /tools/guitar-chordinator/
   <section class="scale-tool chordinator-tool" aria-labelledby="chordinator-heading">
     <div class="result-heading">
       <h2 id="chordinator-heading">Chord shape</h2>
-      <p>Standard tuning, frets 0-15</p>
+      <p id="chordinator-tuning-description">Standard tuning, frets 0-15</p>
     </div>
 
     <div class="chordinator-actions" aria-label="Chord controls">
       <button type="button" id="chordinator-sample">Reset to C</button>
       <button type="button" id="chordinator-clear">Clear</button>
+      <div class="chordinator-preset-control">
+        <label for="chordinator-preset">Preset</label>
+        <select id="chordinator-preset" class="chordinator-preset">
+          <option value="standard">Standard</option>
+          <option value="drop-d">Drop D</option>
+          <option value="open-g">Open G</option>
+          <option value="open-d">Open D</option>
+          <option value="dadgad">DADGAD</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
     </div>
 
     <div class="fretboard-scroll">
