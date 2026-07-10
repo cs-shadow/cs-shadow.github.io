@@ -457,6 +457,34 @@ body
   h2
     margin-bottom: $rs
 
+.chordinator-tool
+  .result-heading
+    margin-bottom: $rs
+
+.chordinator-actions
+  display: flex
+  flex-wrap: wrap
+  gap: 8px
+  margin-bottom: $rs
+  font-family: $font-sans
+  button
+    min-height: 38px
+    padding: 0 12px
+    border: 1px solid #333
+    border-radius: 6px
+    background: #333
+    color: #fff
+    cursor: pointer
+    font: inherit
+    &:hover
+      background: #111
+    + button
+      border-color: #d6d6d6
+      background: #fff
+      color: #333
+      &:hover
+        border-color: #999
+
 .scale-form
   font-family: $font-sans
   label
@@ -615,6 +643,53 @@ body
     background: #333
     color: #fff
 
+.chordinator-string-label
+  gap: 6px
+
+.string-mute
+  width: 22px
+  height: 22px
+  padding: 0
+  border: 1px solid #d6d6d6
+  border-radius: 50%
+  background: #fff
+  color: #777
+  cursor: pointer
+  font: inherit
+  font-size: 12px
+  line-height: 1
+  &[aria-pressed="true"]
+    border-color: #333
+    background: #333
+    color: #fff
+
+.chordinator-fret
+  width: 100%
+  min-height: 34px
+  padding: 0
+  color: #333
+  cursor: pointer
+  font: inherit
+  span
+    display: none
+  &:hover
+    background: #eef5ff
+  &.selected span
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    width: 28px
+    height: 28px
+    border-radius: 50%
+    background: #333
+    color: #fff
+    font-size: 12px
+    font-weight: 700
+  &.open span
+    background: #eef5ff
+    color: #1d4f86
+    box-shadow: inset 0 0 0 1px #9dbfe4
+
 .fretboard-row:first-child .fret-cell
   border-top: 0
 
@@ -739,6 +814,56 @@ body
   border: 1px solid #eee
   border-radius: 8px
   font-size: 14px
+
+.chord-matches
+  display: grid
+  gap: 10px
+  font-family: $font-sans
+
+.chord-match
+  padding: 12px 14px
+  border: 1px solid #e4e4e4
+  border-radius: 8px
+  background: #fff
+  h3
+    margin: 0
+    font-size: 22px
+    line-height: 1.2
+  p
+    margin-top: 6px
+    font-size: 14px
+
+.chord-match-heading
+  display: flex
+  justify-content: space-between
+  align-items: baseline
+  gap: $rs
+  span
+    flex: 0 0 auto
+    padding: 4px 8px
+    border-radius: 999px
+    background: #eef5ff
+    color: #1d4f86
+    font-size: 12px
+    font-weight: 700
+
+.close-match .chord-match-heading span
+  background: #f6f1df
+  color: #705b16
+
+.match-difference
+  color: #705b16 !important
+
+.empty-note
+  min-width: 0 !important
+  color: #777
+
+@include respond-to(640)
+  .chord-match-heading
+    display: block
+    span
+      display: inline-block
+      margin-top: 6px
 
 .post-reading
   position: absolute
