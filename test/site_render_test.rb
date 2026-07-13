@@ -67,4 +67,24 @@ class SiteRenderTest < Minitest::Test
     assert_match(/@include respond-to\(800\).*?repeat\(3,/m, styles)
     assert_match(/@include respond-to\(640\).*?repeat\(2,/m, styles)
   end
+
+  def test_tool_pages_render_recent_settings_controls
+    Dir.mktmpdir("tools-site-", ROOT) do |directory|
+      destination = File.join(directory, "_site")
+      command = [
+        "bundle", "exec", "jekyll", "build", "--source", File.join(ROOT, "site"),
+        "--destination", destination, "--strict_front_matter"
+      ]
+      output, status = Open3.capture2e(*command, chdir: ROOT)
+      assert status.success?, output
+
+      scalar_triads = File.read(File.join(destination, "tools", "scalar-triads", "index.html"))
+      chordinator = File.read(File.join(destination, "tools", "guitar-chordinator", "index.html"))
+
+      assert_includes scalar_triads, 'id="scale-recent-settings"'
+      assert_includes scalar_triads, 'id="scale-clear-history"'
+      assert_includes chordinator, 'id="chordinator-recent-settings"'
+      assert_includes chordinator, 'id="chordinator-clear-history"'
+    end
+  end
 end

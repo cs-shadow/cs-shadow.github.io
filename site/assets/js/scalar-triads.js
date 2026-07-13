@@ -30,6 +30,10 @@
   ];
   var MAX_FRET = 15;
   var MAX_TRIAD_SPAN = 3;
+  var HISTORY_KEY = "cs-shadow.scalar-triads.recent-settings.v1";
+  var HISTORY_VERSION = 1;
+  var HISTORY_LIMIT = 5;
+  var HISTORY_SAVE_DELAY = 1500;
   var SCALE_GROUPS = ["Major Modes", "Pentatonic & Blues", "Minor & Exotic"];
 
   var SCALES = [
@@ -64,8 +68,12 @@
   var fretboardTarget = document.getElementById("scale-fretboard");
   var chordSummaryTarget = document.getElementById("chord-summary");
   var stringSetSelector = document.getElementById("string-set-selector");
+  var recentSettingsSelect = document.getElementById("scale-recent-settings");
+  var clearHistoryButton = document.getElementById("scale-clear-history");
   var triadTarget = document.getElementById("triad-list");
   var selectedStringSetId = "strings-1-2-3";
+  var history = [];
+  var pendingSaveTimer = null;
 
   function normalizePitch(pitch) {
     return ((pitch % 12) + 12) % 12;
@@ -159,6 +167,137 @@
     return STRING_SETS.filter(function (stringSet) {
       return stringSet.id === selectedStringSetId;
     })[0] || STRING_SETS[0];
+  }
+
+  function snapshot() {
+    return {
+      root: rootSelect.value,
+      scaleId: scaleSelect.value,
+      stringSetId: selectedStringSetId
+    };
+  }
+
+  function isValidSnapshot(candidate) {
+    return candidate &&
+      typeof candidate.root === "string" && ROOTS.indexOf(candidate.root) !== -1 &&
+      typeof candidate.scaleId === "string" && Boolean(SCALE_BY_ID[candidate.scaleId]) &&
+      typeof candidate.stringSetId === "string" && STRING_SETS.some(function (stringSet) {
+        return stringSet.id === candidate.stringSetId;
+      });
+  }
+
+  function snapshotsMatch(left, right) {
+    return left.root === right.root &&
+      left.scaleId === right.scaleId &&
+      left.stringSetId === right.stringSetId;
+  }
+
+  function readHistory() {
+    try {
+      var stored = window.localStorage.getItem(HISTORY_KEY);
+      var payload = stored ? JSON.parse(stored) : null;
+
+      if (!payload || payload.version !== HISTORY_VERSION || !Array.isArray(payload.entries)) {
+        return [];
+      }
+
+      return payload.entries.reduce(function (entries, candidate) {
+        if (isValidSnapshot(candidate) && !entries.some(function (entry) {
+          return snapshotsMatch(entry, candidate);
+        })) {
+          entries.push(candidate);
+        }
+        return entries;
+      }, []).slice(0, HISTORY_LIMIT);
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function writeHistory() {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify({
+        version: HISTORY_VERSION,
+        entries: history
+      }));
+    } catch (err) {
+      // Storage is optional, including in private browsing contexts.
+    }
+  }
+
+  function historyLabel(entry) {
+    return entry.root + " " + SCALE_BY_ID[entry.scaleId].name + " · " + STRING_SETS.filter(function (stringSet) {
+      return stringSet.id === entry.stringSetId;
+    })[0].label;
+  }
+
+  function renderHistoryControls() {
+    if (!recentSettingsSelect || !clearHistoryButton) {
+      return;
+    }
+
+    recentSettingsSelect.textContent = "";
+    if (!history.length) {
+      var emptyOption = document.createElement("option");
+      emptyOption.textContent = "No saved settings";
+      emptyOption.value = "";
+      recentSettingsSelect.appendChild(emptyOption);
+      recentSettingsSelect.disabled = true;
+      clearHistoryButton.disabled = true;
+      return;
+    }
+
+    history.forEach(function (entry, index) {
+      var option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = historyLabel(entry);
+      recentSettingsSelect.appendChild(option);
+    });
+    recentSettingsSelect.disabled = false;
+    clearHistoryButton.disabled = false;
+  }
+
+  function saveSnapshot() {
+    var current = snapshot();
+    history = [current].concat(history.filter(function (entry) {
+      return !snapshotsMatch(entry, current);
+    })).slice(0, HISTORY_LIMIT);
+    writeHistory();
+    renderHistoryControls();
+  }
+
+  function scheduleSnapshotSave() {
+    if (pendingSaveTimer !== null) {
+      window.clearTimeout(pendingSaveTimer);
+    }
+
+    pendingSaveTimer = window.setTimeout(function () {
+      pendingSaveTimer = null;
+      saveSnapshot();
+    }, HISTORY_SAVE_DELAY);
+  }
+
+  function flushPendingSnapshotSave() {
+    if (pendingSaveTimer === null) {
+      return;
+    }
+
+    window.clearTimeout(pendingSaveTimer);
+    pendingSaveTimer = null;
+    saveSnapshot();
+  }
+
+  function cancelPendingSnapshotSave() {
+    if (pendingSaveTimer !== null) {
+      window.clearTimeout(pendingSaveTimer);
+      pendingSaveTimer = null;
+    }
+  }
+
+  function applySnapshot(entry) {
+    rootSelect.value = entry.root;
+    scaleSelect.value = entry.scaleId;
+    selectedStringSetId = entry.stringSetId;
   }
 
   function scaleNotes(root, scale) {
@@ -625,11 +764,17 @@
 
   buildIndexes();
   populateControls();
+  history = readHistory();
+  if (history.length) {
+    applySnapshot(history[0]);
+  }
   rootSelect.addEventListener("change", function () {
     render();
+    scheduleSnapshotSave();
   });
   scaleSelect.addEventListener("change", function () {
     render();
+    scheduleSnapshotSave();
   });
   stringSetSelector.addEventListener("click", function (event) {
     var button = event.target.closest("button[data-string-set]");
@@ -638,8 +783,42 @@
       return;
     }
 
+    if (selectedStringSetId === button.getAttribute("data-string-set")) {
+      return;
+    }
+
     selectedStringSetId = button.getAttribute("data-string-set");
     render();
+    scheduleSnapshotSave();
   });
+  recentSettingsSelect.addEventListener("change", function (event) {
+    var entry = history[Number(event.currentTarget.value)];
+
+    if (!entry) {
+      return;
+    }
+
+    cancelPendingSnapshotSave();
+    applySnapshot(entry);
+    render();
+    saveSnapshot();
+  });
+  clearHistoryButton.addEventListener("click", function () {
+    cancelPendingSnapshotSave();
+    history = [];
+    try {
+      window.localStorage.removeItem(HISTORY_KEY);
+    } catch (err) {
+      // Storage is optional, including in private browsing contexts.
+    }
+    renderHistoryControls();
+  });
+  window.addEventListener("pagehide", flushPendingSnapshotSave);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      flushPendingSnapshotSave();
+    }
+  });
+  renderHistoryControls();
   render();
 }());
