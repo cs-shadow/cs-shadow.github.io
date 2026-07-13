@@ -22,6 +22,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
+      - name: ShellCheck preview launcher
+        run: shellcheck scripts/serve
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
