@@ -2,7 +2,7 @@
 
 require "minitest/autorun"
 require "tmpdir"
-require_relative "../script/sync_goodreads"
+require_relative "../scripts/sync_goodreads"
 
 class SyncGoodreadsTest < Minitest::Test
   FIXTURES = File.expand_path("fixtures", __dir__)

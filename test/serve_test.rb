@@ -9,7 +9,7 @@ require "tmpdir"
 
 class ServeTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
-  SCRIPT = File.join(ROOT, "script", "serve")
+  SCRIPT = File.join(ROOT, "scripts", "serve")
 
   def setup
     @temporary_directory = Dir.mktmpdir("jekyll-preview-test-")
