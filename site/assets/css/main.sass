@@ -449,7 +449,7 @@ body
     text-decoration: none
 
 .scale-tool
-  margin-bottom: $rs*3
+  margin-bottom: $rs
   padding: $rs*1.5
   border: 1px solid #e5e5e5
   border-radius: 8px
@@ -536,6 +536,47 @@ body
       outline: 2px solid #1d4f86
       outline-offset: 1px
 
+.chordinator-recent-settings-control,
+.recent-settings-control
+  display: flex
+  flex-wrap: wrap
+  align-items: center
+  gap: 6px
+  font-family: $font-sans
+  label
+    color: #555
+    font-size: 12px
+    font-weight: 700
+  select,
+  button
+    min-height: 38px
+    box-sizing: border-box
+    padding: 3px 8px
+    border: 1px solid #bbb
+    border-radius: 4px
+    background: #fff
+    color: #333
+    font: inherit
+    font-size: 13px
+  select
+    min-width: 190px
+  button
+    cursor: pointer
+    &:hover:not(:disabled)
+      border-color: #999
+    &:disabled
+      cursor: not-allowed
+      opacity: .6
+  select:focus,
+  select:focus-visible,
+  button:focus,
+  button:focus-visible
+    outline: 2px solid #1d4f86
+    outline-offset: 1px
+
+.recent-settings-control
+  margin-top: $rs
+
 .chordinator-string-label
   justify-content: flex-start
   gap: 5px
@@ -563,6 +604,12 @@ body
 @include respond-to(640)
   .chordinator-preset-control
     margin-left: 0
+  .chordinator-recent-settings-control,
+  .recent-settings-control
+    align-items: stretch
+    select,
+    button
+      width: 100%
 
 .scale-form
   font-family: $font-sans
@@ -601,6 +648,21 @@ body
   gap: $rs
   @include respond-to(640)
     grid-template-columns: 1fr
+
+.scale-form .recent-settings-control
+  select,
+  button
+    width: auto
+    border-color: #bbb
+    background: #fff
+    color: #333
+  button
+    &:hover:not(:disabled)
+      background: #fff
+  @include respond-to(640)
+    select,
+    button
+      width: 100%
 
 .scale-error
   min-height: 24px
