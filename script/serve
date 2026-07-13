@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# frozen_string_literal: true
+
+set -euo pipefail
+
+action="${1:-start}"
+worktree_root="${JEKYLL_PREVIEW_WORKTREE:-}"
+if [ -z "$worktree_root" ]; then
+  worktree_root="$(dirname "$0")/.."
+fi
+worktree="$(cd "$worktree_root" && pwd -P)"
+source_directory="$worktree/site"
+state_root="${JEKYLL_PREVIEW_STATE_DIR:-/tmp}"
+read -r -a preview_ports <<< "${JEKYLL_PREVIEW_PORTS:-4000 4001 4002 4003 4004}"
+key="$(printf '%s' "$worktree" | shasum -a 256 | awk '{print $1}')"
+state_file="$state_root/cs-shadow-jekyll-preview-$key.state"
+log_file="$state_root/cs-shadow-jekyll-preview-$key.log"
+
+die() {
+  echo "script/serve: $*" >&2
+  exit 1
+}
+
+read_state() {
+  [ -f "$state_file" ] || return 1
+  # The state file is written only by this script and contains shell-safe values.
+  # shellcheck disable=SC1090
+  source "$state_file"
+  [ "${worktree_path:-}" = "$worktree" ]
+}
+
+port_open() {
+  ruby -rsocket -e '
+    TCPSocket.new("127.0.0.1", ARGV.fetch(0)).close
+  ' "$1" >/dev/null 2>&1
+}
+
+server_healthy() {
+  read_state && kill -0 "$pid" 2>/dev/null && port_open "$port"
+}
+
+clear_stale_state() {
+  if [ -f "$state_file" ] && ! server_healthy; then
+    rm -f "$state_file"
+  fi
+}
+
+first_available_port() {
+  local candidate
+  for candidate in "${preview_ports[@]}"; do
+    if ! port_open "$candidate"; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+print_url() {
+  echo "http://127.0.0.1:$1/"
+}
+
+start() {
+  [ -d "$source_directory" ] || die "no site directory at $source_directory"
+  mkdir -p "$state_root"
+
+  if server_healthy; then
+    print_url "$port"
+    return
+  fi
+  clear_stale_state
+
+  local selected_port
+  selected_port="$(first_available_port)" || die "ports ${preview_ports[*]} are all in use"
+
+  local command
+  command="${JEKYLL_PREVIEW_COMMAND:-bundle exec jekyll serve --source \"$source_directory\" --host 127.0.0.1 --port $selected_port}"
+  PREVIEW_PORT="$selected_port" PREVIEW_WORKTREE="$worktree" \
+    nohup bash -c "exec $command" >"$log_file" 2>&1 &
+  local started_pid=$!
+  printf 'pid=%s\nport=%s\nworktree_path=%s\n' "$started_pid" "$selected_port" "$worktree" > "$state_file"
+
+  local attempt
+  for attempt in $(seq 1 50); do
+    if server_healthy; then
+      print_url "$selected_port"
+      return
+    fi
+    if ! kill -0 "$started_pid" 2>/dev/null; then
+      rm -f "$state_file"
+      die "preview failed to start; see $log_file"
+    fi
+    sleep 0.1
+  done
+
+  kill "$started_pid" 2>/dev/null || true
+  rm -f "$state_file"
+  die "preview did not become available; see $log_file"
+}
+
+status() {
+  if server_healthy; then
+    print_url "$port"
+    return
+  fi
+  clear_stale_state
+  die "no running preview for $worktree"
+}
+
+stop() {
+  if ! read_state; then
+    echo "No preview is running for $worktree"
+    return
+  fi
+
+  if kill -0 "$pid" 2>/dev/null; then
+    kill "$pid" 2>/dev/null || true
+  fi
+  rm -f "$state_file"
+  echo "Stopped preview for $worktree"
+}
+
+case "$action" in
+  start) start ;;
+  status) status ;;
+  stop) stop ;;
+  *) die "usage: script/serve [start|status|stop]" ;;
+esac
