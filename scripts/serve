@@ -17,7 +17,7 @@ state_file="$state_root/cs-shadow-jekyll-preview-$key.state"
 log_file="$state_root/cs-shadow-jekyll-preview-$key.log"
 
 die() {
-  echo "script/serve: $*" >&2
+  echo "scripts/serve: $*" >&2
   exit 1
 }
 
@@ -124,5 +124,5 @@ case "$action" in
   start) start ;;
   status) status ;;
   stop) stop ;;
-  *) die "usage: script/serve [start|status|stop]" ;;
+  *) die "usage: scripts/serve [start|status|stop]" ;;
 esac

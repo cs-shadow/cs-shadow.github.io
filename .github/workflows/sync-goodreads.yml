@@ -34,7 +34,7 @@ jobs:
       - name: Sync public Goodreads shelves
         env:
           GOODREADS_USER_ID: ${{ vars.GOODREADS_USER_ID }}
-        run: ruby script/sync_goodreads.rb
+        run: ruby scripts/sync_goodreads.rb
 
       - name: Commit updated reading data
         run: |

@@ -28,7 +28,7 @@ Goodreads has deprecated its public API, and its RSS format may change. As a
 manual fallback, export the library CSV from Goodreads, then run:
 
 ```shell
-ruby script/sync_goodreads.rb --csv goodreads_library_export.csv
+ruby scripts/sync_goodreads.rb --csv goodreads_library_export.csv
 ```
 
 The import uses the `currently-reading` and `read` exclusive shelves. A CSV
