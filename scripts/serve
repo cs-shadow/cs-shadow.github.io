@@ -15,6 +15,8 @@ read -r -a preview_ports <<< "${JEKYLL_PREVIEW_PORTS:-4000 4001 4002 4003 4004}"
 key="$(printf '%s' "$worktree" | shasum -a 256 | awk '{print $1}')"
 state_file="$state_root/cs-shadow-jekyll-preview-$key.state"
 log_file="$state_root/cs-shadow-jekyll-preview-$key.log"
+pid=""
+port=""
 
 die() {
   echo "scripts/serve: $*" >&2
@@ -81,7 +83,7 @@ start() {
   printf 'pid=%s\nport=%s\nworktree_path=%s\n' "$started_pid" "$selected_port" "$worktree" > "$state_file"
 
   local attempt
-  for attempt in $(seq 1 50); do
+  for ((attempt = 0; attempt < 50; attempt++)); do
     if server_healthy; then
       print_url "$selected_port"
       return
