@@ -1,0 +1,33 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Register ShellCheck annotations
+        run: echo '::add-matcher::.github/problem-matchers/shellcheck.json'
+
+      - name: Run ShellCheck
+        run: |
+          set -o pipefail
+          shellcheck --format=gcc scripts/serve |
+            sed -E 's/: (info|note|style): /: notice: /'
