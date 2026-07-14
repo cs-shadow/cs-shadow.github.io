@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  var NOTES = GuitarTuning.notes;
   var FLAT_EQUIVALENTS = {
     1: "Db",
     3: "Eb",
@@ -9,25 +9,11 @@
     8: "Ab",
     10: "Bb"
   };
-  var DEFAULT_TUNING = [
-    { label: "E", pitch: 4, guitarString: 1 },
-    { label: "B", pitch: 11, guitarString: 2 },
-    { label: "G", pitch: 7, guitarString: 3 },
-    { label: "D", pitch: 2, guitarString: 4 },
-    { label: "A", pitch: 9, guitarString: 5 },
-    { label: "E", pitch: 4, guitarString: 6 }
-  ];
-  var PRESETS = {
-    standard: { label: "Standard", pitches: [4, 11, 7, 2, 9, 4] },
-    "drop-d": { label: "Drop D", pitches: [4, 11, 7, 2, 9, 2] },
-    "open-g": { label: "Open G", pitches: [2, 11, 7, 2, 7, 2] },
-    "open-d": { label: "Open D", pitches: [2, 9, 6, 2, 9, 2] },
-    dadgad: { label: "DADGAD", pitches: [2, 9, 7, 2, 9, 2] }
-  };
+  var PRESETS = GuitarTuning.presets;
   var MAX_FRET = 15;
   var SAMPLE_SHAPE = [0, 1, 0, 2, 3, null];
   var HISTORY_KEY = "cs-shadow.guitar-chordinator.recent-settings.v1";
-  var HISTORY_VERSION = 1;
+  var HISTORY_VERSION = 2;
   var HISTORY_LIMIT = 5;
   var HISTORY_SAVE_DELAY = 1500;
 
@@ -82,18 +68,16 @@
   var recentSettingsSelect = document.getElementById("chordinator-recent-settings");
   var clearHistoryButton = document.getElementById("chordinator-clear-history");
   var selection = SAMPLE_SHAPE.slice();
-  var tuning = DEFAULT_TUNING.map(function (string) {
-    return { label: string.label, pitch: string.pitch, guitarString: string.guitarString };
-  });
+  var tuning = GuitarTuning.defaultTuning();
   var history = [];
-  var pendingSaveTimer = null;
+  var recentSettings;
 
   function normalizePitch(pitch) {
-    return ((pitch % 12) + 12) % 12;
+    return GuitarTuning.normalizePitch(pitch);
   }
 
   function pitchName(pitch) {
-    return NOTES[normalizePitch(pitch)];
+    return GuitarTuning.pitchName(pitch);
   }
 
   function friendlyPitchName(pitch) {
@@ -254,30 +238,23 @@
   }
 
   function tuningPresetKey() {
-    return Object.keys(PRESETS).filter(function (key) {
-      return PRESETS[key].pitches.every(function (pitch, index) {
-        return tuning[index].pitch === pitch;
-      });
-    })[0] || "custom";
+    return GuitarTuning.presetKey(tuning);
   }
 
   function tuningDescriptionText() {
     var key = tuningPresetKey();
-    return key === "custom" ? "Custom tuning, frets 0-15" : PRESETS[key].label + " tuning, frets 0-15";
+    return GuitarTuning.label(tuning) + " tuning, frets 0-15";
   }
 
   function snapshot() {
     return {
-      tuning: tuning.map(function (string) { return string.pitch; }),
+      tuning: GuitarTuning.pitches(tuning),
       selection: selection.slice()
     };
   }
 
   function isValidSnapshot(candidate) {
-    return candidate && Array.isArray(candidate.tuning) && candidate.tuning.length === 6 &&
-      candidate.tuning.every(function (pitch) {
-        return Number.isInteger(pitch) && pitch >= 0 && pitch < NOTES.length;
-      }) && Array.isArray(candidate.selection) && candidate.selection.length === 6 &&
+    return candidate && GuitarTuning.isValidPitches(candidate.tuning) && Array.isArray(candidate.selection) && candidate.selection.length === 6 &&
       candidate.selection.every(function (fret) {
         return fret === null || (Number.isInteger(fret) && fret >= 0 && fret <= MAX_FRET);
       });
@@ -291,46 +268,8 @@
     });
   }
 
-  function readHistory() {
-    try {
-      var stored = window.localStorage.getItem(HISTORY_KEY);
-      var payload = stored ? JSON.parse(stored) : null;
-
-      if (!payload || payload.version !== HISTORY_VERSION || !Array.isArray(payload.entries)) {
-        return [];
-      }
-
-      return payload.entries.reduce(function (entries, candidate) {
-        if (isValidSnapshot(candidate) && !entries.some(function (entry) {
-          return snapshotsMatch(entry, candidate);
-        })) {
-          entries.push(candidate);
-        }
-        return entries;
-      }, []).slice(0, HISTORY_LIMIT);
-    } catch (err) {
-      return [];
-    }
-  }
-
-  function writeHistory() {
-    try {
-      window.localStorage.setItem(HISTORY_KEY, JSON.stringify({
-        version: HISTORY_VERSION,
-        entries: history
-      }));
-    } catch (err) {
-      // Storage is optional, including in private browsing contexts.
-    }
-  }
-
   function historyLabel(entry) {
-    var preset = Object.keys(PRESETS).filter(function (key) {
-      return PRESETS[key].pitches.every(function (pitch, index) {
-        return entry.tuning[index] === pitch;
-      });
-    })[0];
-    var tuningLabel = preset ? PRESETS[preset].label : "Custom";
+    var tuningLabel = GuitarTuning.label(GuitarTuning.fromPitches(entry.tuning));
     var shape = entry.selection.slice().reverse().map(function (fret) {
       return fret === null ? "x" : String(fret);
     }).join("");
@@ -360,51 +299,8 @@
     clearHistoryButton.disabled = false;
   }
 
-  function saveSnapshot() {
-    var current = snapshot();
-    history = [current].concat(history.filter(function (entry) {
-      return !snapshotsMatch(entry, current);
-    })).slice(0, HISTORY_LIMIT);
-    writeHistory();
-    renderHistoryControls();
-  }
-
-  function scheduleSnapshotSave() {
-    if (pendingSaveTimer !== null) {
-      window.clearTimeout(pendingSaveTimer);
-    }
-
-    pendingSaveTimer = window.setTimeout(function () {
-      pendingSaveTimer = null;
-      saveSnapshot();
-    }, HISTORY_SAVE_DELAY);
-  }
-
-  function flushPendingSnapshotSave() {
-    if (pendingSaveTimer === null) {
-      return;
-    }
-
-    window.clearTimeout(pendingSaveTimer);
-    pendingSaveTimer = null;
-    saveSnapshot();
-  }
-
-  function cancelPendingSnapshotSave() {
-    if (pendingSaveTimer !== null) {
-      window.clearTimeout(pendingSaveTimer);
-      pendingSaveTimer = null;
-    }
-  }
-
   function applySnapshot(entry) {
-    tuning = tuning.map(function (string, index) {
-      return {
-        label: pitchName(entry.tuning[index]),
-        pitch: entry.tuning[index],
-        guitarString: string.guitarString
-      };
-    });
+    tuning = GuitarTuning.fromPitches(entry.tuning);
     selection = entry.selection.slice();
   }
 
@@ -453,7 +349,7 @@
         tuning[stringIndex].pitch = Number(event.currentTarget.value);
         tuning[stringIndex].label = pitchName(tuning[stringIndex].pitch);
         render();
-        scheduleSnapshotSave();
+        recentSettings.schedule();
       });
       var mute = document.createElement("button");
       mute.type = "button";
@@ -468,7 +364,7 @@
 
         selection[stringIndex] = null;
         render();
-        scheduleSnapshotSave();
+        recentSettings.schedule();
       });
       label.appendChild(name);
       label.appendChild(tuningSelect);
@@ -495,7 +391,7 @@
           var nextFret = Number(event.currentTarget.dataset.fret);
           selection[nextStringIndex] = selection[nextStringIndex] === nextFret ? null : nextFret;
           render();
-          scheduleSnapshotSave();
+          recentSettings.schedule();
         });
 
         row.appendChild(cell);
@@ -585,13 +481,13 @@
       return null;
     });
     render();
-    scheduleSnapshotSave();
+    recentSettings.schedule();
   });
 
   sampleButton.addEventListener("click", function () {
     selection = SAMPLE_SHAPE.slice();
     render();
-    scheduleSnapshotSave();
+    recentSettings.schedule();
   });
 
   presetSelect.addEventListener("change", function (event) {
@@ -599,15 +495,9 @@
     if (!preset) {
       return;
     }
-    tuning = tuning.map(function (string, index) {
-      return {
-        label: pitchName(preset.pitches[index]),
-        pitch: preset.pitches[index],
-        guitarString: string.guitarString
-      };
-    });
+    tuning = GuitarTuning.fromPitches(preset.pitches);
     render();
-    scheduleSnapshotSave();
+    recentSettings.schedule();
   });
 
   recentSettingsSelect.addEventListener("change", function (event) {
@@ -617,31 +507,30 @@
       return;
     }
 
-    cancelPendingSnapshotSave();
+    recentSettings.cancel();
     applySnapshot(entry);
     render();
-    saveSnapshot();
+    recentSettings.save();
   });
 
   clearHistoryButton.addEventListener("click", function () {
-    cancelPendingSnapshotSave();
-    history = [];
-    try {
-      window.localStorage.removeItem(HISTORY_KEY);
-    } catch (err) {
-      // Storage is optional, including in private browsing contexts.
-    }
-    renderHistoryControls();
+    recentSettings.clear();
   });
 
-  window.addEventListener("pagehide", flushPendingSnapshotSave);
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "hidden") {
-      flushPendingSnapshotSave();
+  recentSettings = RecentSettings.create({
+    key: HISTORY_KEY,
+    version: HISTORY_VERSION,
+    limit: HISTORY_LIMIT,
+    delay: HISTORY_SAVE_DELAY,
+    snapshot: snapshot,
+    normalize: function (candidate) { return isValidSnapshot(candidate) ? candidate : null; },
+    matches: snapshotsMatch,
+    onChange: function (entries) {
+      history = entries;
+      renderHistoryControls();
     }
   });
-
-  history = readHistory();
+  history = recentSettings.load();
   if (history.length) {
     applySnapshot(history[0]);
   }

@@ -536,6 +536,16 @@ body
       outline: 2px solid #1d4f86
       outline-offset: 1px
 
+.scalar-tuning-controls
+  margin-top: $rs
+  align-items: flex-end
+  .chordinator-preset-control
+    margin-left: 0
+
+@include respond-to(640)
+  .scalar-tuning-controls
+    align-items: stretch
+
 .chordinator-recent-settings-control,
 .recent-settings-control
   display: flex
@@ -750,6 +760,10 @@ body
 .chordinator-fretboard .fretboard-row,
 .chordinator-fretboard .fret-number-row
   grid-template-columns: 112px repeat(var(--fret-count), minmax(42px, 1fr))
+
+.full-fretboard .fretboard-row,
+.full-fretboard .fret-number-row
+  grid-template-columns: 92px repeat(var(--fret-count), minmax(42px, 1fr))
 
 .string-label,
 .fret-cell,
