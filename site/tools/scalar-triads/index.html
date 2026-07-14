@@ -26,6 +26,20 @@ permalink: /tools/scalar-triads/
         </div>
       </div>
 
+      <div class="chordinator-actions scalar-tuning-controls" aria-label="Guitar tuning controls">
+        <div class="chordinator-preset-control">
+          <label for="scalar-triads-preset">Tuning preset</label>
+          <select id="scalar-triads-preset" class="chordinator-preset">
+            <option value="standard">Standard</option>
+            <option value="drop-d">Drop D</option>
+            <option value="open-g">Open G</option>
+            <option value="open-d">Open D</option>
+            <option value="dadgad">DADGAD</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+      </div>
+
       <div class="recent-settings-control">
         <label for="scale-recent-settings">Recent settings</label>
         <select id="scale-recent-settings" disabled>
@@ -51,7 +65,7 @@ permalink: /tools/scalar-triads/
     <section class="result-section fretboard-section" aria-labelledby="scale-map-heading">
       <div class="result-heading">
         <h2 id="scale-map-heading">Fretboard map</h2>
-        <p>Standard tuning, frets 0-15</p>
+        <p id="scale-tuning-description">Standard tuning, frets 0-15</p>
       </div>
       <div class="fretboard-scroll">
         <div class="fretboard full-fretboard" id="scale-fretboard"></div>
@@ -80,4 +94,6 @@ permalink: /tools/scalar-triads/
   </section>
 </main>
 
+<script src="/assets/js/guitar-tuning.js"></script>
+<script src="/assets/js/recent-settings.js"></script>
 <script src="/assets/js/scalar-triads.js"></script>
