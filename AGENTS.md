@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Git workflow
+
+For each independent change, use an appropriately named Git worktree and
+feature branch. Create the worktree and switch to its feature branch before
+making changes. Work only from that worktree while the change is in progress;
+switch to the worktree assigned to another change before working on it. This
+keeps parallel changes isolated from one another.
+
 ## Visible UI previews
 
 A major visible UI change changes visible layout, styling, responsive behavior, or
