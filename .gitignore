@@ -1,5 +1,6 @@
 _site
 _site_preview
+_site_live
 .bundle
 .jekyll-metadata
 vendor

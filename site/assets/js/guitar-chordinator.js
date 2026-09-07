@@ -1,3 +1,33 @@
+// Notebook lifecycle boundary. The legacy tool stays active until the complete
+// component set and store are wired at the core UX integration gate.
+(function (root) {
+  "use strict";
+  root.SongNotebookController = {
+    mountComponents: function (document, modules, api) {
+      var contracts = root.SongNotebookContracts;
+      if (!contracts || contracts.componentNames.some(function (name) {
+        return !modules[name] || typeof modules[name].mount !== "function";
+      })) { return null; }
+      var components = contracts.componentNames.map(function (name) {
+        var ids = contracts.hosts[name.toLowerCase()];
+        var hosts = {};
+        Object.keys(ids).forEach(function (key) {
+          hosts[key] = document.getElementById(ids[key]);
+        });
+        return modules[name].mount(hosts, api);
+      });
+      return {
+        render: function (viewState) {
+          components.forEach(function (component) { component.render(viewState); });
+        },
+        destroy: function () {
+          components.forEach(function (component) { component.destroy(); });
+        }
+      };
+    }
+  };
+}(typeof globalThis !== "undefined" ? globalThis : this));
+
 (function () {
   "use strict";
 
