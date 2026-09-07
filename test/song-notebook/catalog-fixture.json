@@ -1,0 +1,641 @@
+{
+  "chords": [
+    {
+      "suffix": "",
+      "quality": "major",
+      "intervals": [
+        0,
+        4,
+        7
+      ]
+    },
+    {
+      "suffix": "m",
+      "quality": "minor",
+      "intervals": [
+        0,
+        3,
+        7
+      ]
+    },
+    {
+      "suffix": "dim",
+      "quality": "diminished",
+      "intervals": [
+        0,
+        3,
+        6
+      ]
+    },
+    {
+      "suffix": "aug",
+      "quality": "augmented",
+      "intervals": [
+        0,
+        4,
+        8
+      ]
+    },
+    {
+      "suffix": "sus2",
+      "quality": "sus2",
+      "intervals": [
+        0,
+        2,
+        7
+      ]
+    },
+    {
+      "suffix": "sus4",
+      "quality": "sus4",
+      "intervals": [
+        0,
+        5,
+        7
+      ]
+    },
+    {
+      "suffix": "7sus4",
+      "quality": "dominant 7 sus4",
+      "intervals": [
+        0,
+        5,
+        7,
+        10
+      ]
+    },
+    {
+      "suffix": "5",
+      "quality": "power chord",
+      "intervals": [
+        0,
+        7
+      ]
+    },
+    {
+      "suffix": "6",
+      "quality": "major 6",
+      "intervals": [
+        0,
+        4,
+        7,
+        9
+      ]
+    },
+    {
+      "suffix": "m6",
+      "quality": "minor 6",
+      "intervals": [
+        0,
+        3,
+        7,
+        9
+      ]
+    },
+    {
+      "suffix": "7",
+      "quality": "dominant 7",
+      "intervals": [
+        0,
+        4,
+        7,
+        10
+      ]
+    },
+    {
+      "suffix": "maj7",
+      "quality": "major 7",
+      "intervals": [
+        0,
+        4,
+        7,
+        11
+      ]
+    },
+    {
+      "suffix": "m7",
+      "quality": "minor 7",
+      "intervals": [
+        0,
+        3,
+        7,
+        10
+      ]
+    },
+    {
+      "suffix": "mMaj7",
+      "quality": "minor major 7",
+      "intervals": [
+        0,
+        3,
+        7,
+        11
+      ]
+    },
+    {
+      "suffix": "dim7",
+      "quality": "diminished 7",
+      "intervals": [
+        0,
+        3,
+        6,
+        9
+      ]
+    },
+    {
+      "suffix": "m7b5",
+      "quality": "half-diminished",
+      "intervals": [
+        0,
+        3,
+        6,
+        10
+      ]
+    },
+    {
+      "suffix": "add2",
+      "quality": "add 2",
+      "intervals": [
+        0,
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "suffix": "add9",
+      "quality": "add 9",
+      "intervals": [
+        0,
+        4,
+        7,
+        14
+      ]
+    },
+    {
+      "suffix": "madd9",
+      "quality": "minor add 9",
+      "intervals": [
+        0,
+        3,
+        7,
+        14
+      ]
+    },
+    {
+      "suffix": "add4",
+      "quality": "add 4",
+      "intervals": [
+        0,
+        4,
+        5,
+        7
+      ]
+    },
+    {
+      "suffix": "add11",
+      "quality": "add 11",
+      "intervals": [
+        0,
+        4,
+        7,
+        17
+      ]
+    },
+    {
+      "suffix": "add6",
+      "quality": "add 6",
+      "intervals": [
+        0,
+        4,
+        7,
+        9
+      ]
+    },
+    {
+      "suffix": "9",
+      "quality": "dominant 9",
+      "intervals": [
+        0,
+        4,
+        7,
+        10,
+        14
+      ]
+    },
+    {
+      "suffix": "maj9",
+      "quality": "major 9",
+      "intervals": [
+        0,
+        4,
+        7,
+        11,
+        14
+      ]
+    },
+    {
+      "suffix": "m9",
+      "quality": "minor 9",
+      "intervals": [
+        0,
+        3,
+        7,
+        10,
+        14
+      ]
+    },
+    {
+      "suffix": "11",
+      "quality": "dominant 11",
+      "intervals": [
+        0,
+        4,
+        7,
+        10,
+        14,
+        17
+      ]
+    },
+    {
+      "suffix": "13",
+      "quality": "dominant 13",
+      "intervals": [
+        0,
+        4,
+        7,
+        10,
+        14,
+        17,
+        21
+      ]
+    },
+    {
+      "suffix": "7b5",
+      "quality": "dominant 7 flat 5",
+      "intervals": [
+        0,
+        4,
+        6,
+        10
+      ]
+    },
+    {
+      "suffix": "7#5",
+      "quality": "dominant 7 sharp 5",
+      "intervals": [
+        0,
+        4,
+        8,
+        10
+      ]
+    },
+    {
+      "suffix": "7b9",
+      "quality": "dominant 7 flat 9",
+      "intervals": [
+        0,
+        4,
+        7,
+        10,
+        13
+      ]
+    },
+    {
+      "suffix": "7#9",
+      "quality": "dominant 7 sharp 9",
+      "intervals": [
+        0,
+        4,
+        7,
+        10,
+        15
+      ]
+    },
+    {
+      "suffix": "9b5",
+      "quality": "dominant 9 flat 5",
+      "intervals": [
+        0,
+        4,
+        6,
+        10,
+        14
+      ]
+    },
+    {
+      "suffix": "9#5",
+      "quality": "dominant 9 sharp 5",
+      "intervals": [
+        0,
+        4,
+        8,
+        10,
+        14
+      ]
+    },
+    {
+      "suffix": "7b5b9",
+      "quality": "dominant 7 flat 5 flat 9",
+      "intervals": [
+        0,
+        4,
+        6,
+        10,
+        13
+      ]
+    },
+    {
+      "suffix": "7#5b9",
+      "quality": "dominant 7 sharp 5 flat 9",
+      "intervals": [
+        0,
+        4,
+        8,
+        10,
+        13
+      ]
+    },
+    {
+      "suffix": "7b5#9",
+      "quality": "dominant 7 flat 5 sharp 9",
+      "intervals": [
+        0,
+        4,
+        6,
+        10,
+        15
+      ]
+    },
+    {
+      "suffix": "7#5#9",
+      "quality": "dominant 7 sharp 5 sharp 9",
+      "intervals": [
+        0,
+        4,
+        8,
+        10,
+        15
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "id": "major",
+      "name": "Major / Ionian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        11
+      ],
+      "feel": "Stable, bright, resolved, and familiar. Good for clear melodies and strong tonal centers."
+    },
+    {
+      "id": "dorian",
+      "name": "Dorian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        10
+      ],
+      "feel": "Minor but lifted by the natural 6. Good for soulful, modal, funk, and jazz-rock sounds."
+    },
+    {
+      "id": "phrygian",
+      "name": "Phrygian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        1,
+        3,
+        5,
+        7,
+        8,
+        10
+      ],
+      "feel": "Dark, tense, and close to the root because of the flat 2. Good for dramatic or Spanish-leaning colors."
+    },
+    {
+      "id": "lydian",
+      "name": "Lydian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        2,
+        4,
+        6,
+        7,
+        9,
+        11
+      ],
+      "feel": "Bright, floating, and unresolved because of the sharp 4. Good for dreamy or cinematic major sounds."
+    },
+    {
+      "id": "mixolydian",
+      "name": "Mixolydian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        2,
+        4,
+        5,
+        7,
+        9,
+        10
+      ],
+      "feel": "Major with a relaxed flat 7. Good for blues, rock, country, and dominant-chord grooves."
+    },
+    {
+      "id": "aeolian",
+      "name": "Natural Minor / Aeolian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        8,
+        10
+      ],
+      "feel": "Classic minor: darker, direct, and grounded. Good for melancholy melodies and minor-key progressions."
+    },
+    {
+      "id": "locrian",
+      "name": "Locrian",
+      "group": "Major Modes",
+      "intervals": [
+        0,
+        1,
+        3,
+        5,
+        6,
+        8,
+        10
+      ],
+      "feel": "Unstable and tense because of the flat 2 and flat 5. Good for dissonant, unresolved passages."
+    },
+    {
+      "id": "major-pentatonic",
+      "name": "Major Pentatonic",
+      "group": "Pentatonic & Blues",
+      "intervals": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "degreeLetters": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "feel": "Open, simple, and consonant. Good for melodic hooks, country, folk, pop, and major blues phrasing."
+    },
+    {
+      "id": "minor-pentatonic",
+      "name": "Minor Pentatonic",
+      "group": "Pentatonic & Blues",
+      "intervals": [
+        0,
+        3,
+        5,
+        7,
+        10
+      ],
+      "degreeLetters": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "feel": "Direct, earthy, and flexible. Good for blues, rock, funk, and minor-key soloing."
+    },
+    {
+      "id": "blues",
+      "name": "Blues",
+      "group": "Pentatonic & Blues",
+      "intervals": [
+        0,
+        3,
+        5,
+        6,
+        7,
+        10
+      ],
+      "degreeLetters": [
+        0,
+        2,
+        3,
+        4,
+        4,
+        6
+      ],
+      "feel": "Gritty and expressive because of the blue note. Good for blues tension, bends, riffs, and call-and-response lines."
+    },
+    {
+      "id": "harmonic-minor",
+      "name": "Harmonic Minor",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        8,
+        11
+      ],
+      "feel": "Minor with a strong leading tone and exotic pull. Good for dramatic cadences and neoclassical lines."
+    },
+    {
+      "id": "melodic-minor",
+      "name": "Melodic Minor",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        2,
+        3,
+        5,
+        7,
+        9,
+        11
+      ],
+      "feel": "Minor at the root with a smoother, brighter upper half. Good for jazz minor sounds and altered harmony."
+    },
+    {
+      "id": "double-harmonic-major",
+      "name": "Double Harmonic Major",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        8,
+        11
+      ],
+      "feel": "Bright but tense, with two augmented seconds and a strong exotic pull. Good for dramatic, Middle Eastern-leaning colors."
+    },
+    {
+      "id": "hungarian-minor",
+      "name": "Hungarian Minor",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        2,
+        3,
+        6,
+        7,
+        8,
+        11
+      ],
+      "feel": "Dark, angular, and dramatic because of the sharp 4 and major 7. Good for tense minor lines and neoclassical colors."
+    },
+    {
+      "id": "phrygian-dominant",
+      "name": "Phrygian Dominant",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        8,
+        10
+      ],
+      "feel": "Dominant and dark, with a flat 2 against a major 3. Good for flamenco, metal, and harmonic-minor V sounds."
+    },
+    {
+      "id": "neapolitan-minor",
+      "name": "Neapolitan Minor",
+      "group": "Minor & Exotic",
+      "intervals": [
+        0,
+        1,
+        3,
+        5,
+        7,
+        8,
+        11
+      ],
+      "feel": "Minor, tense, and theatrical, with a flat 2 and major 7. Good for dramatic minor-key movement."
+    }
+  ]
+}
