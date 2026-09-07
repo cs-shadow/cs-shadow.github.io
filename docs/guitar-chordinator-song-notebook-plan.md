@@ -547,3 +547,14 @@ SHA and worktree paths; exact action payloads/result and error shapes; DOM host 
 script loading order; contract fixture locations; and any repository-driven
 adjustments to adapter boundaries. This is the bounded wave 0 deliverable, not a
 product redesign delegated independently to each worker.
+
+### Wave 0 contract freeze
+
+The exact revision-1 contracts are recorded in
+[`song-notebook-contracts.md`](song-notebook-contracts.md), with shared constants
+in `site/assets/js/song-notebook/contracts.js` and independent-worker fixtures
+in `test/song-notebook/fixtures.cjs`. This appendix freezes Music result records,
+model/storage injection, atomic actions, draft origins and conflicts, component
+hosts, and load order. Wave 0 retains the existing working Chordinator while
+the hidden notebook hosts await integrated modules; no missing module is loaded.
+Preview output uses `_site_live` to avoid production/preview check collisions.
