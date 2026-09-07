@@ -62,6 +62,25 @@ permalink: /tools/guitar-chordinator/
   </section>
 </main>
 
+<!-- Activated by the notebook controller once its components are integrated. -->
+<main id="song-notebook" class="content tool-page song-notebook" hidden>
+  <header id="notebook-header"></header>
+  <p id="notebook-status" role="status" aria-live="polite"></p>
+  <div id="notebook-settings" hidden></div>
+  <div id="notebook-workspace" class="notebook-workspace">
+    <section id="notebook-collection" class="notebook-compose notebook-collection" aria-label="Chords in this song"></section>
+    <section id="notebook-sections" class="notebook-compose notebook-sections" aria-label="Song sections"></section>
+    <section id="notebook-arrangement" class="notebook-compose notebook-arrangement" aria-label="Song order"></section>
+  </div>
+  <div id="notebook-details" class="notebook-details">
+    <section id="notebook-editor" class="notebook-editor" hidden aria-label="Chord details"></section>
+    <section id="notebook-explore" class="notebook-explore" hidden aria-label="Explore chords and scales"></section>
+  </div>
+  <section id="notebook-reading" class="notebook-reading" hidden aria-label="Song sheet"></section>
+</main>
+
+<link rel="stylesheet" href="/assets/css/song-notebook/notebook.css">
 <script src="/assets/js/guitar-tuning.js"></script>
 <script src="/assets/js/recent-settings.js"></script>
+<script src="/assets/js/song-notebook/contracts.js"></script>
 <script src="/assets/js/guitar-chordinator.js"></script>

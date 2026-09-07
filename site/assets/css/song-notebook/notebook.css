@@ -1,0 +1,26 @@
+/* Integration owns workspace geometry; each component owns its inner styles. */
+.song-notebook [hidden], .song-notebook[hidden] { display: none !important; }
+.song-notebook { min-width: 0; }
+.notebook-workspace {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+  gap: 1.5rem;
+}
+.notebook-workspace > *, .notebook-details > * { min-width: 0; }
+.notebook-collection { grid-column: 1; grid-row: 1 / span 2; }
+.notebook-sections, .notebook-arrangement { grid-column: 2; }
+.notebook-details { margin-top: 1.5rem; }
+.song-notebook button, .song-notebook input, .song-notebook select,
+.song-notebook textarea { font: inherit; }
+.song-notebook button { cursor: pointer; }
+.song-notebook :focus-visible { outline: 3px solid #a1492a; outline-offset: 3px; }
+.song-notebook textarea { width: 100%; box-sizing: border-box; }
+.song-notebook .notebook-notes { white-space: pre-wrap; overflow-wrap: anywhere; }
+.song-notebook .notebook-muted { opacity: .65; }
+.song-notebook .notebook-error { color: #9b2929; }
+@media (max-width: 799px) {
+  .notebook-workspace { display: flex; flex-direction: column; }
+  .notebook-sections { order: 0; }
+  .notebook-arrangement { order: 1; }
+  .notebook-collection { order: 2; }
+}
