@@ -32,7 +32,7 @@ function musicFixture() {
 }
 function dependencies() {
   let counter=0;
-  return { music:musicFixture(), id:()=>`fixture-${++counter}`, now:()=>"2026-09-07T12:00:00.000Z" };
+  return { music:require("../../site/assets/js/song-notebook/music.js"), id:()=>`fixture-${++counter}`, now:()=>"2026-09-07T12:00:00.000Z" };
 }
 function songFixture() {
   return {
