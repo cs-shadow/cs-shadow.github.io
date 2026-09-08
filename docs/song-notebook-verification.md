@@ -34,3 +34,30 @@ Preview launch and serve tests require access to localhost sockets outside this
 session's sandbox. Start worker previews from their assigned worktree using the
 same environment; scripts/serve chooses the available port. No global Ruby,
 Gemfile or lockfile changes were made.
+
+## Wave 1 — integrated foundation
+
+- Music and model/storage handoffs were reviewed, committed in their own
+  worktrees, and integrated serially. Model review corrected default section
+  numbering before its commit, with a dedicated regression case.
+- 62 Node tests pass, including real Music/model/storage/controller scenarios:
+  no-setup progression, Unicode/enharmonic identity, atomic failed input and undo,
+  draft origins after reload, variation retargeting, stale-source rejection,
+  deleted-origin fallback, capo/retuning and versioned JSON ID remapping.
+- Voicing tests independently enumerate allowed shapes and compare the globally
+  ranked top eight; cancellation clears pending work. All 37 chord formulas,
+  16 scales, 17 root spellings and five tuning presets are retained.
+- Scalar Triads consumes the same root/scale data with its existing controller.
+  Catalog equality, script order, rendered controls, production build, preserved
+  URLs and internal local links pass.
+- Chordinator now loads the foundation modules in order. Notebook activation
+  waits for compose/editor; the existing tool remains active.
+- Legacy all-muted history entries are omitted from recoverable chords without
+  altering stored raw history. No musical identity is invented.
+- Browser interaction verification remains pending browser availability.
+
+Wave 2 glue remaining with integration: mount compose/editor into the prepared
+hosts; activate the new boot/header/store; wire visibility/storage lifecycle and
+download/print effects; add shared header styles; exercise complete authoring,
+draft, settings, and responsive flows. Workers implement only their component
+module, scoped stylesheet, and matching tests against the frozen action API.
