@@ -61,3 +61,52 @@ hosts; activate the new boot/header/store; wire visibility/storage lifecycle and
 download/print effects; add shared header styles; exercise complete authoring,
 draft, settings, and responsive flows. Workers implement only their component
 module, scoped stylesheet, and matching tests against the frozen action API.
+
+## Wave 2 — activated composition and editor
+
+- Automated core gate: 96 Node tests pass; Ruby serve 4 tests/15 assertions,
+  Goodreads 10/28, site rendering 3/32 all pass. Production/preview builds,
+  48 preserved URLs, internal local links, preview noindex and whitespace pass.
+
+- Compose and editor stopped-write handoffs were reviewed, committed, and
+  integrated serially (`5b6eedf`, `b168e36`). Their styles and scripts are linked;
+  the notebook now activates instead of the legacy tool.
+- Integrated event-DOM checks exercise the actual composer and editor through
+  bootstrap: fresh empty Section 1, typed progression, unnamed shape Keep & add,
+  and unchanged focused header fields/buttons across saves. Header rendering was
+  corrected to preserve uncommitted text and the button receiving a blur click.
+- Component/controller tests cover atomic invalid input, enharmonic identity,
+  shared updates, reload-stable variation origins, explicit retargeting, deleted
+  origins, stale source/settings review, fractional durations, multiline notes,
+  reference-safe deletion, ordering, undo, quota/corrupt/conflict behavior.
+- Actual browser checks completed earlier for Scalar Triads: C Dorian, Drop D,
+  alternate D-A-D string set, history restoration after reload, and no logged
+  errors. These checks do not establish notebook browser acceptance.
+- CUA was available briefly, then disappeared from both integration and monitor
+  tool exposure before core notebook checks. The user explicitly authorized
+  carrying that environment-only browser gate to final verification while the
+  remaining implementation proceeds. Core mobile, native-keyboard, actual local
+  storage, read/print and full browser-console checks remain pending.
+- Integration preview remains `http://127.0.0.1:4000/`; composer/editor previews
+  use their separate worktrees on 4001/4002. Live output remains `_site_live`.
+
+Wave 3 integration owns loading Explore/Reading, enabling Read/Print, printing
+visibility and shared page styles, complete browser/phone/print verification once
+tools are available, and final independent review. Explore/Reading workers own
+only their named component JS, scoped CSS and matching tests.
+
+## Core design remediation after supplied screenshot
+
+The supplied 2026-09-08 20:31 screenshot showed legacy Chord names/Selected notes
+above the notebook, excess vertical whitespace, mismatched content widths,
+separated Undo/Redo, and touching Home/Scale fields. Inspection found the site's
+`main { display: block }` overrode the native hidden rule; the notebook also
+inherited the 640px article width instead of the 1040px tool width.
+
+The shared stylesheet now explicitly hides the inactive legacy main, aligns the
+notebook to the site's tool width, supplies its own visible page heading, groups
+song actions, and lays out context labels with gaps and mobile wrapping. Common
+control dimensions and visual rules are frozen in the contract appendix. A
+regression verifies the hidden cascade guard and actual grouped action/context
+markup; all 97 Node tests pass. This is source/DOM and build evidence against the
+supplied before screenshot, not a claimed after screenshot or browser layout pass.
