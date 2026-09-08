@@ -112,3 +112,14 @@ main.guitar-chordinator[hidden] { display: none !important; }
   .notebook-context-form label { flex: 1 1 8rem; }
   .song-notebook { overflow-wrap: anywhere; }
 }
+
+@media print {
+  body.song-notebook-active > header, body.song-notebook-active > .logo-readium,
+  body.song-notebook-active > footer,
+  body.song-notebook-active .guitar-chordinator,
+  body.song-notebook-active #song-notebook > :not(#notebook-reading) { display: none !important; }
+  body.song-notebook-active, body.song-notebook-active .page-content,
+  body.song-notebook-active .wrapper { margin: 0; padding: 0; background: white; }
+  body.song-notebook-active .content.song-notebook { max-width: none; margin: 0; padding: 0; }
+  body.song-notebook-active #notebook-reading { display: block !important; }
+}
