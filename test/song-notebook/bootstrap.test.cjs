@@ -22,6 +22,65 @@ test("real composer and editor work together through visible controls and bootst
  app.destroy();
 });
 
+test("closing Explore restores its opener through the real component and bootstrap wiring",()=>{
+ const {app,document}=setup(true),root=document.getElementById("song-notebook");
+ const opener=byText(root,"button","Explore");opener.focus();opener.click();
+ const explore=document.getElementById("notebook-explore"),close=byText(explore,"button","Close exploration");
+ assert.equal(explore.hidden,false);close.focus();close.click();
+ assert.equal(explore.hidden,true);assert.strictEqual(document.activeElement,opener);
+ opener.click();const select=explore.querySelector('[data-explore-key="browse-root"]');select.focus();
+ app.store.dispatch({type:"song.update",patch:{title:"An unrelated save"}});
+ assert.strictEqual(document.activeElement,select);
+ app.store.dispatch({type:"panel.set",panel:null});
+ assert.notStrictEqual(document.activeElement,opener);
+ app.destroy();
+});
+
+test("manual capture opens the selected identity in the real editor without returning focus to Explore",()=>{
+ const {app,document}=setup(true),root=document.getElementById("song-notebook");
+ const opener=byText(root,"button","Explore");opener.focus();opener.click();
+ const interpretation=Music.parseChordSymbol("C13").interpretation;
+ app.store.dispatch({type:"explore.set",patch:{selectedInterpretation:interpretation}});
+ const explore=document.getElementById("notebook-explore"),capture=byText(explore,"button","Capture a shape manually");
+ capture.focus();capture.click();
+ const editor=document.getElementById("notebook-editor");
+ assert.equal(explore.hidden,true);assert.equal(editor.hidden,false);
+ assert.deepEqual(app.store.snapshot().drafts[0].candidate.interpretation,interpretation);
+ assert.match(editor.textContent,/C13/);assert.notStrictEqual(document.activeElement,opener);
+ assert.equal(app.store.snapshot().song.chords.length,0);app.destroy();
+});
+
+test("Explore close uses the current opener when a song switch replaces the original control",()=>{
+ const {app,document}=setup(true),root=document.getElementById("song-notebook");
+ const originalSong=app.store.snapshot().song.id,original=byText(root,"button","Explore");
+ original.focus();original.click();app.store.dispatch({type:"library.create"});
+ app.store.dispatch({type:"library.switch",songId:originalSong});
+ const current=byText(root,"button","Explore");
+ assert.ok(current!==original);assert.equal(document.body.contains(original),false);
+ const close=byText(document.getElementById("notebook-explore"),"button","Close exploration");
+ close.focus();close.click();assert.ok(document.activeElement===current);app.destroy();
+});
+
+test("new manual capture starts in Shape after a prior name draft ends, while Resume retains its mode",()=>{
+ for(const finish of ["keep","discard"]){
+  const {app,document}=setup(true),root=document.getElementById("song-notebook"),editor=document.getElementById("notebook-editor");
+  byText(root,"button","+ New chord").click();
+  app.store.dispatch({type:"draft.patch",chordId:null,patch:{frets:null,interpretation:Music.parseChordSymbol("Am").interpretation}});
+  byText(editor,"button","Chord name").click();
+  byText(root,"button","Explore").click();
+  app.store.dispatch({type:"explore.set",patch:{selectedInterpretation:Music.parseChordSymbol("C13").interpretation}});
+  byText(root,"button","Resume existing chord draft").click();
+  assert.equal(byText(editor,"button","Chord name").getAttribute("aria-pressed"),"true");
+  const action=finish==="keep"?{type:"draft.apply",chordId:null,mode:"keep"}:{type:"draft.discard",chordId:null};
+  assert.equal(app.store.dispatch(action).error,null);
+  byText(root,"button","Explore").click();
+  byText(root,"button","Capture a shape manually").click();
+  assert.equal(byText(editor,"button","Shape").getAttribute("aria-pressed"),"true");
+  assert.equal(app.store.snapshot().drafts[0].candidate.interpretation.formulaId,"13");
+  app.destroy();
+ }
+});
+
 test("header keeps focused uncommitted text and pending buttons across unrelated saves",()=>{
  const {app,document}=setup(true),header=document.getElementById("notebook-header");
  const input=header.querySelector('[aria-label="Song title"]'),songs=byText(header,"button","Songs ▾");

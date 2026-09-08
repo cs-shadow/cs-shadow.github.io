@@ -72,3 +72,34 @@ test("settings undo and redo invalidate selected exploration fingerings",()=>{
  select();e.dispatch({type:"history.undo"});assert.equal(e.store.snapshot().exploreState.selectedFrets,null);
  select();e.dispatch({type:"history.redo"});assert.equal(e.store.snapshot().exploreState.selectedFrets,null);e.store.destroy();
 });
+
+test("Explore manual capture persists its chosen identity and current settings only as a draft",()=>{
+ const e=setup(),interpretation=Music.parseChordSymbol("Db13/Ab").interpretation;
+ e.dispatch({type:"settings.apply",tuningMidi:Music.presets[1].tuningMidi.slice(),capo:2});
+ e.dispatch({type:"panel.set",panel:"explore"});
+ const before=e.store.snapshot().song;
+ const view=e.dispatch({type:"explore.capture",interpretation});
+ assert.equal(view.panel,"editor");assert.deepEqual(view.song,before);
+ const draft=view.drafts[0];
+ assert.deepEqual(draft.candidate.interpretation,interpretation);
+ assert.deepEqual(draft.candidate.frets,[null,null,null,null,null,null]);
+ assert.equal(draft.candidate.reviewRequired,false);
+ assert.deepEqual(draft.tuningMidi,before.tuningMidi);assert.equal(draft.capo,2);
+ assert.equal(draft.chordId,null);assert.equal(draft.sourceFingerprint,null);
+ const reloaded=Controller.createStore({music:Music,model:e.model,storage:e.storage});
+ assert.deepEqual(reloaded.snapshot().drafts,[draft]);assert.deepEqual(reloaded.snapshot().song,before);
+ e.dispatch({type:"file.export"});assert.equal(JSON.parse(e.effects.at(-1).text).song.chords.length,0);
+ reloaded.destroy();e.store.destroy();
+});
+test("Explore manual capture refuses to overwrite or open an existing new chord draft",()=>{
+ const e=setup();e.dispatch({type:"draft.open",chordId:null});
+ e.dispatch({type:"draft.patch",chordId:null,patch:{nickname:"My unfinished shape",frets:[0,1,null,null,null,null]}});
+ e.store.flush();e.dispatch({type:"panel.set",panel:"explore"});
+ const before=e.store.snapshot(),stored=e.memory.getItem("cs-shadow.guitar-chordinator.drafts.v1");
+ const result=e.store.dispatch({type:"explore.capture",interpretation:Music.parseChordSymbol("C13").interpretation});
+ assert.equal(result.error.code,"EXISTING_NEW_CHORD_DRAFT");
+ assert.equal(e.store.snapshot().panel,"explore");assert.deepEqual(e.store.snapshot().drafts,before.drafts);
+ assert.deepEqual(e.store.snapshot().song,before.song);
+ assert.equal(e.memory.getItem("cs-shadow.guitar-chordinator.drafts.v1"),stored);
+ e.store.destroy();
+});

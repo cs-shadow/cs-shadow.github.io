@@ -208,6 +208,14 @@ Controller action families (never passed to model):
   `draft.apply {chordId,mode:'keep'|'update'|'variation',addToSectionId?}`.
 - `explore.set {patch}` updates only ExploreState; `explore.keep {interpretation,
   frets:null|array,sectionId?}` creates chord, optional append, one transaction.
+- `explore.capture {interpretation}` validates the selected sounding name and
+  opens a persisted new-chord draft with six muted strings under the current
+  song tuning and capo. It does not commit a chord. An existing new-chord draft
+  returns `EXISTING_NEW_CHORD_DRAFT` unchanged; `draft.open {chordId:null}` resumes
+  it. Invalid selected names return `INVALID_INTERPRETATION`.
+- `explore.close {}` closes the panel. When invoked by the Explore component,
+  the browser returns focus to the visible Explore opener after rendering.
+  Other panel switches and background renders do not restore that focus.
 - `library.create {}`; `library.switch {songId}`; `library.duplicate {songId}`;
   `library.delete {songId,confirmed:true}`; `library.recover {index}`;
   `library.reset {confirmed:true}`; `library.conflict {resolution:'reload'|'keep'}`.
