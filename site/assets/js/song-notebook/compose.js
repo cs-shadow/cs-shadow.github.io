@@ -176,7 +176,7 @@
         rows.length ? el("ul", "chord-list", { class: "notebook-compose-collection" }, rows) : text("p", "collection-empty", "Type chords in your section, capture a shape, or explore a scale.", "notebook-compose-muted"),
         el("div", "collection-entry", { class: "notebook-compose-actions" }, [
           actionButton("new-chord", "+ New chord", { type: "draft.open", chordId: null }),
-          actionButton("explore", "Explore", { type: "panel.set", panel: "explore" })]),
+          actionButton("explore", "Explore", { type: "panel.set", panel: "explore" }, { id: "notebook-explore-opener" })]),
         view.drafts.some(function (draft) { return draft.songId === view.song.id && draft.chordId === null; }) ? actionButton("resume-new", "Resume new chord draft", { type: "draft.open", chordId: null }, { class: "notebook-compose-link" }) : null,
         deletePanel("collection"), el("div", "collection-alert", { role: "alert" }, [error("collection")])];
     }

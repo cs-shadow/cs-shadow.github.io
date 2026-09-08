@@ -79,16 +79,26 @@
     }
     function findDraft(chordId) { return drafts.find(function (item) { return item.songId === song().id && item.chordId === chordId; }); }
     function discardDraft(chordId) { drafts = drafts.filter(function (item) { return !(item.songId === song().id && item.chordId === chordId); }); dirtyDrafts = true; }
-    function openDraft(action) {
+    function openDraft(action, initialCandidate) {
       var existing = findDraft(action.chordId);
       if (!existing) {
         var source = song().chords.find(function (item) { return item.id === action.chordId; });
         if (action.chordId !== null && !source) { return failure("NOT_FOUND", "That chord is no longer in this song."); }
-        var candidate = source ? clone(source) : blankChord(); delete candidate.id;
+        var candidate = source ? clone(source) : initialCandidate || blankChord(); delete candidate.id;
         drafts.push({ songId: song().id, chordId: action.chordId, candidate: candidate, sourceFingerprint: source ? model.fingerprint(source) : null, tuningMidi: song().tuningMidi.slice(), capo: song().capo, originSectionId: action.originSectionId || null, originOccurrenceId: action.originOccurrenceId || null }); dirtyDrafts = true;
       }
       view().inspectedChordId = action.chordId; view().panel = "editor";
       return null;
+    }
+    function captureExploreChord(action) {
+      if (findDraft(null)) { return failure("EXISTING_NEW_CHORD_DRAFT", "You already have an unfinished new chord. Resume that draft and keep or cancel it before capturing this chord."); }
+      var candidate = blankChord();
+      try {
+        // fingerprint validates and canonicalises a chord without changing the
+        // song. Only take its accepted name; manual capture starts with no notes.
+        candidate.interpretation = JSON.parse(model.fingerprint(Object.assign({ id: "explore-draft" }, candidate, { interpretation: action.interpretation }))).interpretation;
+      } catch (err) { return failure("INVALID_INTERPRETATION", "Choose a valid chord before capturing its shape."); }
+      return openDraft({ chordId: null }, candidate);
     }
     function changedSettings(draft) { return draft.capo !== song().capo || JSON.stringify(draft.tuningMidi) !== JSON.stringify(song().tuningMidi); }
     function applyDraft(action) {
@@ -130,6 +140,7 @@
           current.activeSectionId = action.sectionId; current.selectedOccurrenceId = action.occurrenceId || null; break;
         case "chord.inspect": problem = openDraft({ chordId: action.chordId, originSectionId: action.sectionId, originOccurrenceId: action.occurrenceId }); shouldSave = true; break;
         case "panel.set": current.panel = action.panel; break;
+        case "explore.close": current.panel = null; break;
         case "mode.set": current.mode = action.mode; break;
         case "history.undo": case "history.redo": {
           var h = history(), undo = action.type === "history.undo", from = undo ? h.past : h.future, to = undo ? h.future : h.past;
@@ -156,6 +167,7 @@
         case "explore.set":
           if (action.patch.selectedInterpretation !== undefined || action.patch.voicingMode !== undefined) { current.exploreState.selectedFrets = null; }
           Object.assign(current.exploreState, clone(action.patch)); break;
+        case "explore.capture": problem = captureExploreChord(action); shouldSave = true; break;
         case "explore.keep": problem = transact({ type: "chord.create", chord: { frets: action.frets, interpretation: action.interpretation, nickname: "", notes: "", reviewRequired: false, previousInterpretation: null }, sectionId: action.sectionId }); shouldSave = true; break;
         case "library.create": addSong(model.createSong()); shouldSave = true; break;
         case "library.switch":
@@ -402,7 +414,7 @@
     var localStorage = null;
     try { localStorage = window.localStorage; } catch (error) { /* In-memory composition and JSON remain available. */ }
     var storage = window.SongNotebookStorage.create({ storage: localStorage, model: model, music: music });
-    var printing = false, printFocus = null;
+    var printing = false, printFocus = null, exploreOpener = null;
     var modules = { Compose: window.SongNotebookCompose, Editor: window.SongNotebookEditor, Explore: window.SongNotebookExplore, Reading: window.SongNotebookReading };
     var store = createStore({ music: music, model: model, storage: storage, onEffect: function (effect) {
       if (effect.type === "download") {
@@ -414,7 +426,26 @@
         try { window.print(); } finally { endPrint(); }
       }
     } });
-    var components = mountComponents(document, modules, { dispatch: store.dispatch, music: music }, window.SongNotebookContracts);
+    function visibleControl(control) {
+      if (!control || !document.body.contains(control) || control.disabled) { return false; }
+      for (var node = control; node; node = node.parentNode) { if (node.hidden) { return false; } }
+      return true;
+    }
+    function dispatchComponent(action) {
+      var opening = action.type === "panel.set" && action.panel === "explore", closing = action.type === "explore.close";
+      var before = opening || closing ? store.snapshot() : null;
+      if (opening && before.panel !== "explore") {
+        exploreOpener = document.getElementById("notebook-explore-opener");
+      }
+      var result = store.dispatch(action);
+      if (!result.error && closing && before.panel === "explore" && before.mode === "edit") {
+        var opener = visibleControl(exploreOpener) ? exploreOpener : document.getElementById("notebook-explore-opener");
+        if (visibleControl(opener)) { opener.focus(); }
+        exploreOpener = null;
+      }
+      return result;
+    }
+    var components = mountComponents(document, modules, { dispatch: dispatchComponent, music: music }, window.SongNotebookContracts);
     var header = mountHeader({ header: document.getElementById("notebook-header"), status: document.getElementById("notebook-status"), settings: document.getElementById("notebook-settings") }, store, { music: music, model: model, storage: storage, readingAvailable: !!modules.Reading });
     var legacy = document.querySelector("main.guitar-chordinator"); if (legacy) { legacy.hidden = true; }
     root.hidden = false; if (modules.Reading) { document.body.classList.add("song-notebook-active"); }

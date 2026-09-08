@@ -221,6 +221,9 @@
     function render(snapshot) {
       if (destroyed) { return; }
       view = snapshot;
+      // A completed or discarded draft must not choose the input mode for the
+      // next new chord. Resuming an existing draft keeps its chosen mode.
+      if (!view.drafts.some(function (item) { return item.chordId === null && item.songId === view.song.id; })) { delete editingMode[view.song.id + ":new"]; }
       var draft = draftFor(view.inspectedChordId), source = sourceFor(view.inspectedChordId);
       // Text commits and save-status renders preserve the live form nodes, so a
       // blur commit cannot remove the button the user is about to click.
