@@ -110,3 +110,26 @@ control dimensions and visual rules are frozen in the contract appendix. A
 regression verifies the hidden cascade guard and actual grouped action/context
 markup; all 97 Node tests pass. This is source/DOM and build evidence against the
 supplied before screenshot, not a claimed after screenshot or browser layout pass.
+
+## Wave 3 — complete automated review candidate
+
+Reading (`6832e7b`) and Explore (`096b331`) were reviewed and integrated from
+stopped worker handoffs. All four components are now linked in frozen order.
+Read/Edit and menu/native print are wired; Explore keeps its preview in view
+state and its request cache locally, with cancellation on context changes.
+Shared design token propagation (`6092696`) and print lifecycle (`0c888db`)
+remain integrated. The test DOM now supports SVG namespaces for actual Reading.
+
+- 125 Node tests pass, including all 37 formulas/16 scales/17 root spellings,
+  globally ranked compact/full voicings, race cancellation, all collection scale
+  evidence, real Read/Edit/Print bootstrap with SVG and retained drafts.
+- JSON validation/remapping/atomic failures and pending-draft export exclusion
+  pass; controller export displays the nonblocking unapplied-draft notice.
+- Ruby serve 4/15, Goodreads 10/28, site rendering 3/32 pass; production/preview
+  builds, 48 preserved URLs, internal local links, noindex and whitespace pass.
+- Integration preview printed `http://127.0.0.1:4000/`; outputs stay isolated.
+- Remaining acceptance: independent review and browser desktop/mobile375px,
+  native keyboard/focus, real cross-tab/storage/download, multipage print and
+  console checks. No notebook visual or browser pass is claimed. The supplied
+  screenshot established the before defects; source/DOM checks establish the
+  implemented correction, pending rendered verification.

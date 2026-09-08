@@ -514,14 +514,14 @@ only for new changes, failures, or unresolved findings.
 
 ### Monitor checklist
 
-- [ ] Integration owner assigned; worktree/branch/baseline reported.
-- [ ] Preview started immediately for UI implementation; printed URL reported.
-- [ ] Wave 0 contracts and file ownership frozen.
-- [ ] Wave 1 music and document/storage handoffs accepted and integrated.
-- [ ] Foundation baseline published; Scalar Triads still usable.
-- [ ] Wave 2 composition and editor handoffs accepted and integrated.
+- [x] Integration owner assigned; worktree/branch/baseline reported.
+- [x] Preview started immediately for UI implementation; printed URL reported.
+- [x] Wave 0 contracts and file ownership frozen.
+- [x] Wave 1 music and document/storage handoffs accepted and integrated.
+- [x] Foundation baseline published; Scalar Triads still usable.
+- [x] Wave 2 composition and editor handoffs accepted and integrated.
 - [ ] No-setup entry, draft retention, shared/variation and settings flows verified.
-- [ ] Wave 3 exploration and reading handoffs accepted and integrated.
+- [x] Wave 3 exploration and reading handoffs accepted and integrated.
 - [ ] Whole-collection analysis, export/import and phone/print flows verified.
 - [ ] Required automated checks and browser scenarios pass.
 - [ ] Independent review completed; material findings fixed and rechecked.
@@ -558,3 +558,13 @@ model/storage injection, atomic actions, draft origins and conflicts, component
 hosts, and load order. Wave 0 retains the existing working Chordinator while
 the hidden notebook hosts await integrated modules; no missing module is loaded.
 Preview output uses `_site_live` to avoid production/preview check collisions.
+
+### Integrated candidate status
+
+All four component modules are activated in the frozen load order. The automated
+candidate has 125 passing Node tests plus Ruby/build/link checks, with detailed
+evidence in `song-notebook-verification.md`. No-setup, draft/settings and reading
+flows have real-module event-DOM evidence; checklist items combining these with
+browser acceptance remain open. The user authorized deferring unavailable
+browser verification to the final gate; see the contract appendix's sequencing
+adjustment. Independent review and native browser/phone/print checks remain.
