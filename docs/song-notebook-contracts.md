@@ -227,3 +227,29 @@ scripts and contracts; the hidden host skeleton is dormant. No absent script or
 stylesheet is linked. Integration activates modules at their gates and replaces
 the old boot implementation at the core UX gate. This staging preserves the
 working reference UI while worker modules are independently implemented.
+
+## Wave 2 sequencing adjustment
+
+The user authorized proceeding to Wave 3 on automated core acceptance when the
+desktop browser tools became unavailable again. Compose/editor activation and
+stable contracts are checked with the real controller/model/storage and injected
+DOM events. Browser rendering, responsive sizing, native keyboard, actual storage
+and print checks remain explicitly deferred to the final gate; they are not
+claimed as passed. This environment-only adjustment does not change product scope
+or worker ownership. No undocumented browser-control workaround is used.
+
+## Shared visual rules
+
+The notebook is one site-aligned surface, at most 1040px wide including gutters.
+Integration owns its page heading, layout, responsive toolbar, visibility rules
+and control tokens (`--notebook-border`, `--notebook-surface`,
+`--notebook-accent`). Never expose the inactive legacy main or add another page
+shell. Use inherited system typography, 1rem body text, compact section headings,
+2.5rem minimum buttons, .35rem corner radii, and .5–.75rem control gaps. Labels
+sit above inputs; related actions stay in wrapping groups. Use restrained warm
+neutral surfaces, existing rust focus/accent, and explicit selected states.
+Component styles may specialize diagrams and local states but must reuse these
+shared controls and tokens rather than establish another visual theme. Below
+800px, use one column with 1rem gutters and no page-level horizontal scrolling;
+only fretboards may scroll locally. Preserve entered information and focus while
+changing panels. Visual browser verification remains a final-gate requirement.

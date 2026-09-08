@@ -17,7 +17,7 @@
     var firstSong = loaded.data ? null : model.createSong();
     var library = loaded.data || { version: 1, activeSongId: firstSong.id, songs: [firstSong] };
     var drafts = loadedDrafts.data ? loadedDrafts.data.drafts : [];
-    var suspended = loaded.error ? "corrupt" : null;
+    var suspended = loaded.error ? (loaded.raw === null ? "unavailable" : "corrupt") : null;
     var draftsSuspended = !!loadedDrafts.error;
     var rawLibrary = loaded.raw, rawDrafts = loadedDrafts.raw;
     var saveStatus = loaded.error || loadedDrafts.error ? "failed" : loaded.data ? "saved" : "saving";
@@ -211,8 +211,8 @@
     return { snapshot: snapshot, state: state, dispatch: dispatch, flush: flush, storageChanged: storageChanged, subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (item) { return item !== fn; }); }; }, destroy: function () { flush(); listeners = []; }, initialize: function () { if (dirtyLibrary && !suspended) { flush(); } else { emit(); } } };
   }
   function mountComponents(document, modules, api, contracts) {
-    if (!contracts || contracts.componentNames.some(function (name) { return !modules[name] || typeof modules[name].mount !== "function"; })) { return null; }
-    var components = contracts.componentNames.map(function (name) {
+    if (!contracts || ["Compose", "Editor"].some(function (name) { return !modules[name] || typeof modules[name].mount !== "function"; })) { return null; }
+    var components = contracts.componentNames.filter(function (name) { return modules[name] && typeof modules[name].mount === "function"; }).map(function (name) {
       var ids = contracts.hosts[name.toLowerCase()], hosts = {};
       Object.keys(ids).forEach(function (key) { hosts[key] = document.getElementById(ids[key]); });
       return modules[name].mount(hosts, api);
@@ -231,7 +231,7 @@
     function dispatch(action) { return store.dispatch(action); }
     function option(select, value, text, selected) { var node = el("option", text, { value: String(value) }); node.selected = selected; select.appendChild(node); }
     function label(text, control) { var node = el("label", text); node.appendChild(control); return node; }
-    function chordName(chord, index) { return chord.nickname || music.formatInterpretation(chord.interpretation) || "Chord " + (index + 1); }
+    function chordName(chord, index) { return (music.formatInterpretation(chord.interpretation) || "Chord " + (index + 1)) + (chord.nickname ? " · " + chord.nickname : ""); }
     function rerender() { render(store.snapshot(), store.state()); }
     function renderSettings(snapshot) {
       hosts.settings.replaceChildren(); hosts.settings.hidden = !settingsOpen;
@@ -260,10 +260,16 @@
       var apply = el("button", "Apply settings", { type: "submit" }); form.appendChild(apply);
       form.appendChild(button("Cancel", function () { settingsOpen = false; settingsDraft = null; rerender(); }));
       function preview() {
+        var snapshot = store.snapshot();
         result.replaceChildren();
         var next = model.applyAction(snapshot.song, Object.assign({ type: "settings.apply" }, settingsDraft));
         apply.disabled = !!next.error;
-        if (next.error) { result.appendChild(el("p", next.error.message, { class: "notebook-error" })); }
+        if (next.error) {
+          result.appendChild(el("p", next.error.message, { class: "notebook-error" }));
+          var blocked = next.error.details && next.error.details.chordIds;
+          if (blocked) { blocked.forEach(function (id) { var chord = snapshot.song.chords.find(function (item) { return item.id === id; }); if (chord) { result.appendChild(el("p", chordName(chord, snapshot.song.chords.indexOf(chord)) + " would exceed physical fret 24.")); } }); }
+          return;
+        }
         var retuned = JSON.stringify(snapshot.song.tuningMidi) !== JSON.stringify(settingsDraft.tuningMidi), moved = snapshot.song.capo !== settingsDraft.capo;
         if (retuned || moved) {
           var affected = snapshot.song.chords.filter(function (chord) { return chord.frets !== null; });
@@ -294,8 +300,18 @@
     }
     function render(snapshot, state) {
       var current = snapshot.song;
+      if (snapshot.mode === "read") {
+        if (bodySignature !== "read") {
+          hosts.header.replaceChildren();
+          var readActions = el("div", null, { class: "notebook-header-actions", "aria-label": "Reading actions" });
+          readActions.appendChild(button("Edit", function () { dispatch({ type: "mode.set", mode: "edit" }); }));
+          readActions.appendChild(button("Print / Save as PDF", function () { dispatch({ type: "file.print" }); }));
+          hosts.header.appendChild(readActions); bodySignature = "read";
+        }
+        hosts.settings.hidden = true; renderStatus(snapshot, state); return;
+      }
       if (renderedSongId !== current.id) { settingsDraft = null; deleteSongId = null; songNotesOpen = false; renderedSongId = current.id; }
-      var signature = JSON.stringify({ id: current.id, mode: snapshot.mode, tuningMidi: current.tuningMidi, capo: current.capo, context: current.context, notes: songNotesOpen ? null : current.notes, library: libraryOpen ? state.library.songs.map(function (song) { return [song.id, song.title]; }) : null, libraryOpen: libraryOpen, menuOpen: menuOpen, settingsOpen: settingsOpen, contextOpen: contextOpen, songNotesOpen: songNotesOpen, deleteSongId: deleteSongId, settingsChords: settingsOpen ? current.chords : null });
+      var signature = JSON.stringify({ id: current.id, mode: snapshot.mode, tuningMidi: current.tuningMidi, capo: current.capo, context: current.context, notes: songNotesOpen ? null : current.notes, library: libraryOpen ? state.library.songs.map(function (song) { return song.id; }) : null, libraryOpen: libraryOpen, menuOpen: menuOpen, settingsOpen: settingsOpen, contextOpen: contextOpen, songNotesOpen: songNotesOpen, deleteSongId: deleteSongId, settingsChords: settingsOpen ? current.chords : null });
       if (signature === bodySignature) {
         var titleField = hosts.header.querySelector('[aria-label="Song title"]');
         if (titleField && document.activeElement !== titleField) { titleField.value = current.title; }
@@ -304,6 +320,15 @@
         var undoControl = hosts.header.querySelector('[data-notebook-action="undo"]'), redoControl = hosts.header.querySelector('[data-notebook-action="redo"]');
         if (undoControl) { undoControl.disabled = !state.canUndo; }
         if (redoControl) { redoControl.disabled = !state.canRedo; }
+        // A title's blur must not replace the library button receiving the click.
+        hosts.header.querySelectorAll("[data-library-song]").forEach(function (control) {
+          var item = state.library.songs.find(function (song) { return song.id === control.getAttribute("data-library-song"); });
+          if (item) { control.textContent = item.title || "Untitled song"; }
+        });
+        hosts.header.querySelectorAll("[data-library-delete]").forEach(function (control) {
+          var item = state.library.songs.find(function (song) { return song.id === control.getAttribute("data-library-delete"); });
+          if (item) { control.setAttribute("aria-label", "Delete " + (item.title || "Untitled song")); }
+        });
         renderStatus(snapshot, state); return;
       }
       bodySignature = signature;
@@ -312,16 +337,17 @@
       row.appendChild(button("Songs ▾", function () { libraryOpen = !libraryOpen; rerender(); }, { "aria-expanded": String(libraryOpen) }));
       var title = el("input", null, { type: "text", placeholder: "Untitled song", "aria-label": "Song title", class: "notebook-title" }); title.value = current.title;
       title.addEventListener("change", function () { dispatch({ type: "song.update", patch: { title: title.value } }); }); row.appendChild(title);
-      row.appendChild(button(snapshot.mode === "read" ? "Edit" : "Read", function () { dispatch({ type: "mode.set", mode: snapshot.mode === "read" ? "edit" : "read" }); }));
-      row.appendChild(button("Song menu ⋯", function () { menuOpen = !menuOpen; rerender(); }, { "aria-expanded": String(menuOpen) }));
-      var undo = button("Undo", function () { dispatch({ type: "history.undo" }); }, { "data-notebook-action": "undo" }); undo.disabled = !state.canUndo; row.appendChild(undo);
-      var redo = button("Redo", function () { dispatch({ type: "history.redo" }); }, { "data-notebook-action": "redo" }); redo.disabled = !state.canRedo; row.appendChild(redo); hosts.header.appendChild(row);
+      var actions = el("div", null, { class: "notebook-header-actions", "aria-label": "Song actions" });
+      var readButton = button(snapshot.mode === "read" ? "Edit" : "Read", function () { dispatch({ type: "mode.set", mode: snapshot.mode === "read" ? "edit" : "read" }); }); readButton.disabled = !options.readingAvailable; actions.appendChild(readButton);
+      actions.appendChild(button("Song menu ⋯", function () { menuOpen = !menuOpen; rerender(); }, { "aria-expanded": String(menuOpen) }));
+      var undo = button("Undo", function () { dispatch({ type: "history.undo" }); }, { "data-notebook-action": "undo" }); undo.disabled = !state.canUndo; actions.appendChild(undo);
+      var redo = button("Redo", function () { dispatch({ type: "history.redo" }); }, { "data-notebook-action": "redo" }); redo.disabled = !state.canRedo; actions.appendChild(redo); row.appendChild(actions); hosts.header.appendChild(row);
       if (libraryOpen) {
         var library = el("div", null, { class: "notebook-menu", "aria-label": "Song library" });
         state.library.songs.forEach(function (item) {
-          var itemRow = el("div"); itemRow.appendChild(button(item.title || "Untitled song", function () { libraryOpen = false; settingsDraft = null; dispatch({ type: "library.switch", songId: item.id }); }));
+          var itemRow = el("div"); itemRow.appendChild(button(item.title || "Untitled song", function () { libraryOpen = false; settingsDraft = null; dispatch({ type: "library.switch", songId: item.id }); }, { "data-library-song": item.id }));
           itemRow.appendChild(button("Duplicate", function () { dispatch({ type: "library.duplicate", songId: item.id }); }));
-          itemRow.appendChild(button("Delete", function () { deleteSongId = item.id; rerender(); }, { "aria-label": "Delete " + (item.title || "Untitled song") }));
+          itemRow.appendChild(button("Delete", function () { deleteSongId = item.id; rerender(); }, { "aria-label": "Delete " + (item.title || "Untitled song"), "data-library-delete": item.id }));
           if (deleteSongId === item.id) { itemRow.appendChild(el("span", "Delete this song and its drafts? ")); itemRow.appendChild(button("Delete song", function () { deleteSongId = null; dispatch({ type: "library.delete", songId: item.id, confirmed: true }); })); itemRow.appendChild(button("Cancel", function () { deleteSongId = null; rerender(); })); }
           library.appendChild(itemRow);
         });
@@ -338,15 +364,17 @@
         menu.appendChild(button("Export song JSON", function () { dispatch({ type: "file.export" }); }));
         var input = el("input", null, { type: "file", accept: ".json,application/json", "aria-label": "Import song JSON" });
         input.addEventListener("change", function () { if (input.files[0]) { input.files[0].text().then(function (text) { dispatch({ type: "file.import", text: text }); }).catch(function () { hosts.status.textContent = "The selected file could not be read."; }); } }); menu.appendChild(label("Import song JSON ", input));
-        menu.appendChild(button("Print / Save as PDF", function () { dispatch({ type: "file.print" }); })); hosts.header.appendChild(menu);
+        var printButton = button("Print / Save as PDF", function () { dispatch({ type: "file.print" }); }); printButton.disabled = !options.readingAvailable; menu.appendChild(printButton); hosts.header.appendChild(menu);
       }
       var summary = el("div", null, { class: "notebook-song-summary" });
       var tuning = music.presets.find(function (item) { return JSON.stringify(item.tuningMidi) === JSON.stringify(current.tuningMidi); });
-      summary.appendChild(button((tuning ? tuning.label : "Custom") + " tuning · " + (current.capo ? "Capo " + current.capo : "No capo"), function () { settingsOpen = !settingsOpen; settingsDraft = null; renderSettings(snapshot); }));
+      summary.appendChild(button((tuning ? tuning.label : "Custom") + " tuning · " + (current.capo ? "Capo " + current.capo : "No capo"), function () { settingsOpen = !settingsOpen; settingsDraft = null; rerender(); }));
       summary.appendChild(button(current.context ? "Home " + current.context.tonicSpelling + (current.context.scaleId ? " · " + music.scales.find(function (item) { return item.id === current.context.scaleId; }).name : "") : "+ Home / scale", function () { contextOpen = !contextOpen; rerender(); })); hosts.header.appendChild(summary);
       if (contextOpen) {
-        var context = el("form"), tonic = el("select", null, { "aria-label": "Home tonic" }), scale = el("select", null, { "aria-label": "Song scale" });
-        music.roots.forEach(function (root) { option(tonic, root, root, root === (current.context ? current.context.tonicSpelling : "C")); });
+        var context = el("form", null, { class: "notebook-context-form" }), tonic = el("select", null, { "aria-label": "Home tonic" }), scale = el("select", null, { "aria-label": "Song scale" });
+        var tonicSpelling = current.context ? current.context.tonicSpelling : "C", tonicOptions = music.roots.slice();
+        if (!tonicOptions.includes(tonicSpelling)) { tonicOptions.push(tonicSpelling); }
+        tonicOptions.forEach(function (root) { option(tonic, root, root, root === tonicSpelling); });
         option(scale, "", "No scale", !current.context || !current.context.scaleId); music.scales.forEach(function (item) { option(scale, item.id, item.name, current.context && current.context.scaleId === item.id); });
         context.appendChild(label("Home ", tonic)); context.appendChild(label("Scale ", scale)); context.appendChild(el("button", "Apply home / scale", { type: "submit" }));
         context.appendChild(button("Remove context", function () { dispatch({ type: "context.set", context: null }); }));
@@ -367,12 +395,59 @@
     return { render: render, destroy: function () { hosts.header.replaceChildren(); hosts.status.replaceChildren(); hosts.settings.replaceChildren(); } };
   }
 
-  return { createStore: createStore, mountComponents: mountComponents, mountHeader: mountHeader };
+  function bootstrap(window, document) {
+    var root = document.getElementById("song-notebook");
+    if (!root || !window.SongNotebookCompose || !window.SongNotebookEditor) { return null; }
+    var music = window.SongNotebookMusic, model = window.SongNotebookModel.create({ music: music });
+    var localStorage = null;
+    try { localStorage = window.localStorage; } catch (error) { /* In-memory composition and JSON remain available. */ }
+    var storage = window.SongNotebookStorage.create({ storage: localStorage, model: model, music: music });
+    var modules = { Compose: window.SongNotebookCompose, Editor: window.SongNotebookEditor, Explore: window.SongNotebookExplore, Reading: window.SongNotebookReading };
+    var store = createStore({ music: music, model: model, storage: storage, onEffect: function (effect) {
+      if (effect.type === "download") {
+        var url = window.URL.createObjectURL(new window.Blob([effect.text], { type: "application/json" }));
+        var link = document.createElement("a"); link.href = url; link.download = effect.filename.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_");
+        document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 0);
+      } else if (effect.type === "print" && modules.Reading) {
+        root.classList.add("notebook-printing"); components.render(Object.assign(store.snapshot(), { mode: "read" }));
+        window.print(); root.classList.remove("notebook-printing"); render();
+      }
+    } });
+    var components = mountComponents(document, modules, { dispatch: store.dispatch, music: music }, window.SongNotebookContracts);
+    var header = mountHeader({ header: document.getElementById("notebook-header"), status: document.getElementById("notebook-status"), settings: document.getElementById("notebook-settings") }, store, { music: music, model: model, storage: storage, readingAvailable: !!modules.Reading });
+    var legacy = document.querySelector("main.guitar-chordinator"); if (legacy) { legacy.hidden = true; }
+    root.hidden = false;
+    function render() {
+      var snapshot = store.snapshot();
+      header.render(snapshot, store.state()); components.render(snapshot);
+      document.getElementById("notebook-workspace").hidden = snapshot.mode === "read";
+      document.getElementById("notebook-details").hidden = snapshot.mode === "read" || snapshot.panel === null;
+      document.getElementById("notebook-editor").hidden = snapshot.mode === "read" || snapshot.panel !== "editor";
+      document.getElementById("notebook-explore").hidden = snapshot.mode === "read" || snapshot.panel !== "explore";
+      document.getElementById("notebook-reading").hidden = snapshot.mode !== "read";
+      root.classList.toggle("notebook-read-mode", snapshot.mode === "read");
+    }
+    var unsubscribe = store.subscribe(render);
+    function flushWhenHidden() { if (document.visibilityState === "hidden") { store.flush(); } }
+    function storageEvent(event) { if (event.storageArea === localStorage || event.storageArea === null) { store.storageChanged(event.key); } }
+    function keyboard(event) {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || String(event.key).toLowerCase() !== "z") { return; }
+      var tag = event.target && event.target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (event.target && event.target.isContentEditable)) { return; }
+      event.preventDefault(); store.dispatch({ type: event.shiftKey ? "history.redo" : "history.undo" });
+    }
+    document.addEventListener("visibilitychange", flushWhenHidden); window.addEventListener("pagehide", store.flush); window.addEventListener("storage", storageEvent); root.addEventListener("keydown", keyboard);
+    store.initialize(); render();
+    return { store: store, render: render, destroy: function () { unsubscribe(); document.removeEventListener("visibilitychange", flushWhenHidden); window.removeEventListener("pagehide", store.flush); window.removeEventListener("storage", storageEvent); root.removeEventListener("keydown", keyboard); store.destroy(); components.destroy(); header.destroy(); } };
+  }
+
+  return { createStore: createStore, mountComponents: mountComponents, mountHeader: mountHeader, bootstrap: bootstrap };
 }));
 
 (function () {
   "use strict";
   if (typeof document === "undefined") { return; }
+  if (window.SongNotebookController.bootstrap(window, document)) { return; }
 
   var NOTES = GuitarTuning.notes;
   var FLAT_EQUIVALENTS = {
