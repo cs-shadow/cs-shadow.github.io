@@ -35,3 +35,14 @@ test("shared fixture covers spelling distinction, register, unused work and refe
   assert.equal(blank.candidate.interpretation,null);
   assert.ok(blank.candidate.frets.every(fret=>fret===null));
 });
+
+test("Scalar Triads loads the preserved shared scale catalog before its controller",()=>{
+  const html=fs.readFileSync(path.join(root,"site/tools/scalar-triads/index.html"),"utf8");
+  const controller=fs.readFileSync(path.join(root,"site/assets/js/scalar-triads.js"),"utf8");
+  const scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(match=>match[1]);
+  assert.ok(scripts.indexOf("/assets/js/song-notebook/music.js")<scripts.indexOf("/assets/js/scalar-triads.js"));
+  for(const script of scripts) assert.ok(fs.existsSync(path.join(root,"site",script)));
+  assert.match(controller,/var SCALES = SongNotebookMusic.scales;/);
+  assert.match(controller,/var ROOTS = SongNotebookMusic.roots;/);
+  assert.deepEqual(require("../../site/assets/js/song-notebook/music.js").scales,require("./catalog-fixture.json").scales);
+});

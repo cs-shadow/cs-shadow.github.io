@@ -13,7 +13,7 @@
     A: 9,
     B: 11
   };
-  var ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
+  var ROOTS = SongNotebookMusic.roots;
   var MAX_FRET = 15;
   var MAX_TRIAD_SPAN = 3;
   var HISTORY_KEY = "cs-shadow.scalar-triads.recent-settings.v1";
@@ -22,24 +22,7 @@
   var HISTORY_SAVE_DELAY = 1500;
   var SCALE_GROUPS = ["Major Modes", "Pentatonic & Blues", "Minor & Exotic"];
 
-  var SCALES = [
-    { id: "major", name: "Major / Ionian", group: "Major Modes", intervals: [0, 2, 4, 5, 7, 9, 11], feel: "Stable, bright, resolved, and familiar. Good for clear melodies and strong tonal centers." },
-    { id: "dorian", name: "Dorian", group: "Major Modes", intervals: [0, 2, 3, 5, 7, 9, 10], feel: "Minor but lifted by the natural 6. Good for soulful, modal, funk, and jazz-rock sounds." },
-    { id: "phrygian", name: "Phrygian", group: "Major Modes", intervals: [0, 1, 3, 5, 7, 8, 10], feel: "Dark, tense, and close to the root because of the flat 2. Good for dramatic or Spanish-leaning colors." },
-    { id: "lydian", name: "Lydian", group: "Major Modes", intervals: [0, 2, 4, 6, 7, 9, 11], feel: "Bright, floating, and unresolved because of the sharp 4. Good for dreamy or cinematic major sounds." },
-    { id: "mixolydian", name: "Mixolydian", group: "Major Modes", intervals: [0, 2, 4, 5, 7, 9, 10], feel: "Major with a relaxed flat 7. Good for blues, rock, country, and dominant-chord grooves." },
-    { id: "aeolian", name: "Natural Minor / Aeolian", group: "Major Modes", intervals: [0, 2, 3, 5, 7, 8, 10], feel: "Classic minor: darker, direct, and grounded. Good for melancholy melodies and minor-key progressions." },
-    { id: "locrian", name: "Locrian", group: "Major Modes", intervals: [0, 1, 3, 5, 6, 8, 10], feel: "Unstable and tense because of the flat 2 and flat 5. Good for dissonant, unresolved passages." },
-    { id: "major-pentatonic", name: "Major Pentatonic", group: "Pentatonic & Blues", intervals: [0, 2, 4, 7, 9], degreeLetters: [0, 1, 2, 4, 5], feel: "Open, simple, and consonant. Good for melodic hooks, country, folk, pop, and major blues phrasing." },
-    { id: "minor-pentatonic", name: "Minor Pentatonic", group: "Pentatonic & Blues", intervals: [0, 3, 5, 7, 10], degreeLetters: [0, 2, 3, 4, 6], feel: "Direct, earthy, and flexible. Good for blues, rock, funk, and minor-key soloing." },
-    { id: "blues", name: "Blues", group: "Pentatonic & Blues", intervals: [0, 3, 5, 6, 7, 10], degreeLetters: [0, 2, 3, 4, 4, 6], feel: "Gritty and expressive because of the blue note. Good for blues tension, bends, riffs, and call-and-response lines." },
-    { id: "harmonic-minor", name: "Harmonic Minor", group: "Minor & Exotic", intervals: [0, 2, 3, 5, 7, 8, 11], feel: "Minor with a strong leading tone and exotic pull. Good for dramatic cadences and neoclassical lines." },
-    { id: "melodic-minor", name: "Melodic Minor", group: "Minor & Exotic", intervals: [0, 2, 3, 5, 7, 9, 11], feel: "Minor at the root with a smoother, brighter upper half. Good for jazz minor sounds and altered harmony." },
-    { id: "double-harmonic-major", name: "Double Harmonic Major", group: "Minor & Exotic", intervals: [0, 1, 4, 5, 7, 8, 11], feel: "Bright but tense, with two augmented seconds and a strong exotic pull. Good for dramatic, Middle Eastern-leaning colors." },
-    { id: "hungarian-minor", name: "Hungarian Minor", group: "Minor & Exotic", intervals: [0, 2, 3, 6, 7, 8, 11], feel: "Dark, angular, and dramatic because of the sharp 4 and major 7. Good for tense minor lines and neoclassical colors." },
-    { id: "phrygian-dominant", name: "Phrygian Dominant", group: "Minor & Exotic", intervals: [0, 1, 4, 5, 7, 8, 10], feel: "Dominant and dark, with a flat 2 against a major 3. Good for flamenco, metal, and harmonic-minor V sounds." },
-    { id: "neapolitan-minor", name: "Neapolitan Minor", group: "Minor & Exotic", intervals: [0, 1, 3, 5, 7, 8, 11], feel: "Minor, tense, and theatrical, with a flat 2 and major 7. Good for dramatic minor-key movement." }
-  ];
+  var SCALES = SongNotebookMusic.scales;
 
   var ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
   var SCALE_BY_ID = {};
