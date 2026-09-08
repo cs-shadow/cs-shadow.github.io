@@ -133,3 +133,21 @@ remain integrated. The test DOM now supports SVG namespaces for actual Reading.
   console checks. No notebook visual or browser pass is claimed. The supplied
   screenshot established the before defects; source/DOM checks establish the
   implemented correction, pending rendered verification.
+
+## Independent review corrections
+
+Four actionable findings at `0de5611` were corrected in targeted fixups:
+
+- `8204987`: dependent draft writes wait until the committed library is saved;
+  a partial-write/reload/retry regression preserves the previously durable draft.
+  Settings changes through any song replacement, including undo/redo, invalidate
+  selected exploration frets before another accepted shape can be kept.
+- `d640989`: temporary print renders only Reading and changes host visibility,
+  preserving live unblurred authoring nodes/values and restoring prior focus.
+- `8bf776d`: Read offers only Edit and Print controls; authoring title/history,
+  tuning/context/notes/settings return on Edit.
+
+The full suite now passes 129 Node tests, including all four regressions. Site
+rendering (3/32), production build and whitespace checks pass. The retained preview
+still prints port 4000. Focused independent recheck is requested against `8bf776d`;
+browser acceptance remains pending and is not established by these DOM tests.
