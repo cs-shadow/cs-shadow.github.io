@@ -1,35 +1,378 @@
-// Notebook lifecycle boundary. The legacy tool stays active until the complete
-// component set and store are wired at the core UX integration gate.
-(function (root) {
+(function (root, factory) {
   "use strict";
-  root.SongNotebookController = {
-    mountComponents: function (document, modules, api) {
-      var contracts = root.SongNotebookContracts;
-      if (!contracts || contracts.componentNames.some(function (name) {
-        return !modules[name] || typeof modules[name].mount !== "function";
-      })) { return null; }
-      var components = contracts.componentNames.map(function (name) {
-        var ids = contracts.hosts[name.toLowerCase()];
-        var hosts = {};
-        Object.keys(ids).forEach(function (key) {
-          hosts[key] = document.getElementById(ids[key]);
-        });
-        return modules[name].mount(hosts, api);
-      });
-      return {
-        render: function (viewState) {
-          components.forEach(function (component) { component.render(viewState); });
-        },
-        destroy: function () {
-          components.forEach(function (component) { component.destroy(); });
-        }
-      };
+  var api = factory();
+  if (typeof module === "object" && module.exports) { module.exports = api; }
+  else { root.SongNotebookController = api; }
+}(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function failure(code, message) { return { code: code, message: message, path: null, details: null }; }
+  function blankChord() { return { frets: [null,null,null,null,null,null], interpretation: null, nickname: "", notes: "", reviewRequired: false, previousInterpretation: null }; }
+  function createStore(options) {
+    var model = options.model, storage = options.storage, music = options.music;
+    var later = options.schedule || function (fn, ms) { return setTimeout(fn, ms); };
+    var cancel = options.cancel || function (timer) { clearTimeout(timer); };
+    var effect = options.onEffect || function () {};
+    var loaded = storage.loadLibrary(), loadedDrafts = storage.loadDrafts();
+    var firstSong = loaded.data ? null : model.createSong();
+    var library = loaded.data || { version: 1, activeSongId: firstSong.id, songs: [firstSong] };
+    var drafts = loadedDrafts.data ? loadedDrafts.data.drafts : [];
+    var suspended = loaded.error ? "corrupt" : null;
+    var draftsSuspended = !!loadedDrafts.error;
+    var rawLibrary = loaded.raw, rawDrafts = loadedDrafts.raw;
+    var saveStatus = loaded.error || loadedDrafts.error ? "failed" : loaded.data ? "saved" : "saving";
+    var error = loaded.error || loadedDrafts.error || null, notice = "";
+    var histories = {}, views = {}, listeners = [], timer = null;
+    var dirtyLibrary = !loaded.data, dirtyDrafts = false;
+    function song() { return library.songs.find(function (item) { return item.id === library.activeSongId; }); }
+    function view() {
+      var current = song();
+      if (!views[current.id]) {
+        views[current.id] = { activeSectionId: current.sections[0].id, selectedOccurrenceId: null, inspectedChordId: null, panel: null, mode: "edit", exploreState: { tab: "browse", tonicPc: 0, tonicSpelling: "C", scaleId: "major", selectedInterpretation: null, selectedFrets: null, voicingMode: "compact" } };
+      }
+      return views[current.id];
     }
-  };
-}(typeof globalThis !== "undefined" ? globalThis : this));
+    function history() { return histories[song().id] || (histories[song().id] = { past: [], future: [] }); }
+    function blockedError() { return suspended === "conflict" ? failure("STORAGE_CONFLICT", "Another tab changed the saved notebook. Reload its copy, or keep and save this copy. Export is available before deciding.") : loaded.error || loadedDrafts.error || null; }
+    function snapshot() { return clone(Object.assign({ song: song(), drafts: drafts.filter(function (d) { return d.songId === song().id; }), saveStatus: saveStatus, error: error || ((suspended || draftsSuspended) ? blockedError() : null) }, view())); }
+    function state() { return clone({ library: library, suspended: suspended, draftsSuspended: draftsSuspended, draftsCorrupt: draftsSuspended && rawDrafts !== null, notice: notice, canUndo: history().past.length > 0, canRedo: history().future.length > 0 }); }
+    function emit() { listeners.slice().forEach(function (fn) { fn(snapshot(), state()); }); }
+    function flush() {
+      if (timer !== null) { cancel(timer); timer = null; }
+      var failed = false;
+      if (dirtyLibrary) {
+        if (suspended) { failed = true; }
+        else { var saved = storage.saveLibrary(library); if (saved.error) { error = saved.error; failed = true; } else { dirtyLibrary = false; } }
+      }
+      if (dirtyDrafts) {
+        if (dirtyLibrary || draftsSuspended || suspended === "conflict") { failed = true; }
+        else { var savedDrafts = storage.saveDrafts({ version: 1, drafts: drafts }); if (savedDrafts.error) { error = savedDrafts.error; failed = true; } else { dirtyDrafts = false; } }
+      }
+      saveStatus = failed || suspended || draftsSuspended ? "failed" : "saved";
+      emit();
+      return { error: failed ? error || failure("SAVE_SUSPENDED", "Saving is paused until the stored copy is resolved.") : null };
+    }
+    function save(isText) {
+      saveStatus = suspended || draftsSuspended ? "failed" : "saving";
+      if (timer !== null) { cancel(timer); timer = null; }
+      if (isText) { timer = later(flush, 500); emit(); } else { flush(); }
+    }
+    function reconcile() {
+      var current = song(), selected = view();
+      var section = current.sections.find(function (item) { return item.id === selected.activeSectionId; });
+      if (!section) { section = current.sections[0]; selected.activeSectionId = section.id; selected.selectedOccurrenceId = null; }
+      if (!section.occurrences.some(function (item) { return item.id === selected.selectedOccurrenceId; })) { selected.selectedOccurrenceId = null; }
+      if (!current.chords.some(function (item) { return item.id === selected.inspectedChordId; })) { selected.inspectedChordId = null; }
+    }
+    function setSong(next) { if (song().capo !== next.capo || JSON.stringify(song().tuningMidi) !== JSON.stringify(next.tuningMidi)) { view().exploreState.selectedFrets = null; } library.songs = library.songs.map(function (item) { return item.id === next.id ? next : item; }); dirtyLibrary = true; reconcile(); }
+    function transact(action) {
+      var before = song(), result = model.applyAction(before, action);
+      if (result.error) { return result.error; }
+      var h = history(); h.past.push(clone(before)); if (h.past.length > 100) { h.past.shift(); } h.future = [];
+      setSong(result.song);
+      if (action.type === "section.create" || action.type === "section.duplicate") {
+        var added = result.song.sections.find(function (section) { return !before.sections.some(function (old) { return old.id === section.id; }); });
+        if (added) { view().activeSectionId = added.id; view().selectedOccurrenceId = null; }
+      }
+      if (action.type === "settings.apply") { view().exploreState.selectedFrets = null; }
+      return null;
+    }
+    function findDraft(chordId) { return drafts.find(function (item) { return item.songId === song().id && item.chordId === chordId; }); }
+    function discardDraft(chordId) { drafts = drafts.filter(function (item) { return !(item.songId === song().id && item.chordId === chordId); }); dirtyDrafts = true; }
+    function openDraft(action) {
+      var existing = findDraft(action.chordId);
+      if (!existing) {
+        var source = song().chords.find(function (item) { return item.id === action.chordId; });
+        if (action.chordId !== null && !source) { return failure("NOT_FOUND", "That chord is no longer in this song."); }
+        var candidate = source ? clone(source) : blankChord(); delete candidate.id;
+        drafts.push({ songId: song().id, chordId: action.chordId, candidate: candidate, sourceFingerprint: source ? model.fingerprint(source) : null, tuningMidi: song().tuningMidi.slice(), capo: song().capo, originSectionId: action.originSectionId || null, originOccurrenceId: action.originOccurrenceId || null }); dirtyDrafts = true;
+      }
+      view().inspectedChordId = action.chordId; view().panel = "editor";
+      return null;
+    }
+    function changedSettings(draft) { return draft.capo !== song().capo || JSON.stringify(draft.tuningMidi) !== JSON.stringify(song().tuningMidi); }
+    function applyDraft(action) {
+      var draft = findDraft(action.chordId);
+      if (!draft) { return failure("NO_DRAFT", "Open a chord draft first."); }
+      if (changedSettings(draft)) { return failure("STALE_SETTINGS", "Review this draft under the current tuning and capo before applying it."); }
+      var source = song().chords.find(function (item) { return item.id === action.chordId; });
+      if (action.mode !== "variation" && action.chordId !== null && (!source || model.fingerprint(source) !== draft.sourceFingerprint)) { return failure("STALE_CHORD", "This shared chord changed. Reopen it or save your draft as a variation."); }
+      var payload;
+      if (action.mode === "variation") { payload = { type: "chord.variation", chordId: draft.chordId, chord: draft.candidate, originSectionId: draft.originSectionId, originOccurrenceId: draft.originOccurrenceId }; }
+      else if (action.mode === "update") { payload = { type: "chord.update", chordId: draft.chordId, patch: draft.candidate, expectedFingerprint: draft.sourceFingerprint }; }
+      else { payload = { type: "chord.create", chord: draft.candidate, sectionId: action.addToSectionId }; }
+      var before = song(), problem = transact(payload);
+      if (problem) { return problem; }
+      if (action.mode === "variation" && draft.originOccurrenceId) {
+        var originalSection = before.sections.find(function (item) { return item.id === draft.originSectionId; });
+        if (!originalSection || !originalSection.occurrences.some(function (item) { return item.id === draft.originOccurrenceId && item.chordId === draft.chordId; })) { notice = "Variation kept in the collection. The original occurrence is no longer available, so nothing was replaced."; }
+      }
+      var added = song().chords.find(function (item) { return !before.chords.some(function (old) { return item.id === old.id; }); });
+      discardDraft(action.chordId); view().inspectedChordId = added ? added.id : action.chordId;
+      return null;
+    }
+    function addSong(next) { library.songs.push(next); library.activeSongId = next.id; dirtyLibrary = true; reconcile(); }
+    function exportSong() {
+      var result = storage.exportSong(song());
+      if (result.error) { return result.error; }
+      if (drafts.some(function (draft) { return draft.songId === song().id; })) { notice = "Unapplied draft not included."; }
+      effect({ type: "download", text: result.data, filename: (song().title || "Untitled song") + ".json" }); return null;
+    }
+    function dispatch(action) {
+      error = null; notice = "";
+      var problem = null, saveText = false, shouldSave = false;
+      try {
+        var current = view(), draft, source, section;
+        switch (action.type) {
+        case "selection.set":
+          section = song().sections.find(function (item) { return item.id === action.sectionId; });
+          if (!section || (action.occurrenceId && !section.occurrences.some(function (item) { return item.id === action.occurrenceId; }))) { problem = failure("NOT_FOUND", "That section or occurrence is no longer available."); break; }
+          current.activeSectionId = action.sectionId; current.selectedOccurrenceId = action.occurrenceId || null; break;
+        case "chord.inspect": problem = openDraft({ chordId: action.chordId, originSectionId: action.sectionId, originOccurrenceId: action.occurrenceId }); shouldSave = true; break;
+        case "panel.set": current.panel = action.panel; break;
+        case "mode.set": current.mode = action.mode; break;
+        case "history.undo": case "history.redo": {
+          var h = history(), undo = action.type === "history.undo", from = undo ? h.past : h.future, to = undo ? h.future : h.past;
+          if (from.length) { to.push(clone(song())); setSong(from.pop()); shouldSave = true; } break;
+        }
+        case "draft.open": problem = openDraft(action); shouldSave = true; break;
+        case "draft.patch":
+          draft = findDraft(action.chordId); if (!draft) { problem = failure("NO_DRAFT", "Open a chord draft first."); break; }
+          Object.assign(draft.candidate, clone(action.patch)); dirtyDrafts = true; shouldSave = true; saveText = true; break;
+        case "draft.discard": discardDraft(action.chordId); shouldSave = true; break;
+        case "draft.retarget":
+          draft = findDraft(action.chordId); section = song().sections.find(function (item) { return item.id === action.sectionId; });
+          if (!draft || !section || !section.occurrences.some(function (item) { return item.id === action.occurrenceId && item.chordId === action.chordId; })) { problem = failure("INVALID_TARGET", "Select an occurrence of this chord to use for the variation."); break; }
+          draft.originSectionId = action.sectionId; draft.originOccurrenceId = action.occurrenceId; dirtyDrafts = true; shouldSave = true; break;
+        case "draft.rebase":
+          draft = findDraft(action.chordId); if (!draft) { problem = failure("NO_DRAFT", "Open a chord draft first."); break; }
+          draft.tuningMidi = song().tuningMidi.slice(); draft.capo = song().capo;
+          if (draft.candidate.frets && draft.candidate.interpretation) { draft.candidate.previousInterpretation = clone(draft.candidate.interpretation); draft.candidate.reviewRequired = true; }
+          dirtyDrafts = true; shouldSave = true; break;
+        case "draft.reopen":
+          draft = findDraft(action.chordId); var origin = draft ? { originSectionId: draft.originSectionId, originOccurrenceId: draft.originOccurrenceId } : {};
+          discardDraft(action.chordId); problem = openDraft(Object.assign({ chordId: action.chordId }, origin)); shouldSave = true; break;
+        case "draft.apply": problem = applyDraft(action); shouldSave = true; break;
+        case "explore.set":
+          if (action.patch.selectedInterpretation !== undefined || action.patch.voicingMode !== undefined) { current.exploreState.selectedFrets = null; }
+          Object.assign(current.exploreState, clone(action.patch)); break;
+        case "explore.keep": problem = transact({ type: "chord.create", chord: { frets: action.frets, interpretation: action.interpretation, nickname: "", notes: "", reviewRequired: false, previousInterpretation: null }, sectionId: action.sectionId }); shouldSave = true; break;
+        case "library.create": addSong(model.createSong()); shouldSave = true; break;
+        case "library.switch":
+          if (!library.songs.some(function (item) { return item.id === action.songId; })) { problem = failure("NOT_FOUND", "That song is no longer available."); break; }
+          library.activeSongId = action.songId; dirtyLibrary = true; reconcile(); shouldSave = true; break;
+        case "library.duplicate":
+          source = library.songs.find(function (item) { return item.id === action.songId; });
+          if (!source) { problem = failure("NOT_FOUND", "That song is no longer available."); break; }
+          var copy = model.duplicateSong(source); copy.title = (source.title || "Untitled song") + " copy"; addSong(copy); shouldSave = true; break;
+        case "library.delete":
+          if (action.confirmed !== true) { problem = failure("CONFIRM_REQUIRED", "Confirm song deletion first."); break; }
+          library.songs = library.songs.filter(function (item) { return item.id !== action.songId; }); drafts = drafts.filter(function (item) { return item.songId !== action.songId; }); delete histories[action.songId]; delete views[action.songId];
+          if (!library.songs.length) { library.songs.push(model.createSong()); }
+          if (library.activeSongId === action.songId) { library.activeSongId = library.songs[0].id; }
+          dirtyLibrary = true; dirtyDrafts = true; reconcile(); shouldSave = true; break;
+        case "library.recover": {
+          var legacy = storage.readLegacySettings(); if (legacy.error) { problem = legacy.error; break; }
+          var recovery = legacy.data[action.index]; if (!recovery) { problem = failure("NOT_FOUND", "That old shape is unavailable."); break; }
+          var recovered = model.createSong({ title: "Recovered shape", tuningMidi: recovery.tuningMidi });
+          var kept = model.applyAction(recovered, { type: "chord.create", chord: { frets: recovery.frets, interpretation: null, nickname: "", notes: "", reviewRequired: false, previousInterpretation: null } });
+          if (kept.error) { problem = kept.error; break; } addSong(kept.song); notice = recovery.octaveAssumption; shouldSave = true; break;
+        }
+        case "library.reset":
+          if (action.confirmed !== true) { problem = failure("CONFIRM_REQUIRED", "Confirm resetting the saved library first."); break; }
+          suspended = null; draftsSuspended = false; dirtyLibrary = true; dirtyDrafts = true; shouldSave = true; break;
+        case "library.conflict":
+          if (action.resolution === "reload") {
+            var latest = storage.loadLibrary(), latestDrafts = storage.loadDrafts();
+            if (latest.error || latestDrafts.error || !latest.data) { problem = latest.error || latestDrafts.error || failure("MISSING_LIBRARY", "The other saved copy is unavailable. Keep or export this copy."); break; }
+            library = latest.data; drafts = latestDrafts.data ? latestDrafts.data.drafts : []; dirtyLibrary = false; dirtyDrafts = false; histories = {}; views = {}; suspended = null; draftsSuspended = false; saveStatus = "saved";
+          } else if (action.resolution === "keep") { suspended = null; dirtyLibrary = true; dirtyDrafts = true; shouldSave = true; }
+          break;
+        case "file.import": {
+          var imported = storage.importSong(action.text); if (imported.error) { problem = imported.error; break; } addSong(imported.data); shouldSave = true; break;
+        }
+        case "file.export": problem = exportSong(); break;
+        case "file.backup": effect({ type: "download", text: JSON.stringify({ library: rawLibrary, drafts: rawDrafts }, null, 2), filename: "song-notebook-raw-backup.json" }); break;
+        case "file.print": effect({ type: "print", song: clone(song()) }); break;
+        default:
+          problem = transact(action); shouldSave = true;
+          saveText = ["song.update", "section.update", "occurrence.update"].indexOf(action.type) !== -1;
+        }
+      } catch (err) { problem = failure("ACTION_FAILED", err.message || "The change could not be applied."); }
+      error = problem;
+      if (!problem && shouldSave) { save(saveText); } else { emit(); }
+      return { error: problem };
+    }
+    function storageChanged(key) {
+      if (key !== "cs-shadow.guitar-chordinator.library.v1" && key !== "cs-shadow.guitar-chordinator.drafts.v1" && key !== null) { return; }
+      if (timer !== null) { cancel(timer); timer = null; }
+      suspended = "conflict"; saveStatus = "failed"; error = failure("STORAGE_CONFLICT", "Another tab changed the saved notebook. Reload its copy, or keep and save this copy. Export is available before deciding."); emit();
+    }
+    return { snapshot: snapshot, state: state, dispatch: dispatch, flush: flush, storageChanged: storageChanged, subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (item) { return item !== fn; }); }; }, destroy: function () { flush(); listeners = []; }, initialize: function () { if (dirtyLibrary && !suspended) { flush(); } else { emit(); } } };
+  }
+  function mountComponents(document, modules, api, contracts) {
+    if (!contracts || contracts.componentNames.some(function (name) { return !modules[name] || typeof modules[name].mount !== "function"; })) { return null; }
+    var components = contracts.componentNames.map(function (name) {
+      var ids = contracts.hosts[name.toLowerCase()], hosts = {};
+      Object.keys(ids).forEach(function (key) { hosts[key] = document.getElementById(ids[key]); });
+      return modules[name].mount(hosts, api);
+    });
+    return { render: function (viewState) { components.forEach(function (component) { component.render(viewState); }); }, destroy: function () { components.forEach(function (component) { component.destroy(); }); } };
+  }
+  function mountHeader(hosts, store, options) {
+    var document = hosts.header.ownerDocument, music = options.music, model = options.model;
+    var libraryOpen = false, menuOpen = false, settingsOpen = false, contextOpen = false, songNotesOpen = false;
+    var settingsDraft = null, deleteSongId = null, renderedSongId = null, bodySignature = null;
+    function el(tag, text, attributes) {
+      var node = document.createElement(tag); if (text !== null && text !== undefined) { node.textContent = text; }
+      Object.keys(attributes || {}).forEach(function (key) { node.setAttribute(key, attributes[key]); }); return node;
+    }
+    function button(text, run, attributes) { var node = el("button", text, Object.assign({ type: "button" }, attributes || {})); node.addEventListener("click", run); return node; }
+    function dispatch(action) { return store.dispatch(action); }
+    function option(select, value, text, selected) { var node = el("option", text, { value: String(value) }); node.selected = selected; select.appendChild(node); }
+    function label(text, control) { var node = el("label", text); node.appendChild(control); return node; }
+    function chordName(chord, index) { return chord.nickname || music.formatInterpretation(chord.interpretation) || "Chord " + (index + 1); }
+    function rerender() { render(store.snapshot(), store.state()); }
+    function renderSettings(snapshot) {
+      hosts.settings.replaceChildren(); hosts.settings.hidden = !settingsOpen;
+      if (!settingsOpen) { return; }
+      if (!settingsDraft) { settingsDraft = { tuningMidi: snapshot.song.tuningMidi.slice(), capo: snapshot.song.capo }; }
+      var form = el("form", null, { class: "notebook-settings-form" });
+      form.appendChild(el("h2", "Song tuning and capo"));
+      var preset = el("select", null, { "aria-label": "Tuning preset" }); option(preset, "custom", "Custom", true);
+      music.presets.forEach(function (item) { option(preset, item.id, item.label, JSON.stringify(item.tuningMidi) === JSON.stringify(settingsDraft.tuningMidi)); });
+      preset.addEventListener("change", function () { var found = music.presets.find(function (item) { return item.id === preset.value; }); if (found) { settingsDraft.tuningMidi = found.tuningMidi.slice(); renderSettings(snapshot); } });
+      form.appendChild(label("Preset ", preset));
+      var strings = el("div", null, { class: "notebook-string-settings" });
+      settingsDraft.tuningMidi.forEach(function (midi, index) {
+        var group = el("div"), note = el("select", null, { "aria-label": "String " + (index + 1) + " note" }), octave = el("input", null, { type: "number", min: "-1", max: "9", "aria-label": "String " + (index + 1) + " octave" });
+        for (var pc = 0; pc < 12; pc++) { option(note, pc, music.pitchName(pc), pc === music.normalizePitch(midi)); }
+        octave.value = Math.floor(midi / 12) - 1;
+        function updateString() { settingsDraft.tuningMidi[index] = (Number(octave.value) + 1) * 12 + Number(note.value); preview(); }
+        note.addEventListener("change", updateString); octave.addEventListener("input", updateString);
+        group.appendChild(el("span", "String " + (index + 1))); group.appendChild(note); group.appendChild(octave); strings.appendChild(group);
+      });
+      form.appendChild(strings);
+      var capo = el("input", null, { type: "number", min: "0", max: "12", step: "1", "aria-label": "Full capo fret" }); capo.value = settingsDraft.capo;
+      capo.addEventListener("input", function () { settingsDraft.capo = Number(capo.value); preview(); }); form.appendChild(label("Capo ", capo));
+      form.appendChild(el("p", "Frets are relative to the capo. All six strings share these settings."));
+      var result = el("div", null, { "aria-live": "polite" }); form.appendChild(result);
+      var apply = el("button", "Apply settings", { type: "submit" }); form.appendChild(apply);
+      form.appendChild(button("Cancel", function () { settingsOpen = false; settingsDraft = null; rerender(); }));
+      function preview() {
+        result.replaceChildren();
+        var next = model.applyAction(snapshot.song, Object.assign({ type: "settings.apply" }, settingsDraft));
+        apply.disabled = !!next.error;
+        if (next.error) { result.appendChild(el("p", next.error.message, { class: "notebook-error" })); }
+        var retuned = JSON.stringify(snapshot.song.tuningMidi) !== JSON.stringify(settingsDraft.tuningMidi), moved = snapshot.song.capo !== settingsDraft.capo;
+        if (retuned || moved) {
+          var affected = snapshot.song.chords.filter(function (chord) { return chord.frets !== null; });
+          result.appendChild(el("p", retuned ? "Fingerings stay in place. Saved names will need review." : "Fingerings stay in place. Accepted sounding names transpose; name-only chords retain their names."));
+          affected.forEach(function (chord) {
+            var changed = next.error ? null : next.song.chords.find(function (item) { return item.id === chord.id; });
+            result.appendChild(el("p", chordName(chord, snapshot.song.chords.indexOf(chord)) + (changed && !retuned ? " → " + chordName(changed, snapshot.song.chords.indexOf(chord)) : " · review required")));
+          });
+          if (snapshot.drafts.length) { result.appendChild(el("p", "Your unapplied drafts will keep their old settings and require review.")); }
+        }
+      }
+      form.addEventListener("submit", function (event) { event.preventDefault(); var outcome = dispatch(Object.assign({ type: "settings.apply" }, settingsDraft)); if (!outcome.error) { settingsOpen = false; settingsDraft = null; rerender(); } });
+      hosts.settings.appendChild(form); preview();
+    }
+    function renderStatus(snapshot, state) {
+      hosts.status.replaceChildren(); hosts.status.appendChild(el("span", snapshot.saveStatus === "saved" ? "Saved" : snapshot.saveStatus === "saving" ? "Saving…" : "Save failed"));
+      if (snapshot.error) { hosts.status.appendChild(el("span", " · " + snapshot.error.message, { class: "notebook-error" })); }
+      if (state.notice) { hosts.status.appendChild(el("span", " · " + state.notice)); }
+      if (state.suspended === "conflict") {
+        hosts.status.appendChild(button("Reload saved copy", function () { dispatch({ type: "library.conflict", resolution: "reload" }); }));
+        hosts.status.appendChild(button("Keep and save this copy", function () { dispatch({ type: "library.conflict", resolution: "keep" }); }));
+        hosts.status.appendChild(button("Export local song", function () { dispatch({ type: "file.export" }); }));
+      } else if (state.suspended === "corrupt" || state.draftsCorrupt) {
+        hosts.status.appendChild(button("Download raw backup", function () { dispatch({ type: "file.backup" }); }));
+        var reset = el("details"); reset.appendChild(el("summary", "Reset saved data…")); reset.appendChild(el("p", "Replace the unreadable saved data with the songs and drafts currently open here? Download a raw backup first if you want to keep it."));
+        reset.appendChild(button("Replace saved data", function () { dispatch({ type: "library.reset", confirmed: true }); })); hosts.status.appendChild(reset);
+      }
+    }
+    function render(snapshot, state) {
+      var current = snapshot.song;
+      if (renderedSongId !== current.id) { settingsDraft = null; deleteSongId = null; songNotesOpen = false; renderedSongId = current.id; }
+      var signature = JSON.stringify({ id: current.id, mode: snapshot.mode, tuningMidi: current.tuningMidi, capo: current.capo, context: current.context, notes: songNotesOpen ? null : current.notes, library: libraryOpen ? state.library.songs.map(function (song) { return [song.id, song.title]; }) : null, libraryOpen: libraryOpen, menuOpen: menuOpen, settingsOpen: settingsOpen, contextOpen: contextOpen, songNotesOpen: songNotesOpen, deleteSongId: deleteSongId, settingsChords: settingsOpen ? current.chords : null });
+      if (signature === bodySignature) {
+        var titleField = hosts.header.querySelector('[aria-label="Song title"]');
+        if (titleField && document.activeElement !== titleField) { titleField.value = current.title; }
+        var notesField = hosts.header.querySelector('[aria-label="Song notes"]');
+        if (notesField && document.activeElement !== notesField) { notesField.value = current.notes; }
+        var undoControl = hosts.header.querySelector('[data-notebook-action="undo"]'), redoControl = hosts.header.querySelector('[data-notebook-action="redo"]');
+        if (undoControl) { undoControl.disabled = !state.canUndo; }
+        if (redoControl) { redoControl.disabled = !state.canRedo; }
+        renderStatus(snapshot, state); return;
+      }
+      bodySignature = signature;
+      hosts.header.replaceChildren();
+      var row = el("div", null, { class: "notebook-header-row" });
+      row.appendChild(button("Songs ▾", function () { libraryOpen = !libraryOpen; rerender(); }, { "aria-expanded": String(libraryOpen) }));
+      var title = el("input", null, { type: "text", placeholder: "Untitled song", "aria-label": "Song title", class: "notebook-title" }); title.value = current.title;
+      title.addEventListener("change", function () { dispatch({ type: "song.update", patch: { title: title.value } }); }); row.appendChild(title);
+      row.appendChild(button(snapshot.mode === "read" ? "Edit" : "Read", function () { dispatch({ type: "mode.set", mode: snapshot.mode === "read" ? "edit" : "read" }); }));
+      row.appendChild(button("Song menu ⋯", function () { menuOpen = !menuOpen; rerender(); }, { "aria-expanded": String(menuOpen) }));
+      var undo = button("Undo", function () { dispatch({ type: "history.undo" }); }, { "data-notebook-action": "undo" }); undo.disabled = !state.canUndo; row.appendChild(undo);
+      var redo = button("Redo", function () { dispatch({ type: "history.redo" }); }, { "data-notebook-action": "redo" }); redo.disabled = !state.canRedo; row.appendChild(redo); hosts.header.appendChild(row);
+      if (libraryOpen) {
+        var library = el("div", null, { class: "notebook-menu", "aria-label": "Song library" });
+        state.library.songs.forEach(function (item) {
+          var itemRow = el("div"); itemRow.appendChild(button(item.title || "Untitled song", function () { libraryOpen = false; settingsDraft = null; dispatch({ type: "library.switch", songId: item.id }); }));
+          itemRow.appendChild(button("Duplicate", function () { dispatch({ type: "library.duplicate", songId: item.id }); }));
+          itemRow.appendChild(button("Delete", function () { deleteSongId = item.id; rerender(); }, { "aria-label": "Delete " + (item.title || "Untitled song") }));
+          if (deleteSongId === item.id) { itemRow.appendChild(el("span", "Delete this song and its drafts? ")); itemRow.appendChild(button("Delete song", function () { deleteSongId = null; dispatch({ type: "library.delete", songId: item.id, confirmed: true }); })); itemRow.appendChild(button("Cancel", function () { deleteSongId = null; rerender(); })); }
+          library.appendChild(itemRow);
+        });
+        library.appendChild(button("New song", function () { libraryOpen = false; settingsDraft = null; dispatch({ type: "library.create" }); }));
+        var legacy = options.storage.readLegacySettings();
+        if (legacy.data && legacy.data.length) {
+          var recover = el("details"); recover.appendChild(el("summary", "Recover old shape"));
+          legacy.data.forEach(function (item, index) { recover.appendChild(el("p", item.octaveAssumption)); recover.appendChild(button(item.label, function () { libraryOpen = false; dispatch({ type: "library.recover", index: index }); })); }); library.appendChild(recover);
+        }
+        hosts.header.appendChild(library);
+      }
+      if (menuOpen) {
+        var menu = el("div", null, { class: "notebook-menu" });
+        menu.appendChild(button("Export song JSON", function () { dispatch({ type: "file.export" }); }));
+        var input = el("input", null, { type: "file", accept: ".json,application/json", "aria-label": "Import song JSON" });
+        input.addEventListener("change", function () { if (input.files[0]) { input.files[0].text().then(function (text) { dispatch({ type: "file.import", text: text }); }).catch(function () { hosts.status.textContent = "The selected file could not be read."; }); } }); menu.appendChild(label("Import song JSON ", input));
+        menu.appendChild(button("Print / Save as PDF", function () { dispatch({ type: "file.print" }); })); hosts.header.appendChild(menu);
+      }
+      var summary = el("div", null, { class: "notebook-song-summary" });
+      var tuning = music.presets.find(function (item) { return JSON.stringify(item.tuningMidi) === JSON.stringify(current.tuningMidi); });
+      summary.appendChild(button((tuning ? tuning.label : "Custom") + " tuning · " + (current.capo ? "Capo " + current.capo : "No capo"), function () { settingsOpen = !settingsOpen; settingsDraft = null; renderSettings(snapshot); }));
+      summary.appendChild(button(current.context ? "Home " + current.context.tonicSpelling + (current.context.scaleId ? " · " + music.scales.find(function (item) { return item.id === current.context.scaleId; }).name : "") : "+ Home / scale", function () { contextOpen = !contextOpen; rerender(); })); hosts.header.appendChild(summary);
+      if (contextOpen) {
+        var context = el("form"), tonic = el("select", null, { "aria-label": "Home tonic" }), scale = el("select", null, { "aria-label": "Song scale" });
+        music.roots.forEach(function (root) { option(tonic, root, root, root === (current.context ? current.context.tonicSpelling : "C")); });
+        option(scale, "", "No scale", !current.context || !current.context.scaleId); music.scales.forEach(function (item) { option(scale, item.id, item.name, current.context && current.context.scaleId === item.id); });
+        context.appendChild(label("Home ", tonic)); context.appendChild(label("Scale ", scale)); context.appendChild(el("button", "Apply home / scale", { type: "submit" }));
+        context.appendChild(button("Remove context", function () { dispatch({ type: "context.set", context: null }); }));
+        context.appendChild(el("p", "Roman labels use a fixed major-scale reference: with A as home, Am is i and C is ♭III."));
+        context.addEventListener("submit", function (event) { event.preventDefault(); var parsed = music.parseChordSymbol(tonic.value); dispatch({ type: "context.set", context: { tonicPc: parsed.interpretation.rootPc, tonicSpelling: tonic.value, sourceChordId: null, scaleId: scale.value || null } }); }); hosts.header.appendChild(context);
+      }
+      if (songNotesOpen) {
+        var notes = el("textarea", null, { "aria-label": "Song notes", rows: "3" }); notes.value = current.notes;
+        notes.addEventListener("change", function () { dispatch({ type: "song.update", patch: { notes: notes.value } }); }); hosts.header.appendChild(notes);
+        hosts.header.appendChild(button("Done with song notes", function () { songNotesOpen = false; rerender(); }));
+      } else {
+        if (current.notes) { hosts.header.appendChild(el("p", current.notes, { class: "notebook-notes" })); }
+        hosts.header.appendChild(button(current.notes ? "Edit song notes" : "Add song notes…", function () { songNotesOpen = true; rerender(); }));
+      }
+      renderStatus(snapshot, state);
+      renderSettings(snapshot);
+    }
+    return { render: render, destroy: function () { hosts.header.replaceChildren(); hosts.status.replaceChildren(); hosts.settings.replaceChildren(); } };
+  }
+
+  return { createStore: createStore, mountComponents: mountComponents, mountHeader: mountHeader };
+}));
 
 (function () {
   "use strict";
+  if (typeof document === "undefined") { return; }
 
   var NOTES = GuitarTuning.notes;
   var FLAT_EQUIVALENTS = {
