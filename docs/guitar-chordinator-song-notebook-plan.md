@@ -205,10 +205,23 @@ Expandable work area: chord details / shape editor / explore
   fingering. Identical pitch sets with different named formulas remain available.
 - Offer compact three-adjacent-string and fuller guitar shapes. Search current
   tuning/capo, require every distinct chord pitch (and requested slash bass),
-  exclude other pitches, and rank at most eight distinct shapes per mode. Limit
-  fretted-note span to four frets; open strings do not increase span. Rank smaller
-  span, lower position, then fewer muted strings with stable fret-array tie-break.
-  Fuller mode uses at least four sounding strings; compact mode exactly three.
+  exclude other pitches, and rank at most eight distinct shapes per mode. Suggested
+  shapes stop at physical fret 14 (`14 - capo` relative); manual and saved shapes
+  retain the physical fret 24 limit. Limit fretted-note span to four frets; open
+  strings do not increase span. Fuller mode uses at least four consecutive sounding
+  strings, muting only at the edges, and requires the actual lowest MIDI pitch to
+  be the root unless a slash bass is requested. Compact mode uses exactly three
+  adjacent strings and allows inversions unless a slash bass is requested.
+- For fuller shapes in standard tuning, prioritise familiar open and upward-
+  transposed movable forms: C/A/G/E/D major, A/E/D minor, A/G/E/D dominant seventh,
+  C/A/G/E/D major seventh, and A/E/D minor seventh. Transposition moves all sounding
+  strings, including open strings, and accounts for capo and sounding root. Every
+  template must satisfy the same coverage, bass, continuity, span, and fret limits
+  as generated shapes. Deduplicate by fret array before selecting eight. Other
+  tunings and qualities use general search. Rank fuller shapes by template match,
+  lower highest fret, fewer muted strings, smaller span, lower position, then a
+  stable fret-array tie-break. Compact ranking remains smaller span, lower
+  position, fewer muted strings, then the same stable fret-array tie-break.
   Prune impossible pitch coverage and search asynchronously in chunks so the UI
   remains usable; cancel stale requests on chord/tuning changes. No complete
   shape is a valid result, especially for formulas with more than six pitch classes.

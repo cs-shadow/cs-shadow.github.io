@@ -71,6 +71,19 @@ test("shared updates preserve all references; stale fingerprint rejects without 
   assert.strictEqual(conflict.song,song); assert.equal(conflict.error.code,"SOURCE_CONFLICT");
   const reordered={notes:song.chords[0].notes,...song.chords[0],ignored:"discard"}; assert.equal(model.fingerprint(reordered),model.fingerprint(song.chords[0]));
 });
+test("manual and saved shapes retain the physical fret 24 limit above suggestion fret 14", () => {
+  const { model } = setup();
+  for (const capo of [0, 2, 12]) {
+    let song = model.createSong({ capo });
+    const frets = [24 - capo, 15 - capo, null, null, null, null];
+    song = apply(model, song, { type:"chord.create", chord:{...named("C"), interpretation:null, frets} });
+    assert.deepEqual(song.chords[0].frets, frets);
+    assert.equal(model.validateSong(JSON.parse(JSON.stringify(song))).valid, true);
+    const result = model.applyAction(song, { type:"chord.update", chordId:song.chords[0].id,
+      patch:{frets:[25 - capo,null,null,null,null,null]} });
+    assert.ok(result.error, "physical fret 25 remains invalid");
+  }
+});
 
 test("variation changes only its original live occurrence and safely recovers deleted origins", () => {
   const {model}=setup(); let song=songFixture(); song=apply(model,song,{type:"occurrence.create",sectionId:"section-1",chordId:"chord-c"});
