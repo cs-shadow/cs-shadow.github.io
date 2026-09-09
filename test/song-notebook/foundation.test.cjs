@@ -23,7 +23,7 @@ test("real modules support immediate progression, spelling identity and one-step
 test("draft origin survives storage reload and variation only replaces its original occurrence",()=>{
   const first=setup();let view=first.dispatch({type:"progression.insert",sectionId:first.store.snapshot().activeSectionId,text:"C C C",afterOccurrenceId:null});
   const chordId=view.song.chords[0].id,sectionId=view.activeSectionId,origin=view.song.sections[0].occurrences[0].id;
-  first.dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId:origin});first.dispatch({type:"draft.patch",chordId,patch:{nickname:"Variation draft"}});first.store.flush();
+  first.dispatch({type:"draft.open",chordId,originSectionId:sectionId,originOccurrenceId:origin});first.dispatch({type:"draft.patch",chordId,patch:{nickname:"Variation draft"}});first.store.flush();
   // New controller with same model avoids test-injected ID collisions on reload.
   const second=Controller.createStore({music:Music,model:first.model,storage:first.storage});
   const later=view.song.sections[0].occurrences[2].id;second.dispatch({type:"selection.set",sectionId,occurrenceId:later});second.dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId:later});
@@ -35,7 +35,7 @@ test("draft origin survives storage reload and variation only replaces its origi
 test("stale source cannot update silently; deleted draft origin yields collection-only variation",()=>{
   const {store,dispatch}=setup();let view=dispatch({type:"progression.insert",sectionId:store.snapshot().activeSectionId,text:"C C",afterOccurrenceId:null});
   const chordId=view.song.chords[0].id,sectionId=view.activeSectionId,occurrenceId=view.song.sections[0].occurrences[0].id;
-  dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId});dispatch({type:"draft.patch",chordId,patch:{nickname:"Experiment"}});
+  dispatch({type:"draft.open",chordId,originSectionId:sectionId,originOccurrenceId:occurrenceId});dispatch({type:"draft.patch",chordId,patch:{nickname:"Experiment"}});
   dispatch({type:"chord.update",chordId,patch:{notes:"A newer committed note"}});
   assert.equal(store.dispatch({type:"draft.apply",chordId,mode:"update"}).error.code,"STALE_CHORD");
   dispatch({type:"occurrence.delete",sectionId,occurrenceId});view=dispatch({type:"draft.apply",chordId,mode:"variation"});
@@ -44,7 +44,7 @@ test("stale source cannot update silently; deleted draft origin yields collectio
 test("real settings changes transpose shapes, retain name-only harmony and invalidate drafts",()=>{
   const {store,dispatch}=setup();const C=Music.parseChordSymbol("C").interpretation;
   let view=dispatch({type:"chord.create",chord:{frets:[0,1,0,2,3,null],interpretation:C,nickname:"",notes:"",reviewRequired:false,previousInterpretation:null}});
-  const shaped=view.song.chords[0].id;dispatch({type:"progression.insert",sectionId:view.activeSectionId,text:"C",afterOccurrenceId:null});dispatch({type:"chord.inspect",chordId:shaped});
+  const shaped=view.song.chords[0].id;dispatch({type:"progression.insert",sectionId:view.activeSectionId,text:"C",afterOccurrenceId:null});dispatch({type:"draft.open",chordId:shaped});
   view=dispatch({type:"settings.apply",tuningMidi:Music.defaultTuning.slice(),capo:2});assert.equal(Music.formatInterpretation(view.song.chords[0].interpretation),"D");assert.equal(Music.formatInterpretation(view.song.chords[1].interpretation),"C");
   assert.equal(store.dispatch({type:"draft.apply",chordId:shaped,mode:"update"}).error.code,"STALE_SETTINGS");
   assert.equal(store.snapshot().drafts[0].capo,0);
@@ -71,6 +71,22 @@ test("settings undo and redo invalidate selected exploration fingerings",()=>{
  select();e.dispatch({type:"settings.apply",tuningMidi:[64,59,55,50,45,40],capo:2});assert.equal(e.store.snapshot().exploreState.selectedFrets,null);
  select();e.dispatch({type:"history.undo"});assert.equal(e.store.snapshot().exploreState.selectedFrets,null);
  select();e.dispatch({type:"history.redo"});assert.equal(e.store.snapshot().exploreState.selectedFrets,null);e.store.destroy();
+});
+
+test("inspection neither writes a draft nor adds an unapplied warning to export",()=>{
+ const e=setup();let view=e.dispatch({type:"progression.insert",sectionId:e.store.snapshot().activeSectionId,text:"C G",afterOccurrenceId:null});
+ const savedLibrary=e.memory.getItem("cs-shadow.guitar-chordinator.library.v1");
+ const savedDrafts=e.memory.getItem("cs-shadow.guitar-chordinator.drafts.v1");
+ e.dispatch({type:"chord.inspect",chordId:view.song.chords[0].id});
+ e.dispatch({type:"panel.set",panel:"explore"});
+ e.dispatch({type:"chord.inspect",chordId:view.song.chords[1].id,sectionId:view.activeSectionId,occurrenceId:view.song.sections[0].occurrences[1].id});
+ e.dispatch({type:"file.export"});
+ assert.equal(e.store.snapshot().drafts.length,0);
+ assert.equal(e.store.state().notice,"");
+ assert.equal(e.memory.getItem("cs-shadow.guitar-chordinator.library.v1"),savedLibrary);
+ assert.equal(e.memory.getItem("cs-shadow.guitar-chordinator.drafts.v1"),savedDrafts);
+ assert.equal(JSON.parse(e.effects.at(-1).text).song.chords.length,2);
+ e.store.destroy();
 });
 
 test("Explore manual capture persists its chosen identity and current settings only as a draft",()=>{

@@ -184,6 +184,7 @@ Integration hosts: `notebook-header`, `notebook-status`, `notebook-settings`,
 `notebook-workspace`, `notebook-details`; outer `song-notebook`.
 
 Snapshot fields: `{song,activeSectionId,selectedOccurrenceId,inspectedChordId,
+inspectionOrigin,
 panel:null|'editor'|'explore',drafts:Draft[],exploreState,saveStatus,mode:'edit'|
 'read',error:null|Error}`. `saveStatus` is `saving`, `saved`, or `failed`.
 Explore defaults `{tab:'browse',tonicPc:0,tonicSpelling:'C',scaleId:'major',
@@ -198,7 +199,11 @@ only the DOM. Components never retain committed edits or drafts.
 Controller action families (never passed to model):
 
 - `selection.set {sectionId,occurrenceId:null|string}`; `chord.inspect {chordId,
-  sectionId?,occurrenceId?}` opens editor without insertion.
+  sectionId?,occurrenceId?}` opens details without insertion or draft writes.
+  `inspectionOrigin` is null for collection inspection, or the inspected
+  `{sectionId,occurrenceId}`. Edit chord explicitly opens a draft with that origin;
+  changing selection never supplies a replacement origin. Existing drafts retain
+  their own persisted origin when inspected or resumed.
 - `panel.set {panel}`; `mode.set {mode}`; `history.undo {}` / `history.redo {}`.
 - `draft.open {chordId:null|string,originSectionId?,originOccurrenceId?}` creates
   only if absent; `draft.patch {chordId,patch:ChordData subset}`;

@@ -228,7 +228,7 @@
       // Text commits and save-status renders preserve the live form nodes, so a
       // blur commit cannot remove the button the user is about to click.
       var structuralDrafts = view.drafts.map(function (value) { return Object.assign({}, value, { candidate: value.chordId === view.inspectedChordId ? Object.assign({}, value.candidate, { nickname: "", notes: "" }) : value.candidate }); });
-      var nextKey = JSON.stringify([view.song, view.activeSectionId, view.selectedOccurrenceId, view.inspectedChordId, view.panel, view.mode, structuralDrafts]);
+      var nextKey = JSON.stringify([view.song, view.activeSectionId, view.selectedOccurrenceId, view.inspectedChordId, view.inspectionOrigin, view.panel, view.mode, structuralDrafts]);
       if (nextKey === renderKey) { updateTextOnly(draft); message(localError); return; }
       renderKey = nextKey;
       var focused = document.activeElement, focusKey = focused && root.contains(focused) && focused.dataset.editorKey;
@@ -261,7 +261,12 @@
         renderInterpretations(root, draft, settings, key);
       } else {
         if (hasShape(candidate)) { renderFrets(root, candidate, settings, false, source.id, key); }
-        button(root, "Edit chord", "edit", function () { send({ type: "draft.open", chordId: source.id }); });
+        var origin = view.inspectionOrigin;
+        if (origin) {
+          var location = usage(view.song, source.id).find(function (item) { return item.section.id === origin.sectionId && item.occurrence.id === origin.occurrenceId; });
+          if (location) { append(root, "p", "notebook-editor-origin", "Opened from " + (location.section.name || "Untitled section") + ", chord " + (location.index + 1) + "."); }
+        }
+        button(root, "Edit chord", "edit", function () { send({ type: "draft.open", chordId: source.id, originSectionId: origin ? origin.sectionId : null, originOccurrenceId: origin ? origin.occurrenceId : null }); });
       }
       if (!hasShape(candidate)) { append(root, "p", "notebook-editor-hint", "Fingering not set"); }
       renderNotes(root, candidate, settings, key);

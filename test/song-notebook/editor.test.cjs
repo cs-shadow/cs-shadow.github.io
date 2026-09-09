@@ -41,7 +41,7 @@ function harness(options={}){
   return {model,memory,storage,store,doc,root,sibling,editor,actions,dispatch,node,click,change,symbol,close};
 }
 function progression(env,text="C C C"){let state=env.store.snapshot();return env.dispatch({type:"progression.insert",sectionId:state.activeSectionId,text,afterOccurrenceId:null});}
-function openShared(env,text="C C C"){const state=progression(env,text),chordId=state.song.chords[0].id,sectionId=state.activeSectionId,occurrenceId=state.song.sections[0].occurrences[0].id;env.dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId});return {chordId,sectionId,occurrenceId};}
+function openShared(env,text="C C C"){const state=progression(env,text),chordId=state.song.chords[0].id,sectionId=state.activeSectionId,occurrenceId=state.song.sections[0].occurrences[0].id;env.dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId});env.click("edit");return {chordId,sectionId,occurrenceId};}
 
 test("blank capture keeps an unnamed shape and adds exactly one occurrence",()=>{
  const e=harness();e.dispatch({type:"draft.open",chordId:null});assert.equal(e.node("keep").disabled,true);assert.equal(e.root.querySelectorAll(".notebook-editor-note").length,156);
@@ -95,7 +95,7 @@ test("deleted original section gives a collection-only variation and an explicit
 });
 
 test("collection drafts never borrow the current selected occurrence without retargeting",()=>{
- const e=harness(),state=progression(e,"C C"),chordId=state.song.chords[0].id;e.dispatch({type:"chord.inspect",chordId});e.dispatch({type:"selection.set",sectionId:state.activeSectionId,occurrenceId:state.song.sections[0].occurrences[1].id});assert.match(e.root.textContent,/variation will stay in the collection/i);e.click("variation");assert.ok(e.store.snapshot().song.sections[0].occurrences.every(o=>o.chordId===chordId));e.close();
+ const e=harness(),state=progression(e,"C C"),chordId=state.song.chords[0].id;e.dispatch({type:"chord.inspect",chordId});e.click("edit");e.dispatch({type:"selection.set",sectionId:state.activeSectionId,occurrenceId:state.song.sections[0].occurrences[1].id});assert.match(e.root.textContent,/variation will stay in the collection/i);e.click("variation");assert.ok(e.store.snapshot().song.sections[0].occurrences.every(o=>o.chordId===chordId));e.close();
 });
 
 test("source conflict disables shared overwrite but permits reopen or variation",()=>{
@@ -133,4 +133,22 @@ test("close interpretations show their absolute missing or extra note evidence",
 
 test("deleted shared source remains recoverable via its explicit resume action",()=>{
  const e=harness(),{chordId}=openShared(e);e.change("nickname","Saved experiment");e.dispatch({type:"chord.delete",chordId,referenceMode:"remove"});e.click("resume-0");assert.match(e.root.textContent,/original chord was deleted/);assert.equal(e.node("update").disabled,true);e.click("variation");assert.equal(e.store.snapshot().song.chords.length,1);assert.equal(e.store.snapshot().song.chords[0].nickname,"Saved experiment");e.close();
+});
+
+test("inspection stays read-only and Edit uses the inspected occurrence, not selection",()=>{
+ const e=harness(),state=progression(e),sectionId=state.activeSectionId,chordId=state.song.chords[0].id;
+ const [first,second]=state.song.sections[0].occurrences;
+ e.dispatch({type:"chord.inspect",chordId});
+ assert.equal(e.store.snapshot().drafts.length,0);
+ assert.equal(e.root.querySelector('[data-editor-key="update"]'),null);
+ e.dispatch({type:"chord.inspect",chordId,sectionId,occurrenceId:second.id});
+ assert.match(e.root.textContent,/Opened from Section 1, chord 2/);
+ e.dispatch({type:"selection.set",sectionId,occurrenceId:first.id});
+ e.click("edit");
+ assert.equal(e.store.snapshot().drafts[0].originOccurrenceId,second.id);
+ e.change("nickname","Second occurrence variation");e.click("variation");
+ const song=e.store.snapshot().song;
+ assert.equal(song.sections[0].occurrences[0].chordId,chordId);
+ assert.notEqual(song.sections[0].occurrences[1].chordId,chordId);
+ e.close();
 });
