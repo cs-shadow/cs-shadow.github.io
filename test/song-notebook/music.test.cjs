@@ -14,6 +14,24 @@ const parse = symbol => {
 const pcs = values => [...new Set(values.map(n => ((n % 12) + 12) % 12))].sort((a, b) => a - b);
 const notes = midis => midis.map((midi, stringIndex) => ({ stringIndex, fret: 0, physicalFret: 0, midi, pc: midi % 12 }));
 const chord = (id, symbol, extra = {}) => ({ id, frets: null, interpretation: symbol ? parse(symbol) : null, reviewRequired: false, ...extra });
+const lowToHigh = frets => frets.slice().reverse();
+const form = text => lowToHigh([...text].map(fret => fret === "x" ? null : Number(fret)));
+const familiarForms = {
+  C:"x32010", A:"x02220", G:"320003", E:"022100", D:"xx0232", Am:"x02210", Em:"022000", Dm:"xx0231",
+  A7:"x02020", G7:"320001", E7:"020100", D7:"xx0212", Cmaj7:"x32000", Amaj7:"x02120", Gmaj7:"320002",
+  Emaj7:"021100", Dmaj7:"xx0222", Am7:"x02010", Em7:"020000", Dm7:"xx0211"
+};
+// Enumerate all translations, independently of the production root/capo shift
+// calculation. The exhaustive oracle below validates their sounding pitches.
+function familiarKeys(interpretation, tuningSettings) {
+  const keys = new Set();
+  if (JSON.stringify(tuningSettings.tuningMidi) !== JSON.stringify(music.defaultTuning)) return keys;
+  for (const [symbol, text] of Object.entries(familiarForms)) {
+    if (parse(symbol).formulaId !== interpretation.formulaId) continue;
+    for (let shift = 0; shift <= 14; shift++) keys.add(JSON.stringify(form(text).map(fret => fret === null ? null : fret + shift)));
+  }
+  return keys;
+}
 function deepFreeze(value) {
   if (value && typeof value === "object") { Object.values(value).forEach(deepFreeze); Object.freeze(value); }
   return value;
@@ -27,8 +45,9 @@ function checkShape(shape, interpretation, tuningSettings, mode) {
   assert.equal(shape.frets.length, 6);
   const played = music.notesForShape(tuningSettings.tuningMidi, tuningSettings.capo, shape.frets);
   assert.deepEqual(pcs(played.map(note => note.midi)), music.interpretationPitches(interpretation));
-  assert.ok(played.every(note => note.physicalFret <= 24));
-  if (interpretation.bassPc !== null) { assert.equal(Math.min(...played.map(note => note.midi)) % 12, interpretation.bassPc); }
+  assert.ok(played.every(note => note.physicalFret <= 14));
+  const bass = interpretation.bassPc ?? (mode === "compact" ? null : interpretation.rootPc);
+  if (bass !== null) { assert.equal(Math.min(...played.map(note => note.midi)) % 12, bass); }
   const fretted = shape.frets.filter(fret => fret > 0);
   assert.equal(shape.position, fretted.length ? Math.min(...fretted) : 0);
   assert.equal(shape.span, fretted.length ? Math.max(...fretted) - Math.min(...fretted) : 0);
@@ -38,6 +57,7 @@ function checkShape(shape, interpretation, tuningSettings, mode) {
     assert.equal(played.length, 3);
     assert.equal(played[2].stringIndex - played[0].stringIndex, 2);
   } else { assert.ok(played.length >= 4); }
+  assert.equal(played.at(-1).stringIndex - played[0].stringIndex + 1, played.length);
 }
 
 // Deliberately independent exhaustive search: enumerate every allowed fret on
@@ -45,7 +65,8 @@ function checkShape(shape, interpretation, tuningSettings, mode) {
 // ranking and window boundaries, not just the implementation's returned shapes.
 function bruteVoicings(interpretation, tuningSettings, mode) {
   const expected = music.interpretationPitches(interpretation);
-  const choices = tuningSettings.tuningMidi.map(open => [null, ...Array.from({ length: 25 - tuningSettings.capo }, (_, fret) => fret)
+  const familiar = familiarKeys(interpretation, tuningSettings);
+  const choices = tuningSettings.tuningMidi.map(open => [null, ...Array.from({ length: 15 - tuningSettings.capo }, (_, fret) => fret)
     .filter(fret => expected.includes((open + tuningSettings.capo + fret) % 12))]);
   const shapes = [];
   const frets = [];
@@ -53,7 +74,9 @@ function bruteVoicings(interpretation, tuningSettings, mode) {
     if (index < 6) { for (const fret of choices[index]) { frets[index] = fret; visit(index + 1); } return; }
     const sounding = frets.flatMap((fret, i) => fret === null ? [] : [{ midi: tuningSettings.tuningMidi[i] + tuningSettings.capo + fret, index: i }]);
     if (mode === "compact" ? sounding.length !== 3 || sounding[2].index - sounding[0].index !== 2 : sounding.length < 4) { return; }
-    if (interpretation.bassPc !== null && Math.min(...sounding.map(n => n.midi)) % 12 !== interpretation.bassPc) { return; }
+    if (sounding.at(-1).index - sounding[0].index + 1 !== sounding.length) { return; }
+    const bass = interpretation.bassPc ?? (mode === "compact" ? null : interpretation.rootPc);
+    if (bass !== null && Math.min(...sounding.map(n => n.midi)) % 12 !== bass) { return; }
     if (JSON.stringify(pcs(sounding.map(n => n.midi))) !== JSON.stringify(expected)) { return; }
     const positive = frets.filter(fret => fret > 0);
     const position = positive.length ? Math.min(...positive) : 0;
@@ -61,7 +84,11 @@ function bruteVoicings(interpretation, tuningSettings, mode) {
     if (span <= 4) { shapes.push({ frets: frets.slice(), position, span, mutedCount: 6 - sounding.length }); }
   }
   visit(0);
-  return shapes.sort(compareShapes).slice(0, 8);
+  return shapes.sort((a, b) => {
+    if (mode === "compact") return compareShapes(a, b);
+    return Number(familiar.has(JSON.stringify(b.frets))) - Number(familiar.has(JSON.stringify(a.frets))) ||
+      Math.max(0, ...a.frets) - Math.max(0, ...b.frets) || a.mutedCount - b.mutedCount || compareShapes(a, b);
+  }).slice(0, 8);
 }
 
 test("all existing catalogs, distinctions, descriptions and string registers are retained immutably", () => {
@@ -243,7 +270,8 @@ test("scale matching analyzes the whole collection using shapes over stale names
 
 test("compact and fuller voicings are the globally ranked exhaustive top eight", async () => {
   for (const [symbol, tuningSettings] of [
-    ["C", settings], ["C/E", { tuningMidi:[40,60,67,50,45,40],capo:12 }],
+    ["C", settings], ["Am", settings], ["G7", settings], ["Dmaj7", settings], ["Bm7", settings],
+    ["D", { tuningMidi:music.defaultTuning,capo:2 }], ["C/E", { tuningMidi:[40,60,67,50,45,40],capo:12 }],
     ["C/D", { tuningMidi:music.defaultTuning,capo:12 }], ["G7", { tuningMidi:music.defaultTuning,capo:12 }],
     ["D", { tuningMidi:music.presets[3].tuningMidi,capo:0 }]
   ]) {
@@ -256,6 +284,65 @@ test("compact and fuller voicings are the globally ranked exhaustive top eight",
       assert.equal(new Set(result.shapes.map(s => JSON.stringify(s.frets))).size, result.shapes.length);
     }
   }
+});
+
+test("fuller C starts with open C and all five CAGED forms before generated alternatives", async () => {
+  const result = await music.findVoicings(parse("C"), settings, { mode:"fuller" });
+  const expected = [form("x32010"), form("x35553"), form("875558"),
+    lowToHigh([8,10,10,9,8,8]), lowToHigh([null,null,10,12,13,12])];
+  assert.deepEqual(result.shapes.slice(0, 5).map(shape => shape.frets), expected);
+  assert.equal(result.shapes.length, 8);
+  result.shapes.forEach(shape => checkShape(shape, parse("C"), settings, "fuller"));
+});
+
+test("every familiar open form remains available and preferred over general candidates", async () => {
+  for (const [symbol, text] of Object.entries(familiarForms)) {
+    const interpretation = parse(symbol);
+    const { shapes } = await music.findVoicings(interpretation, settings, { mode:"fuller" });
+    assert.ok(shapes.some(shape => JSON.stringify(shape.frets) === JSON.stringify(form(text))), symbol);
+    assert.ok(familiarKeys(interpretation, settings).has(JSON.stringify(shapes[0].frets)), symbol);
+    shapes.forEach(shape => checkShape(shape, interpretation, settings, "fuller"));
+  }
+});
+
+test("capo-aware templates move open strings and reject unsuitable tuning and slash bass", async () => {
+  const capoSettings = { tuningMidi:music.defaultTuning, capo:2 };
+  const d = await music.findVoicings(parse("D"), capoSettings, { mode:"fuller" });
+  assert.deepEqual(d.shapes[0].frets, form("x32010"), "C form sounds D at capo 2");
+  const b = await music.findVoicings(parse("B"), capoSettings, { mode:"fuller" });
+  assert.ok(b.shapes.some(shape => JSON.stringify(shape.frets) === JSON.stringify(form("542225"))), "G form transposes every open string");
+  for (const [symbol, tuningSettings] of [
+    ["C/E", settings], ["C", { tuningMidi:[40,59,55,50,45,64], capo:0 }],
+    ["C", { tuningMidi:music.presets[1].tuningMidi, capo:0 }]
+  ]) {
+    const interpretation = parse(symbol);
+    const { shapes } = await music.findVoicings(interpretation, tuningSettings, { mode:"fuller" });
+    assert.ok(shapes.length > 0, symbol);
+    assert.deepEqual(shapes, bruteVoicings(interpretation, tuningSettings, "fuller"));
+    shapes.forEach(shape => checkShape(shape, interpretation, tuningSettings, "fuller"));
+  }
+});
+
+test("physical fret 14 is inclusive in both modes with and without a capo", async () => {
+  for (const capo of [0, 2, 12]) {
+    for (const mode of ["compact", "fuller"]) {
+      const tuningSettings = { tuningMidi:music.defaultTuning, capo };
+      const { shapes } = await music.findVoicings(parse("A"), tuningSettings, { mode });
+      assert.ok(shapes.some(shape => shape.frets.some(fret => fret !== null && fret + capo === 14)), mode + " capo " + capo);
+      shapes.forEach(shape => checkShape(shape, parse("A"), tuningSettings, mode));
+      assert.deepEqual(shapes, bruteVoicings(parse("A"), tuningSettings, mode));
+    }
+  }
+  const { shapes } = await music.findVoicings(parse("C"), settings, { mode:"fuller" });
+  assert.ok(!shapes.some(shape => JSON.stringify(shape.frets) === JSON.stringify(lowToHigh([null,15,14,12,13,12]))), "C form at physical fret 15 is excluded");
+});
+
+test("compact triads still include inversions, while explicit bass requests are enforced", async () => {
+  const { shapes } = await music.findVoicings(parse("C"), settings, { mode:"compact" });
+  assert.ok(shapes.some(shape => Math.min(...music.notesForShape(settings.tuningMidi, 0, shape.frets).map(note => note.midi)) % 12 !== 0));
+  const slash = await music.findVoicings(parse("C/E"), settings, { mode:"compact" });
+  assert.ok(slash.shapes.length > 0);
+  slash.shapes.forEach(shape => checkShape(shape, parse("C/E"), settings, "compact"));
 });
 
 test("voicing search supports extended complete coverage, register extremes, open strings and empty results", async () => {

@@ -253,6 +253,27 @@
     }
     return order;
   }
+  // Standard-tuning forms, written low E first. Keep this catalogue private:
+  // matching search candidates still have to satisfy every voicing constraint.
+  var FAMILIAR_FORMS = [
+    [0, "", "x32010"], [9, "", "x02220"], [7, "", "320003"], [4, "", "022100"], [2, "", "xx0232"],
+    [9, "m", "x02210"], [4, "m", "022000"], [2, "m", "xx0231"],
+    [9, "7", "x02020"], [7, "7", "320001"], [4, "7", "020100"], [2, "7", "xx0212"],
+    [0, "maj7", "x32000"], [9, "maj7", "x02120"], [7, "maj7", "320002"], [4, "maj7", "021100"], [2, "maj7", "xx0222"],
+    [9, "m7", "x02010"], [4, "m7", "020000"], [2, "m7", "xx0211"]
+  ];
+  function familiarShapes(interpretation, tuning, capo, maxFret) {
+    var keys = new Set();
+    if (!tuning.every(function (note, index) { return note === DEFAULT_TUNING[index]; })) { return keys; }
+    FAMILIAR_FORMS.forEach(function (form) {
+      if (form[1] !== interpretation.formulaId) { return; }
+      for (var shift = normalizePitch(interpretation.rootPc - capo - form[0]); shift <= maxFret; shift += 12) {
+        var frets = form[2].split("").reverse().map(function (fret) { return fret === "x" ? null : Number(fret) + shift; });
+        if (frets.every(function (fret) { return fret === null || fret <= maxFret; })) { keys.add(frets.join(",")); }
+      }
+    });
+    return keys;
+  }
   function bitCount(mask) {
     var count = 0;
     while (mask) { mask &= mask - 1; count += 1; }
@@ -268,8 +289,14 @@
     // Snapshot settings before yielding: later UI changes cannot modify this request.
     var tuning = settings.tuningMidi.slice();
     var capo = settings.capo;
-    var bassPc = interpretation.bassPc;
-    var maxFret = 24 - capo;
+    var bassPc = interpretation.bassPc === null && !compact ? interpretation.rootPc : interpretation.bassPc;
+    var maxFret = 14 - capo;
+    var familiar = compact ? new Set() : familiarShapes(interpretation, tuning, capo, maxFret);
+    function compare(a, b) {
+      if (compact) { return compareShapes(a, b); }
+      return Number(familiar.has(b.frets.join(","))) - Number(familiar.has(a.frets.join(","))) ||
+        (a.position + a.span) - (b.position + b.span) || a.mutedCount - b.mutedCount || compareShapes(a, b);
+    }
     var targetMask = target.reduce(function (mask, pc) { return mask | (1 << pc); }, 0);
     var shapes = [];
     var frets = [null, null, null, null, null, null];
@@ -294,11 +321,11 @@
           for (var i = indexes.length - 1; i >= 0; i -= 1) {
             remainingMasks[i] = choices[i].reduce(function (mask, choice) { return mask | (choice ? choice.mask : 0); }, remainingMasks[i + 1]);
           }
-          yield* visit(0, 0, 0, Infinity, 0, 0);
+          yield* visit(0, 0, 0, Infinity, 0, 0, false);
         }
       }
 
-      function* visit(depth, mask, soundingCount, lowestMidi, minFret, highestFret) {
+      function* visit(depth, mask, soundingCount, lowestMidi, minFret, highestFret, ended) {
         yield; // The scheduler bounds synchronous work by visited search nodes.
         var remaining = indexes.length - depth;
         if ((mask | remainingMasks[depth]) !== targetMask || bitCount(targetMask & ~mask) > remaining ||
@@ -308,18 +335,23 @@
               (minFret === 0 ? position !== 1 : minFret !== position)) { return; }
           var shape = { frets: frets.slice(), span: highestFret - minFret, position: minFret, mutedCount: 6 - soundingCount };
           shapes.push(shape);
-          shapes.sort(compareShapes);
+          // Every template is also enumerated here. Matching by frets gives it
+          // priority without a second insertion path or duplicate results.
+          shapes.sort(compare);
           if (shapes.length > 8) { shapes.pop(); }
           return;
         }
         var stringIndex = indexes[depth];
         for (var choiceIndex = 0; choiceIndex < choices[depth].length; choiceIndex += 1) {
           var choice = choices[depth][choiceIndex];
+          // Once a sounding run ends, only muted strings may follow.
+          if (choice && ended) { continue; }
           frets[stringIndex] = choice ? choice.fret : null;
           yield* visit(depth + 1, mask | (choice ? choice.mask : 0), soundingCount + (choice ? 1 : 0),
             choice ? Math.min(lowestMidi, choice.midi) : lowestMidi,
             choice && choice.fret > 0 ? (minFret ? Math.min(minFret, choice.fret) : choice.fret) : minFret,
-            choice ? Math.max(highestFret, choice.fret) : highestFret);
+            choice ? Math.max(highestFret, choice.fret) : highestFret,
+            ended || (!choice && soundingCount > 0));
         }
         frets[stringIndex] = null;
       }

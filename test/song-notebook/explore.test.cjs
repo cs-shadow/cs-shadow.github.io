@@ -224,6 +224,16 @@ test("real fuller voicings respect capo and slash bass, and mode changes clear t
   e.click("keep"); assert.equal(Music.formatInterpretation(e.song.chords[0].interpretation), "C/E");
   e.change("voicing-mode", "compact"); assert.equal(e.store.snapshot().exploreState.selectedFrets, null); assert.equal(e.find("selected-shape"), undefined); e.close();
 });
+test("Explore explains suggestion limits and keeps the first fuller C as the familiar open shape", async () => {
+  const e = harness(); e.select("C"); e.change("voicing-mode", "fuller");
+  assert.match(e.find("voicing-help").textContent, /physical fret 14/);
+  assert.match(e.find("voicing-help").textContent, /consecutive strings/);
+  assert.match(e.find("voicing-help").textContent, /Compact shapes can include inversions/);
+  e.click("find-voicings"); await completed(e); e.click("voicing-0");
+  assert.deepEqual(e.store.snapshot().exploreState.selectedFrets, [0,1,0,2,3,null]);
+  e.click("keep"); assert.deepEqual(e.song.chords[0].frets, [0,1,0,2,3,null]);
+  assert.equal(Music.formatInterpretation(e.song.chords[0].interpretation), "C"); e.close();
+});
 test("Explore displays Em from string 6 to 1 while keeping the internal string order", async () => {
   const e = harness(); e.select("Em"); e.change("voicing-mode", "fuller"); await completed(e);
   assert.equal(e.node("voicing-0").textContent, "0 · 2 · 2 · 0 · 0 · 0");
