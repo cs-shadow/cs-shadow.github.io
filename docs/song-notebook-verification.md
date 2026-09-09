@@ -151,3 +151,60 @@ The full suite now passes 129 Node tests, including all four regressions. Site
 rendering (3/32), production build and whitespace checks pass. The retained preview
 still prints port 4000. Focused independent recheck is requested against `8bf776d`;
 browser acceptance remains pending and is not established by these DOM tests.
+
+## PR preparation — 2026-09-09
+
+Follow-up implementation uses `/private/tmp/guitar-song-notebook-pr`, branch
+`codex/song-notebook-pr`, for integration into the requested `more-chords` PR
+against `main`. Its retained preview is
+`http://127.0.0.1:4010/tools/guitar-chordinator/`.
+
+The independent review found three header defects: stale settings previews,
+accepted tonic spellings missing from the home selector, and a renamed library
+entry replacing the button receiving the next click. Targeted regressions now
+cover all three. Saved-chord inspection is read-only; explicitly choosing Edit
+chord starts a durable draft and retains the inspected occurrence as its origin.
+An existing draft retains its original target when another occurrence is selected.
+
+Final automated gate passes: 134 Node tests; Ruby serve 4 tests/15 assertions,
+Goodreads 10/28, site rendering 3/32; production and preview Jekyll builds;
+48 preserved URLs, internal local links, preview noindex and whitespace checks.
+The link checker does not check external URLs. Corrupt/quota storage, request
+cancellation, stale drafts and exhaustive voicing ranking have automated evidence.
+
+Actual in-app browser checks on port 4010 passed:
+
+- Empty-song entry; keyboard progression submission and atomic invalid input;
+  enharmonic input; read-only inspection without a draft; explicit editing.
+- Reload-retained draft origins after selection changes; Save as variation
+  affects only its original occurrence; Update shared changes shared occurrences.
+- Native title typing followed immediately by New song; E# home preservation;
+  fret-24/capo-1 rejection with the affected chord shown before Apply.
+- Capo changes transpose shaped names while preserving name-only names; retuning
+  marks shaped interpretations for review.
+- Real file-chooser import and downloaded JSON export preserve unused, unnamed,
+  name-only and slash chords, home references, multiline notes, fractional
+  durations, annotations, arrangement order and repetition counts. Imported IDs
+  are remapped. Unsupported-version import leaves the current song untouched.
+- Real cross-tab changes suspend writes, retain the other tab's durable title,
+  and resolve with Reload saved copy.
+- Compact and fuller searches each return eight fingerings; scale analysis
+  includes the unused B-flat chord and reports its outside notes.
+- Reading shows the full 65-line section note, literal HTML-like notes, and
+  accessible visible fingering SVGs; repeated arrangement sections are listed
+  once in the section reference. Desktop has no horizontal page overflow.
+- Scalar Triads C Dorian, Drop D and D-A-D string-set controls restore after
+  reload. Notebook browser console checks recorded no warnings or errors.
+
+Local QA fixtures and the actual exported JSON are retained in
+`/private/tmp/song-notebook-qa/` (`acceptance.json`, `unsupported.json`,
+`broken-reference.json`, `exported.json`). The broken-reference fixture is covered
+by automated validation; it was not separately submitted through the browser.
+
+Two visual acceptance checks remain unverified. The viewport capability accepted
+375-by-812 dimensions but the page and screenshot remained 1280 pixels wide even
+after reload; the override was reset. Print was invoked, but native print/PDF
+inspection was unavailable in the in-app browser and native Firefox access was
+denied. No 375-pixel layout or multipage printed-output pass is claimed. Print
+lifecycle/content preservation and responsive CSS have automated coverage, which
+does not replace those visual checks. These limits must remain visible in the PR.
