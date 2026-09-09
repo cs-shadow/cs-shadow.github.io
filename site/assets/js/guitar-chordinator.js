@@ -28,7 +28,7 @@
     function view() {
       var current = song();
       if (!views[current.id]) {
-        views[current.id] = { activeSectionId: current.sections[0].id, selectedOccurrenceId: null, inspectedChordId: null, panel: null, mode: "edit", exploreState: { tab: "browse", tonicPc: 0, tonicSpelling: "C", scaleId: "major", selectedInterpretation: null, selectedFrets: null, voicingMode: "compact" } };
+        views[current.id] = { activeSectionId: current.sections[0].id, selectedOccurrenceId: null, inspectedChordId: null, inspectionOrigin: null, panel: null, mode: "edit", exploreState: { tab: "browse", tonicPc: 0, tonicSpelling: "C", scaleId: "major", selectedInterpretation: null, selectedFrets: null, voicingMode: "compact" } };
       }
       return views[current.id];
     }
@@ -62,7 +62,7 @@
       var section = current.sections.find(function (item) { return item.id === selected.activeSectionId; });
       if (!section) { section = current.sections[0]; selected.activeSectionId = section.id; selected.selectedOccurrenceId = null; }
       if (!section.occurrences.some(function (item) { return item.id === selected.selectedOccurrenceId; })) { selected.selectedOccurrenceId = null; }
-      if (!current.chords.some(function (item) { return item.id === selected.inspectedChordId; })) { selected.inspectedChordId = null; }
+      if (!current.chords.some(function (item) { return item.id === selected.inspectedChordId; })) { selected.inspectedChordId = null; selected.inspectionOrigin = null; }
     }
     function setSong(next) { if (song().capo !== next.capo || JSON.stringify(song().tuningMidi) !== JSON.stringify(next.tuningMidi)) { view().exploreState.selectedFrets = null; } library.songs = library.songs.map(function (item) { return item.id === next.id ? next : item; }); dirtyLibrary = true; reconcile(); }
     function transact(action) {
@@ -87,7 +87,9 @@
         var candidate = source ? clone(source) : initialCandidate || blankChord(); delete candidate.id;
         drafts.push({ songId: song().id, chordId: action.chordId, candidate: candidate, sourceFingerprint: source ? model.fingerprint(source) : null, tuningMidi: song().tuningMidi.slice(), capo: song().capo, originSectionId: action.originSectionId || null, originOccurrenceId: action.originOccurrenceId || null }); dirtyDrafts = true;
       }
+      var opened = findDraft(action.chordId);
       view().inspectedChordId = action.chordId; view().panel = "editor";
+      view().inspectionOrigin = opened.originOccurrenceId ? { sectionId: opened.originSectionId, occurrenceId: opened.originOccurrenceId } : null;
       return null;
     }
     function captureExploreChord(action) {
@@ -119,6 +121,7 @@
       }
       var added = song().chords.find(function (item) { return !before.chords.some(function (old) { return item.id === old.id; }); });
       discardDraft(action.chordId); view().inspectedChordId = added ? added.id : action.chordId;
+      view().inspectionOrigin = null;
       return null;
     }
     function addSong(next) { library.songs.push(next); library.activeSongId = next.id; dirtyLibrary = true; reconcile(); }
@@ -138,7 +141,16 @@
           section = song().sections.find(function (item) { return item.id === action.sectionId; });
           if (!section || (action.occurrenceId && !section.occurrences.some(function (item) { return item.id === action.occurrenceId; }))) { problem = failure("NOT_FOUND", "That section or occurrence is no longer available."); break; }
           current.activeSectionId = action.sectionId; current.selectedOccurrenceId = action.occurrenceId || null; break;
-        case "chord.inspect": problem = openDraft({ chordId: action.chordId, originSectionId: action.sectionId, originOccurrenceId: action.occurrenceId }); shouldSave = true; break;
+        case "chord.inspect":
+          source = song().chords.find(function (item) { return item.id === action.chordId; });
+          if (!source) { problem = failure("NOT_FOUND", "That chord is no longer in this song."); break; }
+          if (action.sectionId || action.occurrenceId) {
+            section = song().sections.find(function (item) { return item.id === action.sectionId; });
+            if (!section || !section.occurrences.some(function (item) { return item.id === action.occurrenceId && item.chordId === action.chordId; })) { problem = failure("INVALID_TARGET", "That occurrence is no longer available."); break; }
+          }
+          current.inspectedChordId = action.chordId; current.panel = "editor";
+          current.inspectionOrigin = action.occurrenceId ? { sectionId: action.sectionId, occurrenceId: action.occurrenceId } : null;
+          break;
         case "panel.set": current.panel = action.panel; break;
         case "explore.close": current.panel = null; break;
         case "mode.set": current.mode = action.mode; break;

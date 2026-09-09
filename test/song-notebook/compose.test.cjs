@@ -138,7 +138,8 @@ test("occurrence actions reorder, duplicate, replace and remove with focus intac
   assert.equal(h.section.occurrences[1].chordId, occurrence.chordId); assert.notEqual(h.section.occurrences[1].id, occurrence.id);
   const replacement = h.find(key + "-replacement"); replacement.value = h.song.chords[0].id; replacement.fire("change");
   assert.equal(h.section.occurrences[0].chordId, h.song.chords[0].id);
-  h.click(key + "-details"); assert.equal(h.store.snapshot().drafts[0].originOccurrenceId, occurrence.id);
+  h.click(key + "-details"); assert.equal(h.store.snapshot().inspectionOrigin.occurrenceId, occurrence.id);
+  assert.equal(h.store.snapshot().drafts.length, 0);
   h.click(key + "-remove"); assert.equal(h.section.occurrences.length, 3);
   assert.equal(h.doc.activeElement, h.find("progression-input"));
   h.close();
