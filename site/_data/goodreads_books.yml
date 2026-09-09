@@ -3,10 +3,18 @@
 - id: '201129910'
   title: 'Cannery Row: Penguin Modern Classics'
   author: John Steinbeck
-  status: currently-reading
-  activity_date: '2026-08-21'
+  status: read
+  activity_date: '2026-09-08'
+  finished_date: '2026-09-08'
   cover_url: https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1698764348l/201129910._SX318_SY475_.jpg
   goodreads_url: https://www.goodreads.com/review/show/8879169676?utm_medium=api&utm_source=rss
+- id: '255619627'
+  title: 'The End of Everything: A Novel'
+  author: M. John Harrison
+  status: currently-reading
+  activity_date: '2026-09-08'
+  cover_url: https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1784690392l/255619627._SY475_.jpg
+  goodreads_url: https://www.goodreads.com/review/show/8930163851?utm_medium=api&utm_source=rss
 - id: '54949119'
   title: Pale Fire
   author: Vladimir Nabokov
@@ -86,11 +94,3 @@
   finished_date: '2026-06-08'
   cover_url: https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1677851926l/60121775._SY475_.jpg
   goodreads_url: https://www.goodreads.com/review/show/8629807276?utm_medium=api&utm_source=rss
-- id: '22731377'
-  title: Fictions
-  author: Jorge Luis Borges
-  status: read
-  activity_date: '2026-05-25'
-  finished_date: '2026-05-25'
-  cover_url: https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1405486372l/22731377.jpg
-  goodreads_url: https://www.goodreads.com/review/show/8569605983?utm_medium=api&utm_source=rss
