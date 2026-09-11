@@ -78,7 +78,8 @@ permalink: /tools/scalar-triads/
       <div class="result-heading">
         <h2 id="chords-heading">Diatonic chords</h2>
       </div>
-      <ol class="chord-summary" id="chord-summary" aria-label="Diatonic chords"></ol>
+      <p class="chord-selection-hint" id="chord-selection-hint">Click chord names to show or hide their fingerings.</p>
+      <ol class="chord-summary" id="chord-summary" aria-label="Diatonic chords" aria-describedby="chord-selection-hint"></ol>
     </section>
 
     <section class="result-section" aria-labelledby="triads-heading">
@@ -97,6 +98,7 @@ permalink: /tools/scalar-triads/
         <button type="button" data-string-set="strings-4-5-6" aria-pressed="false">D-A-E</button>
       </div>
       <div class="triad-list" id="triad-list"></div>
+      <p id="chord-selection-empty" hidden>No chords selected. Select a chord name above to show its fingerings.</p>
     </section>
   </section>
 </main>
