@@ -61,7 +61,8 @@
 .music-tool .music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
 .music-tool .music-note-picker > button { justify-self: start; }
 @media (max-width: 799px) {
-  .content.music-tool { padding: 1.5rem 1rem 2rem; }
+  /* Leave room below the site navigation logo fixed at the top left. */
+  .content.music-tool { padding: 4.5rem 1rem 2rem; }
   .music-tool .music-tuning-presets { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
   .music-tool .music-note-picker { padding: .75rem; }
 }
