@@ -1,0 +1,67 @@
+/* Shared music-tool foundations. Component geometry belongs to each tool. */
+.music-tool {
+  --music-surface: #fffdf9;
+  --music-panel: #faf7f2;
+  --music-border: #cfc6bd;
+  --music-text: #302c28;
+  --music-muted: #655d54;
+  --music-accent: #365e58;
+  --music-accent-strong: #254a44;
+  --music-selected: #e9f0eb;
+  --music-focus: #a1492a;
+  --music-error: #9b2929;
+  --music-warning: #8b571c;
+  --music-warning-surface: #fff2d9;
+  --music-neck: #eee1ce;
+  --music-wire: #9b8b76;
+  --music-fret: #b3a590;
+  --music-nut: #817362;
+  --music-radius: .375rem;
+  --music-panel-radius: .5rem;
+  --music-control-padding: .5rem .75rem;
+  --music-space-1: .25rem;
+  --music-space-2: .5rem;
+  --music-space-3: .75rem;
+  --music-space-4: 1rem;
+  --music-space-6: 1.5rem;
+  --music-space-8: 2rem;
+}
+.content.music-tool { width: 100%; max-width: 1040px; min-width: 0; margin: 0 auto; padding: 2.5rem 2rem 3rem; color: var(--music-text); font-size: 1rem; line-height: 1.5; }
+.music-tool *, .music-tool *::before, .music-tool *::after { box-sizing: border-box; }
+.music-tool [hidden], .music-tool[hidden] { display: none !important; }
+.music-tool > .tool-header { margin-bottom: 1.5rem; }
+.music-tool > .tool-header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.15; }
+.music-tool h2 { font-size: 1.15rem; line-height: 1.3; }
+.music-tool h3 { font-size: 1rem; line-height: 1.4; }
+.music-tool p { color: var(--music-muted); overflow-wrap: anywhere; }
+.music-tool button, .music-tool input, .music-tool select, .music-tool textarea { font: inherit; color: inherit; }
+.music-tool button, .music-tool input, .music-tool select { min-height: 44px; }
+.music-tool button, .music-tool input, .music-tool select, .music-tool textarea { max-width: 100%; border: 1px solid var(--music-border); border-radius: var(--music-radius); padding: var(--music-control-padding); background: var(--music-surface); }
+.music-tool button { cursor: pointer; line-height: 1.3; }
+.music-tool button:hover:not(:disabled) { background: var(--music-selected); }
+.music-tool button:disabled { opacity: .5; cursor: default; }
+.music-tool :focus-visible { outline: 3px solid var(--music-focus); outline-offset: 3px; }
+.music-tool .music-primary { background: var(--music-accent); border-color: var(--music-accent); color: var(--music-surface); }
+.music-tool .music-primary:hover:not(:disabled) { background: var(--music-accent-strong); }
+.music-tool button[aria-pressed="true"], .music-tool [role="tab"][aria-selected="true"] { border-color: var(--music-accent); background: var(--music-selected); color: var(--music-accent-strong); box-shadow: inset 0 0 0 1px var(--music-accent); }
+.music-tuning-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .5rem; }
+.music-tool .music-tuning-preset { display: grid; align-content: start; gap: .35rem; padding: .75rem; text-align: left; min-width: 0; }
+.music-preset-notes { font-size: .8rem; color: var(--music-muted); }
+.music-tuning-preset[aria-pressed="true"] strong::after { content: " ✓"; }
+.music-string-badges { display: flex; flex-wrap: wrap; gap: .5rem; }
+.music-tool .music-string-badge { display: flex; justify-content: space-between; align-items: center; gap: .5rem; min-width: 4.5rem; }
+.music-string-number { font-size: .75rem; color: var(--music-muted); }
+.music-string-pitch { white-space: nowrap; }
+.music-tool .music-string-badge[aria-expanded="true"] { background: var(--music-selected); border-color: var(--music-accent); box-shadow: inset 0 0 0 1px var(--music-accent); }
+.music-string-badge[aria-expanded="true"] .music-string-pitch { text-decoration: underline; text-underline-offset: .25rem; }
+.music-note-picker { display: grid; gap: .75rem; padding: 1rem; margin-top: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.music-tool .music-note-picker h3 { margin: 0; font-size: 1rem; }
+.music-note-options, .music-octave-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.music-tool .music-note-option, .music-octave-controls button { min-width: 44px; }
+.music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
+.music-note-picker > button { justify-self: start; }
+@media (max-width: 799px) {
+  .content.music-tool { padding: 1.5rem 1rem 2rem; }
+  .music-tuning-presets { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .music-note-picker { padding: .75rem; }
+}
