@@ -6,27 +6,26 @@
 .notebook-reading h2 { font-size: 1.15rem; margin: 0 0 .75rem; }
 .notebook-reading h3 { font-size: 1.1rem; margin: 0 0 .5rem; }
 .notebook-reading p { margin: 0 0 .5rem; }
-.notebook-reading a { color: inherit; text-decoration-color: var(--notebook-accent); text-underline-offset: .15em; overflow-wrap: anywhere; }
-.notebook-reading a:focus-visible { outline: 3px solid var(--notebook-accent); outline-offset: 3px; }
+.notebook-reading a { color: inherit; text-decoration-color: var(--music-accent); text-underline-offset: .15em; overflow-wrap: anywhere; }
 .notebook-reading .notebook-reading-header { margin-bottom: 1.5rem; }
 .notebook-reading .notebook-reading-tuning, .notebook-reading .notebook-reading-home-source { font-size: .9rem; }
 .notebook-reading .notebook-reading-notes { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 .notebook-reading .notebook-reading-song-notes, .notebook-reading .notebook-reading-section-notes { margin-top: .75rem; }
 .notebook-reading .notebook-reading-muted, .notebook-reading .notebook-reading-unused, .notebook-reading .notebook-reading-roman { opacity: .78; font-size: .9rem; }
-.notebook-reading .notebook-reading-review { color: var(--notebook-accent); font-size: .9rem; }
+.notebook-reading .notebook-reading-review { color: var(--music-warning); font-size: .9rem; }
 .notebook-reading .notebook-reading-nickname { font-weight: 600; }
-.notebook-reading .notebook-reading-order { margin: 1.25rem 0; padding: .75rem; border: 1px solid var(--notebook-border); border-radius: .35rem; background: var(--notebook-surface); }
+.notebook-reading .notebook-reading-order { margin: 1.25rem 0; padding: .75rem; border: 1px solid var(--music-border); border-radius: var(--music-radius); background: var(--music-surface); }
 .notebook-reading .notebook-reading-order-list { display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; padding-left: 1.5rem; margin: 0; }
 .notebook-reading .notebook-reading-order-list li { max-width: 100%; overflow-wrap: anywhere; }
 .notebook-reading .notebook-reading-repeat { white-space: nowrap; }
-.notebook-reading .notebook-reading-section { margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--notebook-border); min-width: 0; }
+.notebook-reading .notebook-reading-section { margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--music-border); min-width: 0; }
 .notebook-reading .notebook-reading-occurrences { display: flex; flex-wrap: wrap; gap: .75rem; padding: 0; margin: .85rem 0 0; list-style: none; }
-.notebook-reading .notebook-reading-occurrence { flex: 0 1 auto; min-width: 4.5rem; max-width: 100%; padding: .35rem .7rem .35rem 0; border-right: 1px solid var(--notebook-border); }
+.notebook-reading .notebook-reading-occurrence { flex: 0 1 auto; min-width: 4.5rem; max-width: 100%; padding: .35rem .7rem .35rem 0; border-right: 1px solid var(--music-border); }
 .notebook-reading .notebook-reading-occurrence:last-child { border-right: 0; }
-.notebook-reading .notebook-reading-chord-link { display: inline-block; font-weight: 600; font-size: 1.1rem; }
+.notebook-reading .notebook-reading-chord-link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; font-size: 1.1rem; }
 .notebook-reading .notebook-reading-duration { font-size: .9rem; }
 .notebook-reading .notebook-reading-annotation { margin-top: .35rem; }
-.notebook-reading .notebook-reading-dictionary { padding-top: 1rem; border-top: 1px solid var(--notebook-border); }
+.notebook-reading .notebook-reading-dictionary { padding-top: 1rem; border-top: 1px solid var(--music-border); }
 .notebook-reading .notebook-reading-chords { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.5rem; }
 .notebook-reading .notebook-reading-chord { min-width: 0; max-width: 100%; padding-top: .75rem; }
 .notebook-reading .notebook-reading-diagram { width: 12.125rem; max-width: 100%; margin: .5rem 0 .75rem; break-inside: avoid; page-break-inside: avoid; }
@@ -35,7 +34,7 @@
 .notebook-reading .notebook-reading-open-mark { font-size: 16px; font-family: inherit; fill: currentColor; }
 .notebook-reading .notebook-reading-string, .notebook-reading .notebook-reading-fret, .notebook-reading .notebook-reading-gap-mark { stroke: currentColor; }
 .notebook-reading .notebook-reading-dot { fill: currentColor; }
-.notebook-reading .notebook-reading-gap { fill: var(--notebook-surface); }
+.notebook-reading .notebook-reading-gap { fill: var(--music-surface); }
 .notebook-reading .notebook-reading-gap-mark { fill: none; stroke-width: 1; }
 .notebook-reading .notebook-reading-diagram figcaption { font-size: .8rem; line-height: 1.4; }
 .notebook-reading .notebook-reading-diagram figcaption span { display: block; }
@@ -45,12 +44,13 @@
   .notebook-reading .notebook-reading-order { padding: .65rem; }
 }
 @media print {
-  .notebook-reading { padding: 0; max-width: none; color: #000; font-size: 10.5pt; line-height: 1.4; }
+  .notebook-reading { --music-muted: #000; --music-border: #000; --music-surface: #fff; padding: 0; max-width: none; color: #000; font-size: 10.5pt; line-height: 1.4; }
   .notebook-reading h1 { font-size: 20pt; }
   .notebook-reading h2 { font-size: 13pt; }
   .notebook-reading h3, .notebook-reading .notebook-reading-chord-link { font-size: 11.5pt; }
   .notebook-reading h1, .notebook-reading h2, .notebook-reading h3 { break-after: avoid; page-break-after: avoid; }
   .notebook-reading p { orphans: 2; widows: 2; }
+  .notebook-reading .notebook-reading-chord-link { min-height: 0; }
   .notebook-reading a { color: inherit; text-decoration: none; }
   .notebook-reading a::after { content: none !important; }
   .notebook-reading .notebook-reading-order { background: transparent; }

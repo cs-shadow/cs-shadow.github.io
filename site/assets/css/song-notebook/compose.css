@@ -1,49 +1,41 @@
 .notebook-compose { min-width: 0; overflow-wrap: anywhere; }
 .notebook-compose h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .07em; margin: 0 0 1rem; }
-.notebook-compose button, .notebook-compose input, .notebook-compose select,
-.notebook-compose textarea { border: 1px solid var(--notebook-border, #cfc6bd); border-radius: var(--notebook-control-radius, .35rem); background: var(--notebook-surface, #fffdf9); color: inherit; padding: var(--notebook-control-padding, .45rem .7rem); max-width: 100%; box-sizing: border-box; }
-.notebook-compose button { min-height: 2.5rem; }
-.notebook-compose button:hover { background: #f0e9dc; }
-.notebook-compose button:disabled { opacity: .45; cursor: default; }
-.notebook-compose :focus-visible { outline: 3px solid var(--notebook-accent, #a1492a); outline-offset: 3px; }
 .notebook-compose .notebook-compose-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: end; }
-.notebook-compose .notebook-compose-muted { font-size: .85rem; color: #686258; }
+.notebook-compose .notebook-compose-muted { font-size: .85rem; color: var(--music-muted); }
 .notebook-compose .notebook-compose-name { display: block; font-weight: 600; }
-.notebook-compose .notebook-compose-subtitle, .notebook-compose .notebook-compose-roman { display: block; font-size: .8rem; font-weight: normal; color: #686258; margin-top: .2rem; }
-.notebook-compose .notebook-compose-review { display: block; font-size: .8rem; color: #8b4821; }
+.notebook-compose .notebook-compose-subtitle, .notebook-compose .notebook-compose-roman { display: block; font-size: .8rem; font-weight: normal; color: var(--music-muted); margin-top: .2rem; }
+.notebook-compose .notebook-compose-review { display: block; font-size: .8rem; color: var(--music-warning); }
 .notebook-compose .notebook-compose-notes { white-space: pre-wrap; overflow-wrap: anywhere; }
 .notebook-compose .notebook-compose-collection { list-style: none; padding: 0; margin: 0 0 1rem; }
-.notebook-compose .notebook-compose-chord { border-bottom: 1px solid #e3ddd2; padding: .45rem 0; }
+.notebook-compose .notebook-compose-chord { border-bottom: 1px solid var(--music-border); padding: .45rem 0; }
 .notebook-compose .notebook-compose-chord-row { display: flex; gap: .4rem; align-items: center; }
 .notebook-compose .notebook-compose-inspect { flex: 1; min-width: 0; text-align: left; border-color: transparent; background: transparent; }
-.notebook-compose .notebook-compose-append { flex: 0 0 2.5rem; font-size: 1.1rem; }
+.notebook-compose .notebook-compose-append { flex: 0 0 44px; font-size: 1.1rem; }
 .notebook-compose .notebook-compose-link { font-size: .85rem; background: none; border: 0; text-decoration: underline; }
 .notebook-compose details { margin: .65rem 0; }
-.notebook-compose summary { cursor: pointer; padding: .3rem 0; width: fit-content; max-width: 100%; color: #686258; font-size: .85rem; }
+.notebook-compose summary { cursor: pointer; padding: .3rem 0; width: fit-content; max-width: 100%; color: var(--music-muted); font-size: .85rem; }
 .notebook-compose details[open] > summary { margin-bottom: .5rem; }
 .notebook-compose .notebook-compose-section-header { display: flex; align-items: start; gap: .5rem; }
 .notebook-compose .notebook-compose-tabs { display: flex; gap: .35rem; flex-wrap: wrap; min-width: 0; }
-.notebook-compose [role="tab"][aria-selected="true"] { background: #eee2cc; border-color: #927142; }
 .notebook-compose .notebook-compose-occurrences { display: flex; flex-wrap: wrap; align-items: start; gap: .6rem; list-style: none; padding: 0; margin: 1.2rem 0; }
 .notebook-compose .notebook-compose-occurrences > li { max-width: 100%; min-width: 0; }
 .notebook-compose .notebook-compose-chip { min-width: 3.2rem; text-align: left; padding: .65rem .8rem; }
-.notebook-compose .notebook-compose-chip[aria-pressed="true"] { background: #eee2cc; border-color: #927142; box-shadow: 0 0 0 1px #927142; }
 .notebook-compose .notebook-compose-chip .notebook-compose-notes { max-width: 18rem; }
-.notebook-compose .notebook-compose-occurrence-controls { border: 1px solid #ddd3c2; border-radius: .4rem; padding: .8rem; margin: .8rem 0; background: #f9f5ed; }
+.notebook-compose .notebook-compose-occurrence-controls { border: 1px solid var(--music-border); border-radius: var(--music-radius); padding: .8rem; margin: .8rem 0; background: var(--music-panel); }
 .notebook-compose .notebook-compose-field { display: flex; flex-direction: column; gap: .3rem; min-width: 0; margin: .4rem 0; font-size: .85rem; }
 .notebook-compose .notebook-compose-field input, .notebook-compose .notebook-compose-field select { width: 100%; min-width: 0; }
 .notebook-compose .notebook-compose-field input[type="number"] { width: 7rem; }
 .notebook-compose .notebook-compose-progression { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem .5rem; align-items: end; margin: 1rem 0; }
 .notebook-compose .notebook-compose-progression .notebook-compose-field { margin: 0; }
 .notebook-compose .notebook-compose-progression p { grid-column: 1 / -1; margin: .15rem 0; }
-.notebook-compose .notebook-compose-delete { border: 1px solid #a96e54; border-radius: .4rem; padding: .8rem; margin: 1rem 0; }
+.notebook-compose .notebook-compose-delete { border: 1px solid var(--music-error); border-radius: var(--music-radius); padding: .8rem; margin: 1rem 0; }
 .notebook-compose .notebook-compose-delete button { margin: .25rem .25rem .25rem 0; }
-.notebook-compose .notebook-compose-destructive { color: #8d3024; }
-.notebook-compose .notebook-compose-error { color: #9b2929; font-size: .9rem; }
+.notebook-compose .notebook-compose-destructive { color: var(--music-error); }
+.notebook-compose .notebook-compose-error { color: var(--music-error); font-size: .9rem; }
 .notebook-compose .notebook-compose-error:empty { display: none; }
 .notebook-compose .notebook-compose-order-summary { font-size: .95rem; line-height: 1.6; margin: .7rem 0; }
 .notebook-compose .notebook-compose-order { padding-left: 1.5rem; }
-.notebook-compose .notebook-compose-order > li { padding: .5rem 0 .8rem; border-bottom: 1px solid #e3ddd2; }
+.notebook-compose .notebook-compose-order > li { padding: .5rem 0 .8rem; border-bottom: 1px solid var(--music-border); }
 @media (max-width: 799px) {
   .notebook-compose .notebook-compose-occurrences { gap: .5rem; }
   .notebook-compose .notebook-compose-occurrence-controls { padding: .65rem; }

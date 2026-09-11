@@ -1,35 +1,29 @@
-.notebook-editor { min-width: 0; padding: 1.25rem; border: 1px solid #d8cfc3; border-radius: .65rem; background: var(--notebook-surface, #fffdf9); color: #302c28; }
+.notebook-editor { min-width: 0; padding: 1.25rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-surface); color: var(--music-text); }
 .notebook-editor[hidden], .notebook-editor [hidden] { display: none !important; }
 .notebook-editor *, .notebook-editor *::before, .notebook-editor *::after { box-sizing: border-box; }
 .notebook-editor h2, .notebook-editor h3, .notebook-editor p { margin: 0 0 .85rem; overflow-wrap: anywhere; }
 .notebook-editor h2 { font-size: 1.15rem; }
 .notebook-editor h3 { font-size: 1.65rem; }
-.notebook-editor button, .notebook-editor input, .notebook-editor textarea, .notebook-editor select { font: inherit; }
-.notebook-editor button { min-height: 2.5rem; padding: var(--notebook-control-padding, .45rem .7rem); border: 1px solid var(--notebook-border, #cfc6bd); border-radius: var(--notebook-control-radius, .35rem); color: inherit; background: var(--notebook-surface, #fffdf9); cursor: pointer; white-space: normal; }
-.notebook-editor button:hover:not(:disabled) { background: #f2e9de; }
-.notebook-editor button:disabled { opacity: .48; cursor: default; }
-.notebook-editor .notebook-editor-primary { color: white; background: #8a4128; border-color: #8a4128; }
-.notebook-editor .notebook-editor-primary:hover:not(:disabled) { background: #6f331e; }
-.notebook-editor :focus-visible { outline: 3px solid var(--notebook-accent, #a1492a); outline-offset: 3px; }
+.notebook-editor button { white-space: normal; }
 .notebook-editor .notebook-editor-header, .notebook-editor .notebook-editor-actions, .notebook-editor .notebook-editor-mode, .notebook-editor .notebook-editor-resume { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: 1rem; }
 .notebook-editor .notebook-editor-header { justify-content: space-between; }
 .notebook-editor .notebook-editor-header h2 { margin: 0; }
 .notebook-editor .notebook-editor-actions { margin-top: 1.15rem; }
-.notebook-editor .notebook-editor-resume { padding: .7rem; background: #f1eee8; border-radius: .4rem; }
-.notebook-editor .notebook-editor-mode button[aria-pressed="true"] { color: #fff; background: #4b5c4b; border-color: #4b5c4b; }
-.notebook-editor .notebook-editor-hint { color: #655d54; font-size: .9rem; line-height: 1.5; }
-.notebook-editor .notebook-editor-warning { padding: .75rem; border-left: 3px solid #ad7021; background: #fff2d9; margin: .8rem 0; }
+.notebook-editor .notebook-editor-resume { padding: .7rem; background: var(--music-panel); border-radius: var(--music-radius); }
+.notebook-editor .notebook-editor-hint { color: var(--music-muted); font-size: .9rem; line-height: 1.5; }
+.notebook-editor .notebook-editor-warning { padding: .75rem; border-left: 3px solid var(--music-warning); background: var(--music-warning-surface); margin: .8rem 0; }
 .notebook-editor .notebook-editor-warning p:last-child { margin-bottom: 0; }
-.notebook-editor .notebook-editor-error { color: #9b2929; font-weight: 600; }
-.notebook-editor .notebook-editor-sounding { color: #685444; }
+.notebook-editor .notebook-editor-error:empty { display: none; }
+.notebook-editor .notebook-editor-error { color: var(--music-error); font-weight: 600; }
+.notebook-editor .notebook-editor-sounding { color: var(--music-muted); }
 .notebook-editor .notebook-editor-nickname { font-weight: 600; }
 .notebook-editor .notebook-editor-personal-notes { white-space: pre-wrap; line-height: 1.5; }
-.notebook-editor .notebook-editor-disclosure { border-top: 1px solid #e2dbd1; padding: .8rem 0; }
-.notebook-editor .notebook-editor-disclosure summary { cursor: pointer; font-weight: 600; padding: .3rem 0; min-height: 2rem; }
+.notebook-editor .notebook-editor-disclosure { border-top: 1px solid var(--music-border); padding: .8rem 0; }
+.notebook-editor .notebook-editor-disclosure summary { cursor: pointer; font-weight: 600; padding: .3rem 0; min-height: 44px; }
 .notebook-editor .notebook-editor-disclosure[open] summary { margin-bottom: .75rem; }
 .notebook-editor .notebook-editor-field { display: flex; flex-direction: column; min-width: 0; gap: .35rem; margin-bottom: .8rem; }
 .notebook-editor .notebook-editor-field > span { font-size: .9rem; font-weight: 600; }
-.notebook-editor .notebook-editor-field input, .notebook-editor .notebook-editor-field select, .notebook-editor .notebook-editor-field textarea { min-width: 0; max-width: 100%; padding: .55rem; border: 1px solid var(--notebook-border, #cfc6bd); border-radius: .3rem; background: white; color: inherit; }
+.notebook-editor .notebook-editor-field input, .notebook-editor .notebook-editor-field select, .notebook-editor .notebook-editor-field textarea { min-width: 0; }
 .notebook-editor .notebook-editor-field textarea { width: 100%; resize: vertical; }
 .notebook-editor .notebook-editor-name-entry { display: flex; flex-wrap: wrap; gap: .65rem; align-items: end; margin-bottom: 1rem; }
 .notebook-editor .notebook-editor-name-entry .notebook-editor-field { flex: 1 1 13rem; margin: 0; }
@@ -37,23 +31,25 @@
 .notebook-editor .notebook-editor-name-controls .notebook-editor-field { margin: 0; flex: 1 1 8rem; }
 .notebook-editor .notebook-editor-neck-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; padding: .3rem 0 .65rem; margin: .8rem 0; }
 .notebook-editor .notebook-editor-neck { width: max-content; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: .85rem; }
-.notebook-editor .notebook-editor-neck th, .notebook-editor .notebook-editor-neck td { min-width: 2.6rem; width: 2.6rem; height: 2.6rem; text-align: center; padding: 0; }
-.notebook-editor .notebook-editor-neck thead th { font-weight: 500; color: #675d51; height: 2rem; }
-.notebook-editor .notebook-editor-neck .notebook-editor-string { position: sticky; left: 0; z-index: 2; min-width: 4.4rem; width: 4.4rem; padding-right: .4rem; text-align: left; white-space: nowrap; background: var(--notebook-surface, #fffdf9); }
-.notebook-editor .notebook-editor-fret { position: relative; background: #eee1ce; border-right: 2px solid #b3a590; }
-.notebook-editor .notebook-editor-fret::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #9b8b76; }
+.notebook-editor .notebook-editor-neck th, .notebook-editor .notebook-editor-neck td { min-width: 3rem; width: 3rem; height: 3rem; text-align: center; padding: 0; }
+.notebook-editor .notebook-editor-neck thead th { font-weight: 500; color: var(--music-muted); height: 2rem; }
+.notebook-editor .notebook-editor-neck .notebook-editor-string { position: sticky; left: 0; z-index: 2; min-width: 4.4rem; width: 4.4rem; padding-right: .4rem; text-align: left; white-space: nowrap; background: var(--music-surface); }
+.notebook-editor .notebook-editor-fret { position: relative; background: var(--music-neck); border-right: 2px solid var(--music-fret); }
+.notebook-editor .notebook-editor-fret::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--music-wire); }
 .notebook-editor .notebook-editor-neck tbody tr:nth-child(n+4) .notebook-editor-fret::before { border-top-width: 2px; }
-.notebook-editor .notebook-editor-neck .notebook-editor-open { background: #f7f1e7; border-right: 4px solid #817362; }
-.notebook-editor .notebook-editor-neck .notebook-editor-note { position: relative; z-index: 1; display: block; width: 2.3rem; min-width: 2.3rem; height: 2.3rem; min-height: 2.3rem; padding: 0; border: 1px solid transparent; border-radius: 50%; margin: .15rem auto; background: transparent; color: #6a5d4d; }
-.notebook-editor .notebook-editor-neck .notebook-editor-note[aria-pressed="true"] { color: #fff; background: #4b5c4b; border-color: #344634; }
+.notebook-editor .notebook-editor-neck .notebook-editor-open { background: var(--music-panel); border-right: 4px solid var(--music-nut); }
+.notebook-editor .notebook-editor-neck .notebook-editor-note { position: relative; z-index: 1; display: block; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; border: 1px solid transparent; border-radius: 50%; margin: .15rem auto; background: transparent; color: var(--music-muted); }
+.notebook-editor .notebook-editor-neck .notebook-editor-note[aria-pressed="true"] { color: var(--music-accent-strong); background: var(--music-selected); border-color: var(--music-accent); }
+.notebook-editor .notebook-editor-neck .notebook-editor-root[aria-pressed="true"] { color: var(--music-surface); background: var(--music-accent); outline: 2px solid var(--music-accent-strong); outline-offset: 2px; }
+.notebook-editor .notebook-editor-neck .notebook-editor-root:focus-visible { outline: 3px solid var(--music-focus); outline-offset: 3px; }
 .notebook-editor .notebook-editor-neck .notebook-editor-note:disabled { opacity: 1; }
-.notebook-editor .notebook-editor-neck .notebook-editor-note:hover:not(:disabled) { border-color: #8a4128; background: #ddccb3; color: #302c28; }
+.notebook-editor .notebook-editor-neck .notebook-editor-note:hover:not(:disabled) { border-color: var(--music-accent); box-shadow: inset 0 0 0 1px var(--music-accent); }
 .notebook-editor .notebook-editor-candidates { padding: 0; margin: 0 0 .7rem; list-style: none; }
 .notebook-editor .notebook-editor-candidates li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .4rem 0; }
-.notebook-editor .notebook-editor-match { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: #4b5c4b; }
-.notebook-editor .notebook-editor-evidence { font-size: .9rem; color: #655d54; }
+.notebook-editor .notebook-editor-match { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--music-accent); }
+.notebook-editor .notebook-editor-evidence { font-size: .9rem; color: var(--music-muted); }
 .notebook-editor .notebook-editor-notes-table { border-collapse: collapse; width: 100%; font-size: .85rem; }
-.notebook-editor .notebook-editor-notes-table th, .notebook-editor .notebook-editor-notes-table td { padding: .4rem .3rem; text-align: left; border-bottom: 1px solid #e2dbd1; overflow-wrap: anywhere; }
+.notebook-editor .notebook-editor-notes-table th, .notebook-editor .notebook-editor-notes-table td { padding: .4rem .3rem; text-align: left; border-bottom: 1px solid var(--music-border); overflow-wrap: anywhere; }
 @media (max-width: 799px) {
   .notebook-editor { padding: .85rem; }
   .notebook-editor .notebook-editor-header { align-items: start; }

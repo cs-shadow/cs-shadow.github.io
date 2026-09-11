@@ -152,3 +152,18 @@ test("inspection stays read-only and Edit uses the inspected occurrence, not sel
  assert.notEqual(song.sections[0].occurrences[1].chordId,chordId);
  e.close();
 });
+
+test("fretboard root markers use accepted sounding identity and clear on review",()=>{
+ const e=harness();
+ e.dispatch({type:"settings.apply",tuningMidi:Music.defaultTuning,capo:2});
+ e.dispatch({type:"draft.open",chordId:null});
+ e.dispatch({type:"draft.patch",chordId:null,patch:{frets:[0,1,0,2,3,null],interpretation:Music.parseChordSymbol("D").interpretation}});
+ assert.equal(e.node("fret-1-1").classList.contains("notebook-editor-root"),true);
+ assert.match(e.node("fret-1-1").getAttribute("aria-label"),/D4.*root/);
+ assert.equal(e.node("fret-4-3").classList.contains("notebook-editor-root"),true);
+ assert.equal(e.node("fret-0-0").classList.contains("notebook-editor-root"),false);
+ assert.equal(e.node("fret-1-13").classList.contains("notebook-editor-root"),false);
+ e.click("fret-0-1");
+ assert.equal(e.root.querySelectorAll(".notebook-editor-root").length,0);
+ e.close();
+});
