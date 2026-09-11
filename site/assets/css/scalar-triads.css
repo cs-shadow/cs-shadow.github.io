@@ -1,15 +1,15 @@
 /* Scalar layout; the companion tools share controls and diagram styling. */
 .scalar-triads .scale-tool { margin-bottom: 1.5rem; }
-.scalar-triads .scale-form { display: grid; gap: .75rem; }
+.scalar-triads .scale-form { display: grid; gap: .75rem; min-width: 0; }
 .scalar-triads .scale-controls { display: grid; grid-template-columns: minmax(5rem, .65fr) minmax(0, 1.65fr); gap: .75rem; max-width: 36rem; }
 .scalar-triads .scale-controls label, .scalar-triads .recent-settings-control label { display: block; margin-bottom: .375rem; font-size: .875rem; font-weight: 700; color: var(--music-muted); }
 .scalar-triads .scale-controls select { width: 100%; }
 .scalar-triads .scalar-tuning-summary { justify-self: start; text-align: left; }
 .scalar-triads .scalar-tuning-summary::after { content: " ▾"; }
 .scalar-triads .scalar-tuning-summary[aria-expanded="true"]::after { content: " ▴"; }
-.scalar-triads .scalar-tuning-panel { padding: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.scalar-triads .scalar-tuning-panel { min-width: 0; padding: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
 .scalar-triads .scalar-tuning-panel h2 { margin: 0 0 .75rem; }
-.scalar-triads .scalar-string-hint { margin: 1rem 0 .75rem; font-size: .875rem; }
+.scalar-triads .scalar-tuning-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
 .scalar-triads .scalar-history summary { display: list-item; width: fit-content; padding: .65rem 0; min-height: 44px; cursor: pointer; color: var(--music-muted); font-size: .875rem; }
 .scalar-triads .recent-settings-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem .75rem; padding: .75rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
 .scalar-triads .recent-settings-control label { grid-column: 1 / -1; margin: 0; }
@@ -46,5 +46,5 @@
 @media (max-width: 639px) {
   .scalar-triads .recent-settings-control { grid-template-columns: minmax(0, 1fr); }
   .scalar-triads .triad-card-heading { flex-direction: column; }
-  .scalar-triads .scalar-tuning-panel { padding: .75rem; }
+  .scalar-triads .scalar-tuning-panel { min-width: 0; padding: .75rem; }
 }
