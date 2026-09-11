@@ -110,6 +110,15 @@
       }).filter(function (recovery) { return recovery.frets.some(function (fret) { return fret !== null; }); });
     }
     return {
+      loadFingeringStyle: function () {
+        try { var mode = storage && storage.getItem(contracts.fingeringStyleKey); return mode === "compact" || mode === "fuller" ? mode : null; }
+        catch (error) { return null; }
+      },
+      saveFingeringStyle: function (mode) {
+        if (mode !== "compact" && mode !== "fuller") { return false; }
+        try { if (!storage) { return false; } storage.setItem(contracts.fingeringStyleKey, mode); return true; }
+        catch (error) { return false; }
+      },
       loadLibrary: function () { return read(contracts.libraryKey, canonicalLibrary); },
       saveLibrary: function (library) { return save(contracts.libraryKey, library, canonicalLibrary); },
       loadDrafts: function () { return read(contracts.draftsKey, canonicalDrafts); },

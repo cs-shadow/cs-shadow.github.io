@@ -23,7 +23,7 @@ function harness(options = {}) {
   root.id = "explore-test"; sibling.textContent = "Outside ownership"; doc.body.append(root, sibling);
   let id = 0;
   const model = Model.create({ music: Music, id: () => "explore-" + ++id, now: () => "2026-09-08T10:00:00Z" });
-  const storage = Storage.create({ storage: memoryStorage(), model, music: Music });
+  const storage = Storage.create({ storage: options.backend || memoryStorage(), model, music: Music });
   const store = Controller.createStore({ model, storage, music: Music, schedule: () => 1, cancel() {} });
   const actions = [], music = options.music || Music;
   const component = Explore.mount({ root }, { music, dispatch(action) { actions.push(action); return options.reject && options.reject(action) || store.dispatch(action); } });
@@ -41,7 +41,7 @@ function harness(options = {}) {
 }
 function controlledSearch() { const requests = []; return { requests, music: { ...Music, findVoicings(interpretation, settings, options) { return new Promise((resolve, reject) => requests.push({ interpretation, settings, options, resolve, reject })); } } }; }
 async function settle() { await new Promise(resolve => setImmediate(resolve)); }
-async function completed(env) { for (let index = 0; index < 200 && env.node("find-voicings").disabled; index++) await new Promise(resolve => setTimeout(resolve, 5)); assert.equal(env.node("find-voicings").disabled, false); }
+async function completed(env) { for (let index = 0; index < 200 && env.find("fingerings").getAttribute("aria-busy") === "true"; index++) await new Promise(resolve => setTimeout(resolve, 5)); assert.equal(env.find("fingerings").getAttribute("aria-busy"), "false"); }
 
 test("browse exposes the complete catalog, every fitting formula and distinct aliases without changing the song", () => {
   const e = harness(), before = JSON.stringify(e.song);
@@ -112,10 +112,14 @@ test("matching exposes every ranked candidate through bounded expansion", () => 
   assert.equal(e.find("match-results").childNodes.length, candidates.length);
   assert.deepEqual(e.find("match-results").childNodes.map(node => node._exploreKey), candidates.map(c => "candidate-" + c.tonicPc + "-" + c.scaleId)); e.close();
 });
-test("voicings are on demand; real compact results stay previews until explicit shape Keep", async () => {
-  const e = harness(); e.select("C"); assert.equal(e.find("voicing-results"), undefined);
-  e.click("find-voicings"); assert.equal(e.doc.activeElement, e.node("cancel-voicings")); await completed(e);
-  assert.equal(e.doc.activeElement, e.node("find-voicings"));
+test("fingerings appear automatically without a disclosure or search form and preserve focus", async () => {
+  const e = harness(); const selected = e.node("result-triads-0"); selected.focus(); selected.click();
+  assert.equal(e.find("fingerings").localName, "section");
+  assert.equal(e.find("fingerings").querySelector("summary"), null);
+  assert.equal(e.find("fingerings").querySelector("form"), null);
+  assert.equal(e.find("find-voicings"), undefined); assert.equal(e.find("cancel-voicings"), undefined);
+  assert.equal(e.find("fingerings").getAttribute("aria-busy"), "true");
+  await completed(e); assert.equal(e.doc.activeElement, selected);
   assert.ok(e.find("voicing-results").childNodes.length > 0); assert.ok(e.find("voicing-results").childNodes.length <= 8);
   assert.equal(e.store.snapshot().exploreState.selectedFrets, null); assert.equal(e.song.chords.length, 0);
   e.click("voicing-0"); const shape = e.store.snapshot().exploreState.selectedFrets;
@@ -126,7 +130,7 @@ test("voicings are on demand; real compact results stay previews until explicit 
   e.click("clear-fingering"); e.click("keep"); assert.equal(e.song.chords[1].frets, null); e.close();
 });
 test("no complete seven-tone fingering retains name-only and manual capture actions", async () => {
-  const e = harness(); e.select("C13"); e.change("voicing-mode", "fuller"); e.click("find-voicings"); await completed(e);
+  const e = harness(); e.select("C13"); e.change("voicing-mode", "fuller"); await completed(e);
   assert.match(e.find("voicing-status").textContent, /No complete fingering/); assert.ok(e.node("manual-shape"));
   e.click("keep"); assert.equal(e.song.chords[0].frets, null); assert.equal(e.song.chords[0].interpretation.formulaId, "13"); e.close();
 });
@@ -174,39 +178,38 @@ test("manual capture carries the selected extended chord and offers safe resumpt
 });
 test("new interpretation, mode and tuning abort stale work and ignore late results", async () => {
   const controlled = controlledSearch(), e = harness(controlled);
-  e.select("C"); e.click("find-voicings"); await settle(); const first = controlled.requests[0];
+  e.select("C"); await settle(); const first = controlled.requests[0];
   e.select("D"); assert.equal(first.options.signal.aborted, true);
-  e.click("find-voicings"); await settle(); const second = controlled.requests[1];
+  await settle(); const second = controlled.requests[1];
   first.resolve({ shapes: [{ frets: [0, 1, 0, null, null, null], position: 1 }], cancelled: false }); await settle();
-  assert.equal(e.find("voicing-results"), undefined); assert.equal(e.node("find-voicings").disabled, true);
+  assert.equal(e.find("voicing-results"), undefined); assert.equal(e.find("fingerings").getAttribute("aria-busy"), "true");
   e.change("voicing-mode", "fuller"); assert.equal(second.options.signal.aborted, true);
-  e.click("find-voicings"); await settle(); const third = controlled.requests[2];
+  await settle(); const third = controlled.requests[2];
   assert.equal(third.options.mode, "fuller");
   e.dispatch({ type: "settings.apply", tuningMidi: e.song.tuningMidi, capo: 1 }); assert.equal(third.options.signal.aborted, true);
-  e.click("find-voicings"); await settle(); const fourth = controlled.requests[3]; assert.equal(fourth.settings.capo, 1);
+  await settle(); const fourth = controlled.requests[3]; assert.equal(fourth.settings.capo, 1);
   fourth.resolve({ shapes: [], cancelled: false }); await settle(); assert.match(e.find("voicing-status").textContent, /No complete/);
   second.resolve({ shapes: [], cancelled: false }); third.resolve({ shapes: [], cancelled: false }); e.close();
 });
-test("closing, tab changes, explicit cancel and destroy abort requests without late writes", async () => {
+test("closing, tab changes and destroy abort automatic requests without late writes", async () => {
   const controlled = controlledSearch(), e = harness(controlled); e.select("C");
-  e.click("find-voicings"); await settle(); e.click("tab-match"); assert.equal(controlled.requests[0].options.signal.aborted, true);
-  e.click("tab-browse"); e.click("find-voicings"); await settle(); e.click("cancel-voicings"); assert.equal(controlled.requests[1].options.signal.aborted, true); assert.equal(e.doc.activeElement, e.node("find-voicings"));
-  e.click("find-voicings"); await settle(); e.click("close"); assert.equal(controlled.requests[2].options.signal.aborted, true);
-  e.dispatch({ type: "panel.set", panel: "explore" }); e.click("find-voicings"); await settle();
-  e.component.destroy(); assert.equal(controlled.requests[3].options.signal.aborted, true);
+  await settle(); e.click("tab-match"); assert.equal(controlled.requests[0].options.signal.aborted, true);
+  e.click("tab-browse"); await settle(); e.click("close"); assert.equal(controlled.requests[1].options.signal.aborted, true);
+  e.dispatch({ type: "panel.set", panel: "explore" }); await settle();
+  e.component.destroy(); assert.equal(controlled.requests[2].options.signal.aborted, true);
   for (const request of controlled.requests) request.resolve({ shapes: [], cancelled: false }); await settle();
   assert.equal(e.root.childNodes.length, 0); assert.equal(e.sibling.textContent, "Outside ownership"); e.component.render(e.store.snapshot()); assert.equal(e.root.childNodes.length, 0); e.close();
 });
 test("failed search can retry, and API failures remain visible without losing selected preview", async () => {
   const controlled = controlledSearch();
   const e = harness({ ...controlled, reject: action => action.type === "explore.keep" ? { error: { code: "TEST", message: "Cannot keep this preview" } } : null });
-  e.select("C"); e.click("find-voicings"); await settle(); controlled.requests[0].reject(Error("worker failed")); await settle();
-  assert.match(e.find("voicing-status").textContent, /could not be searched/); assert.equal(e.node("find-voicings").disabled, false);
-  e.click("find-voicings"); await settle(); controlled.requests[1].resolve({ shapes: [], cancelled: false }); await settle();
+  e.select("C"); await settle(); controlled.requests[0].reject(Error("worker failed")); await settle();
+  assert.match(e.find("voicing-status").textContent, /could not be searched/); assert.equal(e.find("fingerings").getAttribute("aria-busy"), "false");
+  e.click("retry-voicings"); await settle(); controlled.requests[1].resolve({ shapes: [], cancelled: false }); await settle();
   e.click("keep"); assert.match(e.find("error").textContent, /Cannot keep/); assert.equal(e.song.chords.length, 0); assert.equal(e.find("preview-name").textContent, "C"); e.close();
 });
 test("keyboard tabs, selected states, focus and open disclosures survive unrelated renders", () => {
-  const e = harness(); e.select("C"); const rootSelect = e.node("browse-root"), disclosure = e.find("fingerings"); disclosure.open = true; rootSelect.focus();
+  const e = harness(); e.select("C"); const rootSelect = e.node("browse-root"), disclosure = e.find("group-triads"); disclosure.open = true; rootSelect.focus();
   e.dispatch({ type: "song.update", patch: { title: "Unrelated save" } });
   assert.equal(e.node("browse-root"), rootSelect); assert.equal(e.doc.activeElement, rootSelect); assert.equal(disclosure.open, true);
   e.node("tab-browse").dispatchEvent({ type: "keydown", key: "ArrowRight" }); assert.equal(e.store.snapshot().exploreState.tab, "match"); assert.equal(e.doc.activeElement, e.node("tab-match"));
@@ -215,7 +218,7 @@ test("keyboard tabs, selected states, focus and open disclosures survive unrelat
 });
 test("real fuller voicings respect capo and slash bass, and mode changes clear the selected shape", async () => {
   const e = harness(); e.dispatch({ type: "settings.apply", tuningMidi: e.song.tuningMidi, capo: 2 });
-  e.select("C/E"); e.change("voicing-mode", "fuller"); e.click("find-voicings"); await completed(e);
+  e.select("C/E"); e.change("voicing-mode", "fuller"); await completed(e);
   assert.ok(e.find("voicing-results").childNodes.length > 0); e.click("voicing-0");
   const notes = Music.notesForShape(e.song.tuningMidi, e.song.capo, e.store.snapshot().exploreState.selectedFrets);
   assert.ok(notes.length >= 4); assert.equal(notes.reduce((lowest, note) => note.midi < lowest.midi ? note : lowest).pc, 4);
@@ -229,7 +232,7 @@ test("Explore explains suggestion limits and keeps the first fuller C as the fam
   assert.match(e.find("voicing-help").textContent, /physical fret 14/);
   assert.match(e.find("voicing-help").textContent, /consecutive strings/);
   assert.match(e.find("voicing-help").textContent, /Compact shapes can include inversions/);
-  e.click("find-voicings"); await completed(e); e.click("voicing-0");
+  await completed(e); e.click("voicing-0");
   assert.deepEqual(e.store.snapshot().exploreState.selectedFrets, [0,1,0,2,3,null]);
   e.click("keep"); assert.deepEqual(e.song.chords[0].frets, [0,1,0,2,3,null]);
   assert.equal(Music.formatInterpretation(e.song.chords[0].interpretation), "C"); e.close();
@@ -247,11 +250,63 @@ test("Explore displays Em from string 6 to 1 while keeping the internal string o
   e.click("keep"); assert.deepEqual(e.song.chords[0].frets, [0, 0, 0, 2, 2, 0]); e.close();
 });
 test("song switches abort old searches and never populate the new song with stale results", async () => {
-  const controlled = controlledSearch(), e = harness(controlled); e.select("C"); e.click("find-voicings"); await settle();
+  const controlled = controlledSearch(), e = harness(controlled); e.select("C"); await settle();
   const pending = controlled.requests[0], originalId = e.song.id;
   e.dispatch({ type: "library.create" }); assert.notEqual(e.song.id, originalId); assert.equal(pending.options.signal.aborted, true);
   pending.resolve({ shapes: [{ frets: [0, 1, 0, null, null, null], position: 1 }], cancelled: false }); await settle();
   e.dispatch({ type: "panel.set", panel: "explore" }); assert.equal(e.song.chords.length, 0); assert.equal(e.find("chord-preview"), undefined);
   e.dispatch({ type: "library.switch", songId: originalId }); assert.equal(e.store.snapshot().exploreState.selectedInterpretation.rootSpelling, "C");
   assert.equal(e.find("voicing-results"), undefined); e.close();
+});
+
+test("changing style immediately replaces results and keeps dropdown focus", async () => {
+  const e = harness(); e.select("C"); await completed(e); e.click("voicing-0");
+  const input = e.node("voicing-mode"); input.focus(); e.change("voicing-mode", "fuller");
+  assert.equal(e.find("voicing-results"), undefined);
+  assert.equal(e.store.snapshot().exploreState.selectedFrets, null);
+  await completed(e);
+  assert.equal(e.doc.activeElement, input); assert.equal(e.node("voicing-mode"), input);
+  assert.equal(e.node("voicing-0").textContent, "× · 3 · 2 · 0 · 1 · 0");
+  e.close();
+});
+
+test("unrelated renders and reopening completed results never repeat the search", async () => {
+  const controlled = controlledSearch(), e = harness(controlled); e.select("C"); await settle();
+  e.dispatch({ type:"song.update", patch:{ title:"While searching" } }); await settle();
+  assert.equal(controlled.requests.length, 1);
+  controlled.requests[0].resolve({shapes:[],cancelled:false}); await settle();
+  e.dispatch({ type:"song.update", patch:{ title:"After searching" } });
+  e.click("tab-match"); e.click("tab-browse"); e.click("close"); e.dispatch({type:"panel.set",panel:"explore"}); await settle();
+  assert.equal(controlled.requests.length, 1); assert.match(e.find("voicing-status").textContent, /No complete/); e.close();
+});
+
+test("failed and cancelled results do not cause automatic retry loops", async () => {
+  for (const cancelled of [false,true]) {
+    const controlled = controlledSearch(), e = harness(controlled); e.select("C"); await settle();
+    if (cancelled) controlled.requests[0].resolve({shapes:[],cancelled:true});
+    else controlled.requests[0].reject(Error("failed"));
+    await settle(); e.component.render(e.store.snapshot()); await settle();
+    assert.equal(controlled.requests.length, 1); assert.ok(e.node("retry-voicings")); e.close();
+  }
+});
+
+test("last-used style follows new and existing songs and survives reload without changing song data", () => {
+  const backend = memoryStorage(), e = harness({backend}); const original = e.song.id, before = JSON.stringify(e.song);
+  e.select("C"); e.change("voicing-mode", "fuller");
+  assert.equal(JSON.stringify(e.song), before);
+  e.dispatch({type:"library.create"}); assert.equal(e.store.snapshot().exploreState.voicingMode, "fuller");
+  e.dispatch({type:"panel.set",panel:"explore"}); e.select("C"); e.change("voicing-mode", "compact");
+  e.dispatch({type:"library.switch",songId:original}); assert.equal(e.store.snapshot().exploreState.voicingMode, "compact");
+  e.select("C"); e.change("voicing-mode", "fuller"); e.close();
+  const reloaded = harness({backend}); assert.equal(reloaded.store.snapshot().exploreState.voicingMode, "fuller"); reloaded.close();
+});
+
+test("invalid or unavailable style storage falls back safely and never blocks changing style", () => {
+  const key = require("../../site/assets/js/song-notebook/contracts.js").fingeringStyleKey;
+  for (const backend of [memoryStorage({[key]:"unsupported"}), {getItem(){throw Error("unavailable");},setItem(){throw Error("unavailable");}}]) {
+    const e = harness({backend}); assert.equal(e.store.snapshot().exploreState.voicingMode, "compact");
+    e.select("C"); e.change("voicing-mode", "fuller"); assert.equal(e.store.snapshot().exploreState.voicingMode, "fuller");
+    assert.equal(e.store.dispatch({type:"explore.set",patch:{voicingMode:"unknown"}}).error.code, "INVALID_FINGERING_STYLE");
+    assert.equal(e.store.snapshot().exploreState.voicingMode, "fuller"); e.close();
+  }
 });

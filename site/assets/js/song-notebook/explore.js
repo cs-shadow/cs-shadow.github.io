@@ -105,15 +105,13 @@
       var interpretation = view.exploreState.selectedInterpretation;
       var settings = { tuningMidi: view.song.tuningMidi.slice(), capo: view.song.capo }, mode = view.exploreState.voicingMode;
       request = pending; voicings = null; error = "";
-      render(view);
-      focus("cancel-voicings");
       Promise.resolve().then(function () {
         if (controller.signal.aborted) { return { shapes: [], cancelled: true }; }
         return music.findVoicings(interpretation, settings, { mode: mode, signal: controller.signal });
       }).then(function (result) {
         if (destroyed || request !== pending || controller.signal.aborted || !searchVisible(view) || searchKey(view) !== key) { return; }
         request = null;
-        if (!result.cancelled) { voicings = { key: key, shapes: result.shapes, error: "" }; }
+        voicings = { key: key, shapes: result.cancelled ? [] : result.shapes, error: result.cancelled ? "Fingering search stopped. Try again, or keep the chord without a fingering." : "" };
         render(view);
       }).catch(function () {
         if (destroyed || request !== pending || controller.signal.aborted) { return; }
@@ -151,11 +149,12 @@
         detail("roman-legend", "About Roman labels", [text("p", "roman-legend-text", "Degrees use a fixed major-scale reference, with lowercase for minor and diminished chords. For example, with A home, Am is i and C is ♭III. These labels describe relationships, not a required chord function.")]),
         state.selectedFrets ? shapePreview(state.selectedFrets) : text("p", "no-fingering", "Fingering not set. You can keep this chord by name.", "notebook-explore-hint"),
         el("div", "keep-actions", { class: "notebook-explore-actions" }, [button("keep", "Keep chord", function () { keep(false); }), button("keep-add", "Keep & add to " + (section.name || "Untitled section"), function () { keep(true); })]),
-        detail("fingerings", "Find a guitar fingering", [
+        el("section", "fingerings", { class: "notebook-explore-fingerings", "aria-label": "Find a guitar fingering", "aria-busy": request ? "true" : "false" }, [
+          text("h4", "fingerings-heading", "Find a guitar fingering"),
           controls("voicing-mode", "Fingering style", [{ id: "compact", label: "Compact · three adjacent strings" }, { id: "fuller", label: "Fuller · four or more strings" }], state.voicingMode, function (event) { set({ voicingMode: event.target.value }); }),
           text("p", "voicing-help", "Complete chord tones within a four-fret span, up to physical fret 14, using your song’s tuning and capo. Fuller shapes use consecutive strings with the root (or requested slash note) in the bass; familiar open and movable shapes come first in standard tuning. Compact shapes can include inversions. Strings are listed 6 through 1 (low E to high E in standard tuning); × means muted and 0 means open relative to capo.", "notebook-explore-hint"),
-          el("div", "search-actions", { class: "notebook-explore-actions" }, [button("find-voicings", request ? "Searching…" : cache ? "Search again" : "Find fingerings", search, { disabled: !!request }),
-            request ? button("cancel-voicings", "Cancel search", function () { abort(); render(view); focus("find-voicings"); }) : null,
+          el("div", "search-actions", { class: "notebook-explore-actions" }, [
+            cache && cache.error ? button("retry-voicings", "Try again", function () { search(); render(view); }) : null,
             state.selectedFrets ? button("clear-fingering", "Use name only", function () { set({ selectedFrets: null }); }) : null]),
           el("p", "voicing-status", { role: "status", class: "notebook-explore-hint" }, [request ? "Searching for complete fingerings…" : cache && cache.error ? cache.error : cache ? cache.shapes.length ? cache.shapes.length + " fingerings found. Choose one to preview." : "No complete fingering fits this style and guitar setup. Try the other style, keep the name, or capture a shape manually." : ""]),
           cache && cache.shapes.length ? el("ul", "voicing-results", { class: "notebook-explore-voicings", "aria-label": "Fingerings, strings 6 through 1" }, cache.shapes.map(function (shape, index) {
@@ -226,6 +225,7 @@
       view = snapshot;
       if (songId !== view.song.id) { abort(); voicings = null; matchCache = null; notice = ""; error = ""; patch(root, []); songId = view.song.id; }
       if (request && (!searchVisible(view) || request.key !== searchKey(view))) { abort(); }
+      if (searchVisible(view) && !request && (!voicings || voicings.key !== searchKey(view))) { search(); }
       root.classList.add("notebook-explore");
       root.hidden = view.panel !== "explore" || view.mode === "read";
       var focused = doc.activeElement;
@@ -238,7 +238,7 @@
         })), el("p", "error", { role: "alert", class: "notebook-explore-error" }, [error]), el("p", "notice", { role: "status", class: "notebook-explore-hint" }, [notice]),
         el("div", "panel-" + tab, { id: prefix + "panel", role: "tabpanel", "aria-labelledby": prefix + "tab-" + tab }, tab === "browse" ? browse() : matching())]);
       if (focused && root.contains(focused) && doc.activeElement !== focused) { focused.focus(); }
-      else if (focused && focused._exploreKey === "cancel-voicings" && !request && !root.hidden) { focus("find-voicings"); }
+      else if (focused && focused._exploreKey === "retry-voicings" && !root.contains(focused) && !root.hidden) { focus("voicing-mode"); }
     }
     function destroy() { if (destroyed) { return; } destroyed = true; abort(); view = null; voicings = null; matchCache = null; browseCache = null; patch(root, []); root.classList.remove("notebook-explore"); }
     return { render: render, destroy: destroy };
