@@ -209,7 +209,7 @@ test("visual tuning presets preserve the draft capo and cancel without saving",(
   settingsControl(settings,"preset-"+preset.id).click();
   assert.equal(settingsControl(settings,"preset-"+preset.id).getAttribute("aria-pressed"),"true");
   assert.equal(settingsControl(settings,"capo-2").getAttribute("aria-pressed"),"true");
-  assert.match(settings.querySelector(".notebook-tuning-name").textContent,new RegExp(preset.label));
+  assert.match(settings.querySelector(".music-tuning-name").textContent,new RegExp(preset.label));
  }
  assert.deepEqual(app.store.snapshot().song,before);
  settingsControl(settings,"cancel").click();assert.equal(settings.hidden,true);
@@ -233,12 +233,12 @@ test("string notes preserve octave, identify matching presets, and preview sound
  assert.equal(settingsControl(settings,"note-2").getAttribute("aria-pressed"),"true");
  assert.match(settingsControl(settings,"string-5").textContent,/D2/);
  settingsControl(settings,"note-3").click();
- assert.match(settings.querySelector(".notebook-tuning-name").textContent,/Custom tuning/);
+ assert.match(settings.querySelector(".music-tuning-name").textContent,/Custom tuning/);
  assert.equal(Music.presets.some(preset=>settingsControl(settings,"preset-"+preset.id).getAttribute("aria-pressed")==="true"),false);
  assert.match(picker.textContent,/String 6 · D#2/);
  assert.match(settingsControl(settings,"string-5").textContent,/D#2/);
  settingsControl(settings,"capo-2").click();
- assert.match(settings.querySelector(".notebook-sounding-tuning").textContent,/F2/);
+ assert.match(settings.querySelector(".music-sounding-tuning").textContent,/F2/);
  assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);
  applySettings(settings);
  assert.deepEqual(app.store.snapshot().song.tuningMidi,[64,59,55,50,45,39]);

@@ -58,61 +58,7 @@ main.guitar-chordinator[hidden] { display: none !important; }
 .notebook-menu > div { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
 .notebook-menu > label { display: block; margin: .75rem 0; }
 .notebook-settings-form { min-width: 0; }
-.song-notebook .notebook-tuning-name { margin: .65rem 0 .25rem; font-weight: 600; }
 .song-notebook .notebook-settings-hint { margin: .3rem 0 .85rem; color: var(--music-muted); font-size: .875rem; }
-.notebook-capo-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1rem 0 .5rem; }
-.notebook-capo-label { color: var(--music-accent); font-size: .9rem; }
-.notebook-no-capo[aria-pressed="true"]::before { content: "✓ "; }
-.notebook-tuning-diagram { display: grid; grid-template-columns: 5.25rem minmax(0, 1fr); gap: .5rem; min-width: 0; }
-.notebook-string-badges { display: grid; grid-template-rows: 36px 288px; align-items: center; }
-.notebook-string-badges > span { color: var(--music-muted); font-size: .75rem; padding-left: .4rem; }
-.notebook-string-badges .music-string-badges { display: grid; grid-template-rows: repeat(6, 48px); gap: 0; align-items: center; }
-.song-notebook .notebook-string-badges .music-string-badge { height: 44px; min-width: 0; padding: .4rem .55rem; }
-.notebook-neck-scroll { min-width: 0; overflow-x: auto; border-radius: var(--music-radius); overscroll-behavior-x: contain; }
-.notebook-tuning-neck {
-  position: relative; height: 324px; min-width: 528px;
-  background: linear-gradient(to bottom, var(--music-panel) 36px, var(--music-neck) 36px);
-}
-.notebook-tuning-neck::before {
-  content: ""; position: absolute; z-index: 2; left: 0; top: 36px; bottom: 0;
-  width: 4px; background: var(--music-nut); pointer-events: none;
-}
-.notebook-neck-strings {
-  position: absolute; top: 36px; right: 0; bottom: 0; left: 0;
-  display: grid; grid-template-rows: repeat(6, 48px); pointer-events: none;
-}
-.notebook-tuning-wire { position: relative; }
-.notebook-tuning-wire::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--music-wire); }
-.notebook-tuning-wire[data-string="2"]::before { height: 1.5px; }
-.notebook-tuning-wire[data-string="3"]::before { height: 2px; }
-.notebook-tuning-wire[data-string="4"]::before { height: 2.5px; }
-.notebook-tuning-wire[data-string="5"]::before { height: 3px; }
-.notebook-tuning-wire[data-string="6"]::before { height: 3.5px; }
-.notebook-capo-frets { display: grid; grid-template-columns: repeat(12, minmax(44px, 1fr)); height: 100%; }
-.song-notebook .notebook-capo-fret {
-  position: relative; height: 100%; min-width: 44px; padding: 0;
-  border: 0; border-radius: 0; background: transparent;
-}
-.song-notebook .notebook-capo-fret::after {
-  content: ""; position: absolute; right: 0; top: 36px; bottom: 0;
-  width: 2px; background: var(--music-fret); pointer-events: none;
-}
-.song-notebook .notebook-capo-fret[aria-pressed="true"] { background: transparent; box-shadow: none; }
-.song-notebook .notebook-capo-fret:hover { background: rgb(255 253 249 / 30%); }
-.song-notebook .notebook-capo-fret:focus-visible { outline-offset: -3px; z-index: 3; }
-.notebook-fret-number {
-  position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
-  display: grid; place-items: center; width: 30px; height: 30px;
-  color: var(--music-muted); font-size: .8rem; border-radius: 50%;
-}
-.notebook-fret-marker { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); color: var(--music-wire); font-size: 1rem; }
-.song-notebook .notebook-capo-fret[aria-pressed="true"]::before {
-  content: ""; position: absolute; top: 48px; bottom: 12px; left: 50%; transform: translateX(-50%);
-  width: 14px; z-index: 1; border: 2px solid var(--music-accent-strong); border-radius: 7px;
-  background: var(--music-accent); box-shadow: 2px 2px 3px rgb(48 44 40 / 20%);
-}
-.notebook-capo-fret[aria-pressed="true"] .notebook-fret-number { color: var(--music-surface); background: var(--music-accent); font-weight: 700; }
-.song-notebook .notebook-sounding-tuning { margin: .85rem 0; font-size: .875rem; color: var(--music-accent); }
 .notebook-settings-preview:empty { display: none; }
 .notebook-settings-preview { margin: 1rem 0; padding-top: .75rem; border-top: 1px solid var(--music-border); }
 .song-notebook .notebook-settings-preview p { margin: .35rem 0; font-size: .875rem; }

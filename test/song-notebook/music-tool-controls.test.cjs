@@ -41,3 +41,49 @@ test("preset tiles show low-to-high notes and compare exact host values", () => 
   control.update([4,11,7,2,9,2]); assert.equal(tile.getAttribute("aria-pressed"),"false");
   control.destroy(); tile.click(); assert.equal(changes.length,1); assert.equal(host.children.length,0);
 });
+
+function tuningPanel(midi = false) {
+  const document = documentFixture(), host = document.createElement("div"), changes = [];
+  document.body.appendChild(host);
+  const values = midi ? [64,59,55,50,45,40] : [4,11,7,2,9,4];
+  const dropD = values.slice(); dropD[5] -= 2;
+  const panel = Controls.mountTuning(host, {
+    id: "shared-tuning-picker", values, capo: 0, midi,
+    presets: [{id:"standard",label:"Standard",values}, {id:"drop-d",label:"Drop D",values:dropD}],
+    onChange(next) { changes.push(next); panel.update(next); }
+  });
+  return {document,host,values,panel,changes,key: name => host.querySelector('[data-tuning-key="'+name+'"]')};
+}
+test("tuning panel keeps uncapoed host values and combines preset, pitch, and capo updates", () => {
+  for (const midi of [false,true]) {
+    const {document,host,values,panel,changes,key} = tuningPanel(midi);
+    key("capo-2").click();
+    assert.deepEqual(changes.at(-1), {values,capo:2});
+    assert.match(host.querySelector(".music-sounding-tuning").textContent, midi ? /F#2 · B2 · E3 · A3 · C#4 · F#4/ : /F# · B · E · A · C# · F#/);
+    key("preset-drop-d").click(); assert.equal(changes.at(-1).capo,2);
+    assert.match(host.querySelector(".music-tuning-name").textContent,/Drop D/);
+    key("string-5").click(); const choice=key("note-0"); choice.focus(); choice.click();
+    assert.equal(changes.at(-1).values[5], midi ? 36 : 0); assert.equal(changes.at(-1).capo,2);
+    assert.equal(document.activeElement,choice); assert.equal(key("octave-up"),null);
+    assert.match(host.querySelector(".music-tuning-name").textContent,/Custom/);
+    assert.equal(values[5],midi ? 40 : 4);
+    panel.closePicker(); assert.equal(document.activeElement,key("string-5"));
+    panel.destroy();
+  }
+});
+test("tuning panel capo keyboard uses one tab stop and cleans up all callbacks", () => {
+  const {document,host,panel,changes,key}=tuningPanel();
+  function press(fret,command) { key("capo-"+fret).dispatchEvent({type:"keydown",key:command,bubbles:true}); }
+  assert.equal(key("capo-0").getAttribute("tabindex"),"0");
+  press(0,"ArrowRight"); assert.equal(changes.at(-1).capo,1); assert.equal(document.activeElement,key("capo-1"));
+  assert.equal(key("capo-0").getAttribute("tabindex"),"-1");
+  press(1,"End"); press(12,"ArrowRight"); assert.equal(changes.at(-1).capo,12);
+  press(12,"Home"); press(0,"ArrowLeft"); assert.equal(changes.at(-1).capo,0);
+  key("string-0").click();
+  const event={type:"keydown",key:"Escape",bubbles:true}; key("capo-0").dispatchEvent(event);
+  assert.equal(event.defaultPrevented,true); assert.equal(document.activeElement,key("string-0"));
+  assert.equal(host.querySelector(".music-note-picker").hidden,true);
+  const staleCapo=key("capo-5"),stalePreset=key("preset-drop-d"),count=changes.length;
+  panel.destroy(); staleCapo.click(); stalePreset.click();
+  assert.equal(changes.length,count); assert.equal(host.children.length,0);
+});
