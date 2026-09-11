@@ -152,7 +152,6 @@
         el("section", "fingerings", { class: "notebook-explore-fingerings", "aria-label": "Find a guitar fingering", "aria-busy": request ? "true" : "false" }, [
           text("h4", "fingerings-heading", "Find a guitar fingering"),
           controls("voicing-mode", "Fingering style", [{ id: "compact", label: "Compact · three adjacent strings" }, { id: "fuller", label: "Fuller · four or more strings" }], state.voicingMode, function (event) { set({ voicingMode: event.target.value }); }),
-          text("p", "voicing-help", "Complete chord tones within a four-fret span, up to physical fret 14, using your song’s tuning and capo. Fuller shapes use consecutive strings with the root (or requested slash note) in the bass; familiar open and movable shapes come first in standard tuning. Compact shapes can include inversions. Strings are listed 6 through 1 (low E to high E in standard tuning); × means muted and 0 means open relative to capo.", "notebook-explore-hint"),
           el("div", "search-actions", { class: "notebook-explore-actions" }, [
             cache && cache.error ? button("retry-voicings", "Try again", function () { search(); render(view); }) : null,
             state.selectedFrets ? button("clear-fingering", "Use name only", function () { set({ selectedFrets: null }); }) : null]),
