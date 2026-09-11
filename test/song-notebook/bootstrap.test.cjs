@@ -4,9 +4,12 @@ const Controller=require("../../site/assets/js/guitar-chordinator.js"),Music=req
 const {notebookDocument}=require("./dom-fixture.cjs"),{memoryStorage}=require("./fixtures.cjs");
 function setup(realComponents=false,reading=false){const document=notebookDocument(),renders=[],handlers={},memory=memoryStorage();const component={mount:()=>({render:snapshot=>renders.push(snapshot),destroy(){}})};const window={SongNotebookMusic:Music,SongNotebookModel:Model,SongNotebookStorage:Storage,SongNotebookContracts:Contracts,SongNotebookCompose:realComponents?require("../../site/assets/js/song-notebook/compose.js"):component,SongNotebookExplore:realComponents?require("../../site/assets/js/song-notebook/explore.js"):undefined,SongNotebookReading:reading==="real"?require("../../site/assets/js/song-notebook/reading.js"):reading?component:undefined,print(){},SongNotebookEditor:realComponents?require("../../site/assets/js/song-notebook/editor.js"):component,localStorage:memory,addEventListener(type,handler){handlers[type]=handler;},removeEventListener(type){delete handlers[type];}};const app=Controller.bootstrap(window,document);return {app,window,document,renders,handlers,memory};}
 function byText(root,tag,text){return root.querySelectorAll(tag).find(node=>node.textContent===text);}
+function settingsControl(settings,key){return settings.querySelector('[data-settings-key="'+key+'"]');}
+function openSettings(document){byText(document.getElementById("notebook-header"),"button","Standard tuning · No capo").click();return document.getElementById("notebook-settings");}
+function applySettings(settings){settings.querySelector("form").dispatchEvent({type:"submit"});}
 test("bootstrap wires actual store into hosts while preserving an empty first song",()=>{const {app,document,renders,memory}=setup();assert.equal(document.getElementById("song-notebook").hidden,false);assert.equal(document.querySelector("main.guitar-chordinator").hidden,true);assert.equal(renders.at(-1).song.chords.length,0);assert.equal(renders.at(-1).song.sections[0].name,"Section 1");assert.ok(memory.getItem(Contracts.libraryKey));assert.equal(document.getElementById("notebook-details").hidden,true);app.destroy();});
 test("inline title and optional notes use text and remain visible after committing",()=>{const {app,document}=setup();const header=document.getElementById("notebook-header");let title=header.querySelector('[aria-label="Song title"]');title.value="<script>Song title</script>";title.dispatchEvent({type:"change"});assert.equal(app.store.snapshot().song.title,title.value);byText(header,"button","Add song notes…").click();const notes=header.querySelector("textarea");notes.value="Line one\nLine two";notes.dispatchEvent({type:"change"});byText(header,"button","Done with song notes").click();assert.ok(header.textContent.includes("Line one\nLine two"));assert.equal(header.querySelector("script"),null);app.destroy();});
-test("settings changes preview before Apply and storage events expose explicit choices",()=>{const {app,document,handlers}=setup();let header=document.getElementById("notebook-header");byText(header,"button","Standard tuning · No capo").click();const settings=document.getElementById("notebook-settings");const capo=settings.querySelector('[aria-label="Full capo fret"]');capo.value="2";capo.dispatchEvent({type:"input"});assert.equal(app.store.snapshot().song.capo,0);settings.querySelector("form").dispatchEvent({type:"submit"});assert.equal(app.store.snapshot().song.capo,2);handlers.storage({key:Contracts.libraryKey,storageArea:null});const status=document.getElementById("notebook-status");assert.ok(byText(status,"button","Reload saved copy"));assert.ok(byText(status,"button","Keep and save this copy"));assert.equal(app.store.state().suspended,"conflict");app.destroy();});
+test("settings changes preview before Apply and storage events expose explicit choices",()=>{const {app,document,handlers}=setup();let header=document.getElementById("notebook-header");byText(header,"button","Standard tuning · No capo").click();const settings=document.getElementById("notebook-settings");settings.querySelector('[data-settings-key="capo-2"]').click();assert.equal(app.store.snapshot().song.capo,0);settings.querySelector("form").dispatchEvent({type:"submit"});assert.equal(app.store.snapshot().song.capo,2);handlers.storage({key:Contracts.libraryKey,storageArea:null});const status=document.getElementById("notebook-status");assert.ok(byText(status,"button","Reload saved copy"));assert.ok(byText(status,"button","Keep and save this copy"));assert.equal(app.store.state().suspended,"conflict");app.destroy();});
 
 test("real composer and editor work together through visible controls and bootstrap",()=>{
  const {app,document}=setup(true),root=document.getElementById("song-notebook");
@@ -156,8 +159,8 @@ test("settings preview includes shapes saved since the header was rendered",()=>
  app.store.dispatch({type:"chord.create",chord:{frets:[24,null,null,null,null,null],interpretation:null,nickname:"High shape",notes:""}});
  assert.strictEqual(byText(header,"button","Standard tuning · No capo"),tuningButton);
  tuningButton.click();
- const settings=document.getElementById("notebook-settings"),capo=settings.querySelector('[aria-label="Full capo fret"]');
- capo.value="1";capo.dispatchEvent({type:"input"});
+ const settings=document.getElementById("notebook-settings");
+ settings.querySelector('[data-settings-key="capo-1"]').click();
  assert.equal(byText(settings,"button","Apply settings").disabled,true);
  assert.match(settings.textContent,/High shape would exceed physical fret 24/);
  assert.equal(app.store.snapshot().song.capo,0);
@@ -193,5 +196,173 @@ test("renaming with Songs open preserves the next library action and its labels"
  assert.equal(app.store.state().library.songs.length,2);
  assert.notEqual(app.store.snapshot().song.id,songId);
  assert.equal(app.store.state().library.songs.find(song=>song.id===songId).title,"Renamed song");
+ app.destroy();
+});
+
+test("visual tuning presets preserve the draft capo and cancel without saving",()=>{
+ const {app,document}=setup(),before=app.store.snapshot().song,settings=openSettings(document);
+ assert.equal(settings.querySelectorAll("select").length,0);
+ assert.equal(settings.querySelectorAll("input").length,0);
+ assert.equal(settingsControl(settings,"preset-standard").getAttribute("aria-pressed"),"true");
+ settingsControl(settings,"capo-2").click();
+ for(const preset of Music.presets){
+  settingsControl(settings,"preset-"+preset.id).click();
+  assert.equal(settingsControl(settings,"preset-"+preset.id).getAttribute("aria-pressed"),"true");
+  assert.equal(settingsControl(settings,"capo-2").getAttribute("aria-pressed"),"true");
+  assert.match(settings.querySelector(".notebook-tuning-name").textContent,new RegExp(preset.label));
+ }
+ assert.deepEqual(app.store.snapshot().song,before);
+ settingsControl(settings,"cancel").click();assert.equal(settings.hidden,true);
+ assert.deepEqual(app.store.snapshot().song,before);
+ openSettings(document);
+ assert.equal(settingsControl(settings,"preset-standard").getAttribute("aria-pressed"),"true");
+ assert.equal(settingsControl(settings,"capo-0").getAttribute("aria-pressed"),"true");
+ app.destroy();
+});
+
+test("string notes preserve octave, identify matching presets, and preview sounding pitches",()=>{
+ const {app,document}=setup(),settings=openSettings(document);
+ settingsControl(settings,"string-5").click();
+ const picker=settings.querySelector(".notebook-note-picker");
+ assert.equal(picker.hidden,false);assert.equal(picker.getAttribute("aria-label"),"Edit string 6 tuning");
+ assert.match(picker.textContent,/Octave 2/);
+ settingsControl(settings,"note-2").click();
+ assert.equal(settingsControl(settings,"preset-drop-d").getAttribute("aria-pressed"),"true");
+ assert.equal(settingsControl(settings,"note-2").getAttribute("aria-pressed"),"true");
+ assert.match(settingsControl(settings,"string-5").textContent,/D2/);
+ settingsControl(settings,"note-3").click();
+ assert.match(settings.querySelector(".notebook-tuning-name").textContent,/Custom tuning/);
+ assert.equal(Music.presets.some(preset=>settingsControl(settings,"preset-"+preset.id).getAttribute("aria-pressed")==="true"),false);
+ assert.match(picker.textContent,/Octave 2/);
+ settingsControl(settings,"octave-up").click();assert.match(picker.textContent,/Octave 3/);
+ assert.match(settingsControl(settings,"string-5").textContent,/D#3/);
+ settingsControl(settings,"capo-2").click();
+ assert.match(settings.querySelector(".notebook-sounding-tuning").textContent,/F3/);
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);
+ applySettings(settings);
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,[64,59,55,50,45,51]);
+ assert.equal(app.store.snapshot().song.capo,2);
+ app.destroy();
+});
+
+test("note and octave controls enforce the complete MIDI range",()=>{
+ const {app,document}=setup();
+ app.store.dispatch({type:"settings.apply",tuningMidi:[0,127,55,50,45,40],capo:0});
+ const header=document.getElementById("notebook-header");
+ byText(header,"button","Custom tuning · No capo").click();
+ const settings=document.getElementById("notebook-settings");
+ settingsControl(settings,"string-0").click();
+ assert.match(settings.querySelector(".notebook-note-picker").textContent,/Octave -1/);
+ assert.equal(settingsControl(settings,"octave-down").disabled,true);
+ assert.equal(settingsControl(settings,"octave-up").disabled,false);
+ settingsControl(settings,"octave-down").click();
+ assert.match(settingsControl(settings,"string-0").textContent,/C-1/);
+ settingsControl(settings,"string-1").click();
+ assert.match(settings.querySelector(".notebook-note-picker").textContent,/Octave 9/);
+ assert.equal(settingsControl(settings,"octave-up").disabled,true);
+ assert.equal(settingsControl(settings,"note-7").disabled,false);
+ assert.equal(settingsControl(settings,"note-8").disabled,true);
+ assert.equal(settingsControl(settings,"note-11").disabled,true);
+ settingsControl(settings,"note-8").click();
+ assert.match(settingsControl(settings,"string-1").textContent,/G9/);
+ settingsControl(settings,"octave-down").click();
+ assert.equal(settingsControl(settings,"note-11").disabled,false);
+ settingsControl(settings,"note-11").click();
+ assert.equal(settingsControl(settings,"octave-up").disabled,true);
+ applySettings(settings);assert.deepEqual(app.store.snapshot().song.tuningMidi,[0,119,55,50,45,40]);
+ app.destroy();
+});
+
+test("capo keyboard navigation selects and focuses positions including both bounds",()=>{
+ const {app,document}=setup(),settings=openSettings(document);
+ function key(from,key,to){
+  const control=settingsControl(settings,"capo-"+from);control.focus();
+  const event={type:"keydown",key,bubbles:true};control.dispatchEvent(event);
+  assert.equal(event.defaultPrevented,true);
+  assert.strictEqual(document.activeElement,settingsControl(settings,"capo-"+to));
+  assert.equal(document.activeElement.getAttribute("aria-pressed"),"true");
+ }
+ key(0,"ArrowLeft",0);key(0,"ArrowRight",1);key(1,"End",12);
+ key(12,"ArrowRight",12);key(12,"ArrowLeft",11);key(11,"Home",0);
+ settingsControl(settings,"capo-12").click();settingsControl(settings,"capo-12").click();
+ assert.equal(settingsControl(settings,"capo-12").getAttribute("aria-pressed"),"true");
+ assert.equal(app.store.snapshot().song.capo,0);
+ applySettings(settings);assert.equal(app.store.snapshot().song.capo,12);
+ app.destroy();
+});
+
+test("settings keep focused nodes and the active picker through draft updates and saves",()=>{
+ const {app,document}=setup(),settings=openSettings(document),string=settingsControl(settings,"string-0");
+ string.click();assert.equal(string.getAttribute("aria-expanded"),"true");
+ const note=settingsControl(settings,"note-5"),picker=settings.querySelector(".notebook-note-picker");
+ note.focus();note.click();
+ assert.strictEqual(settingsControl(settings,"note-5"),note);assert.strictEqual(document.activeElement,note);
+ app.store.flush();app.store.dispatch({type:"song.update",patch:{title:"Another title"}});
+ assert.strictEqual(settingsControl(settings,"note-5"),note);assert.strictEqual(document.activeElement,note);
+ assert.strictEqual(settings.querySelector(".notebook-note-picker"),picker);assert.equal(picker.hidden,false);
+ settingsControl(settings,"picker-done").click();
+ assert.equal(picker.hidden,true);assert.strictEqual(document.activeElement,string);assert.equal(string.getAttribute("aria-expanded"),"false");
+ string.click();note.focus();note.dispatchEvent({type:"keydown",key:"Escape",bubbles:true});
+ assert.equal(picker.hidden,true);assert.strictEqual(document.activeElement,string);
+ app.destroy();
+});
+
+test("settings draft and picker survive Read but reset when changing songs",()=>{
+ const {app,document}=setup(true,"real"),settings=openSettings(document),header=document.getElementById("notebook-header");
+ settingsControl(settings,"capo-2").click();settingsControl(settings,"string-5").click();settingsControl(settings,"note-2").click();
+ byText(header,"button","Read").click();assert.equal(settings.hidden,true);
+ byText(header,"button","Edit").click();assert.equal(settings.hidden,false);
+ assert.equal(settingsControl(settings,"capo-2").getAttribute("aria-pressed"),"true");
+ assert.equal(settingsControl(settings,"preset-drop-d").getAttribute("aria-pressed"),"true");
+ assert.equal(settings.querySelector(".notebook-note-picker").hidden,false);
+ assert.equal(settings.querySelector(".notebook-note-picker").getAttribute("aria-label"),"Edit string 6 tuning");
+ const original=app.store.snapshot().song.id;
+ app.store.dispatch({type:"library.create"});
+ if(settings.hidden)openSettings(document);
+ assert.equal(settingsControl(settings,"capo-0").getAttribute("aria-pressed"),"true");
+ assert.equal(settingsControl(settings,"preset-standard").getAttribute("aria-pressed"),"true");
+ assert.equal(settings.querySelector(".notebook-note-picker").hidden,true);
+ app.store.dispatch({type:"library.switch",songId:original});
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);assert.equal(app.store.snapshot().song.capo,0);
+ app.destroy();
+});
+
+test("applying visual tuning and capo creates one undoable settings change",()=>{
+ const {app,document}=setup(),settings=openSettings(document);
+ settingsControl(settings,"preset-open-d").click();settingsControl(settings,"capo-2").click();
+ assert.equal(app.store.state().canUndo,false);
+ applySettings(settings);assert.equal(settings.hidden,true);
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,[62,57,54,50,45,38]);assert.equal(app.store.snapshot().song.capo,2);
+ app.store.dispatch({type:"history.undo"});
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);assert.equal(app.store.snapshot().song.capo,0);
+ assert.equal(app.store.state().canUndo,false);
+ app.store.dispatch({type:"history.redo"});
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,[62,57,54,50,45,38]);assert.equal(app.store.snapshot().song.capo,2);
+ app.destroy();
+});
+
+test("an open settings preview revalidates shapes added and removed afterward",()=>{
+ const {app,document}=setup(),settings=openSettings(document),capo=settingsControl(settings,"capo-2");
+ capo.click();assert.equal(settingsControl(settings,"apply").disabled,false);
+ app.store.dispatch({type:"chord.create",chord:{frets:[24,null,null,null,null,null],interpretation:null,nickname:"Later high shape",notes:""}});
+ const chord=app.store.snapshot().song.chords.at(-1);
+ assert.strictEqual(settingsControl(settings,"capo-2"),capo);
+ assert.equal(settingsControl(settings,"apply").disabled,true);
+ assert.match(settings.textContent,/Later high shape would exceed physical fret 24/);
+ assert.equal(app.store.snapshot().song.capo,0);
+ app.store.dispatch({type:"chord.delete",chordId:chord.id});
+ assert.equal(settingsControl(settings,"apply").disabled,false);
+ applySettings(settings);assert.equal(app.store.snapshot().song.capo,2);
+ app.destroy();
+});
+
+test("an open settings preview updates its warning when editor drafts appear or disappear",()=>{
+ const {app,document}=setup(),settings=openSettings(document);
+ settingsControl(settings,"capo-2").click();
+ assert.doesNotMatch(settings.textContent,/Your unapplied drafts/);
+ app.store.dispatch({type:"draft.open",chordId:null});
+ assert.match(settings.textContent,/Your unapplied drafts will keep their old settings and require review/);
+ app.store.dispatch({type:"draft.discard",chordId:null});
+ assert.doesNotMatch(settings.textContent,/Your unapplied drafts/);
  app.destroy();
 });

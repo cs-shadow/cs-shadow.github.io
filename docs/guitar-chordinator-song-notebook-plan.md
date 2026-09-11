@@ -159,9 +159,18 @@ Expandable work area: chord details / shape editor / explore
 
 - One tuning and one full capo apply to the whole song, including unused chords.
   Changes are deliberate song-setting edits, never occurrence settings.
-- Reuse Standard, Drop D, Open G, Open D, and DADGAD presets. Custom settings offer
-  note and octave for each of six strings. Use actual register to determine bass
-  and inversion; string order alone is insufficient.
+- Show Standard, Drop D, Open G, Open D, and DADGAD as preset tiles with notes
+  labelled low-to-high. Each string has a tuning-before-capo badge that opens an
+  inline chromatic-note and octave picker; highlight the matching preset or
+  show Custom tuning. Use actual register to determine bass and inversion.
+- Draw a six-string neck with string 1 at the top and clickable capo frets 1–12,
+  a visible capo bar, a No capo button, and resulting open-string pitches.
+  Preset, string, and capo changes update a draft and affected-chord preview;
+  Apply commits the settings, while Cancel leaves the song unchanged.
+- Provide labelled buttons, selected states, visible keyboard focus, arrow and
+  Home/End capo navigation, and Done/Escape for the string picker. Preserve
+  focus and the picker through draft updates. On phones, wrap controls and
+  keep string badges beside a scrolling neck with at least 44px touch targets.
 - Store frets relative to capo: fret 0 sounds at capo, and physical fret equals
   capo plus relative fret. Support physical frets through 24 and capo 0–12.
 - When names differ, show “C shape · sounds D · capo 2”. Primary section/analysis
