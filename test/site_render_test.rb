@@ -85,6 +85,20 @@ class SiteRenderTest < Minitest::Test
       assert_includes scalar_triads, 'id="scale-clear-history"'
       assert_includes chordinator, 'id="chordinator-recent-settings"'
       assert_includes chordinator, 'id="chordinator-clear-history"'
+
+      [scalar_triads, chordinator].each do |page|
+        assert_match(/<main[^>]+class="[^"]*\bmusic-tool\b/, page)
+        assert_includes page, 'href="/assets/css/music-tool.css"'
+        assert_includes page, 'src="/assets/js/music-tool-controls.js"'
+      end
+      assert_operator scalar_triads.index('/assets/js/music-tool-controls.js'), :<,
+        scalar_triads.index('/assets/js/scalar-triads.js')
+      assert_operator chordinator.index('/assets/js/music-tool-controls.js'), :<,
+        chordinator.index('/assets/js/guitar-chordinator.js')
+      assert_operator chordinator.index('/assets/css/music-tool.css'), :<,
+        chordinator.index('/assets/css/song-notebook/notebook.css')
+      assert File.exist?(File.join(destination, "assets", "css", "music-tool.css"))
+      assert File.exist?(File.join(destination, "assets", "js", "music-tool-controls.js"))
     end
   end
 end
