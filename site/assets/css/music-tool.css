@@ -56,8 +56,8 @@
 .music-tool .music-string-badge[aria-expanded="true"] .music-string-pitch { text-decoration: underline; text-underline-offset: .25rem; }
 .music-tool .music-note-picker { display: grid; gap: .75rem; padding: 1rem; margin-top: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
 .music-tool .music-note-picker h3 { margin: 0; font-size: 1rem; }
-.music-tool .music-note-options, .music-tool .music-octave-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.music-tool .music-note-option, .music-tool .music-octave-controls button { min-width: 44px; }
+.music-tool .music-note-options { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.music-tool .music-note-option { min-width: 44px; }
 .music-tool .music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
 .music-tool .music-note-picker > button { justify-self: start; }
 @media (max-width: 1100px) {

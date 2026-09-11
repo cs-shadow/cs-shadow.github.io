@@ -225,7 +225,9 @@ test("string notes preserve octave, identify matching presets, and preview sound
  settingsControl(settings,"string-5").click();
  const picker=settings.querySelector(".music-note-picker");
  assert.equal(picker.hidden,false);assert.equal(picker.getAttribute("aria-label"),"Edit string 6 tuning");
- assert.match(picker.textContent,/Octave 2/);
+ assert.match(picker.textContent,/String 6 · E2/);
+ assert.equal(settingsControl(settings,"octave-up"),null);
+ assert.equal(settingsControl(settings,"octave-down"),null);
  settingsControl(settings,"note-2").click();
  assert.equal(settingsControl(settings,"preset-drop-d").getAttribute("aria-pressed"),"true");
  assert.equal(settingsControl(settings,"note-2").getAttribute("aria-pressed"),"true");
@@ -233,43 +235,35 @@ test("string notes preserve octave, identify matching presets, and preview sound
  settingsControl(settings,"note-3").click();
  assert.match(settings.querySelector(".notebook-tuning-name").textContent,/Custom tuning/);
  assert.equal(Music.presets.some(preset=>settingsControl(settings,"preset-"+preset.id).getAttribute("aria-pressed")==="true"),false);
- assert.match(picker.textContent,/Octave 2/);
- settingsControl(settings,"octave-up").click();assert.match(picker.textContent,/Octave 3/);
- assert.match(settingsControl(settings,"string-5").textContent,/D#3/);
+ assert.match(picker.textContent,/String 6 · D#2/);
+ assert.match(settingsControl(settings,"string-5").textContent,/D#2/);
  settingsControl(settings,"capo-2").click();
- assert.match(settings.querySelector(".notebook-sounding-tuning").textContent,/F3/);
+ assert.match(settings.querySelector(".notebook-sounding-tuning").textContent,/F2/);
  assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);
  applySettings(settings);
- assert.deepEqual(app.store.snapshot().song.tuningMidi,[64,59,55,50,45,51]);
+ assert.deepEqual(app.store.snapshot().song.tuningMidi,[64,59,55,50,45,39]);
  assert.equal(app.store.snapshot().song.capo,2);
  app.destroy();
 });
 
-test("note and octave controls enforce the complete MIDI range",()=>{
+test("note controls preserve imported registers at MIDI bounds",()=>{
  const {app,document}=setup();
  app.store.dispatch({type:"settings.apply",tuningMidi:[0,127,55,50,45,40],capo:0});
  const header=document.getElementById("notebook-header");
  byText(header,"button","Custom tuning · No capo").click();
  const settings=document.getElementById("notebook-settings");
  settingsControl(settings,"string-0").click();
- assert.match(settings.querySelector(".music-note-picker").textContent,/Octave -1/);
- assert.equal(settingsControl(settings,"octave-down").disabled,true);
- assert.equal(settingsControl(settings,"octave-up").disabled,false);
- settingsControl(settings,"octave-down").click();
+ assert.match(settings.querySelector(".music-note-picker").textContent,/String 1 · C-1/);
  assert.match(settingsControl(settings,"string-0").textContent,/C-1/);
  settingsControl(settings,"string-1").click();
- assert.match(settings.querySelector(".music-note-picker").textContent,/Octave 9/);
- assert.equal(settingsControl(settings,"octave-up").disabled,true);
+ assert.match(settings.querySelector(".music-note-picker").textContent,/String 2 · G9/);
  assert.equal(settingsControl(settings,"note-7").disabled,false);
  assert.equal(settingsControl(settings,"note-8").disabled,true);
  assert.equal(settingsControl(settings,"note-11").disabled,true);
  settingsControl(settings,"note-8").click();
  assert.match(settingsControl(settings,"string-1").textContent,/G9/);
- settingsControl(settings,"octave-down").click();
- assert.equal(settingsControl(settings,"note-11").disabled,false);
- settingsControl(settings,"note-11").click();
- assert.equal(settingsControl(settings,"octave-up").disabled,true);
- applySettings(settings);assert.deepEqual(app.store.snapshot().song.tuningMidi,[0,119,55,50,45,40]);
+ settingsControl(settings,"note-6").click();
+ applySettings(settings);assert.deepEqual(app.store.snapshot().song.tuningMidi,[0,126,55,50,45,40]);
  app.destroy();
 });
 

@@ -54,7 +54,7 @@ widths.
 - Scalar: long scale/history labels fit on phones. Six strings tuned to C produce
   the existing empty-fingering message without page overflow. Root markers and
   pale tone markers are distinct on the scale map and compact triad diagrams.
-- Notebook: shared presets and the octave picker remain drafts until Apply;
+- Notebook: shared presets and the string-note picker remain drafts until Apply;
   Cancel preserves standard tuning. Applying Drop D and capo 2 updates the song,
   and Undo restores the previous settings. Escape restores string-badge focus.
 - Notebook: typing `Am F C G`, opening Explore, selecting C, manually capturing

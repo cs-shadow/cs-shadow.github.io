@@ -50,18 +50,19 @@
   }
 
   // Separate hosts allow badges to sit beside a neck and the picker below it.
-  // options: {id, values, octaves?, noteName?, keyAttribute?, onChange(values)}.
+  // options: {id, values, midi?, noteName?, keyAttribute?, onChange(values)}.
+  // MIDI note changes preserve the host's register; only pitch is editable.
   // update preserves mounted nodes, selected string, and keyboard focus.
   function mountStringNotes(badgeHost, pickerHost, options) {
     var document = badgeHost.ownerDocument, values = options.values.slice();
     var selected = null, active = true, badges = [], pitches = [], notes = [];
     var name = options.noteName || function (value) { return NOTES[pc(value)]; };
-    function pitch(value) { return name(value) + (options.octaves ? Math.floor(value / 12) - 1 : ""); }
+    function pitch(value) { return name(value) + (options.midi ? Math.floor(value / 12) - 1 : ""); }
     var badgeGroup = node(document, "div", null, { class: "music-string-badges", role: "group", "aria-label": "String tuning" });
     var picker = node(document, "div", null, { id: options.id, class: "music-note-picker", role: "region", "aria-labelledby": options.id + "-title" });
     var title = node(document, "h3", "", { id: options.id + "-title" }); picker.appendChild(title);
     function change(value) {
-      if (!active || selected === null || value < 0 || value > (options.octaves ? 127 : 11)) { return; }
+      if (!active || selected === null || value < 0 || value > (options.midi ? 127 : 11)) { return; }
       var next = values.slice(); next[selected] = value; options.onChange(next);
     }
     values.forEach(function (_, index) {
@@ -77,21 +78,11 @@
     var noteGroup = node(document, "div", null, { class: "music-note-options", role: "group", "aria-label": "String note" });
     NOTES.forEach(function (_, notePc) {
       var choice = button(document, options, "note-" + notePc, name(notePc), "music-note-option", function () {
-        if (selected !== null) { change(options.octaves ? Math.floor(values[selected] / 12) * 12 + notePc : notePc); }
+        if (selected !== null) { change(options.midi ? Math.floor(values[selected] / 12) * 12 + notePc : notePc); }
       });
       notes.push(choice); noteGroup.appendChild(choice);
     });
     picker.appendChild(noteGroup);
-    var octaveDown, octaveUp, octaveLabel;
-    if (options.octaves) {
-      var octaves = node(document, "div", null, { class: "music-octave-controls" });
-      octaveDown = button(document, options, "octave-down", "−", "", function () { if (selected !== null) { change(values[selected] - 12); } });
-      octaveDown.setAttribute("aria-label", "Lower string octave");
-      octaveUp = button(document, options, "octave-up", "+", "", function () { if (selected !== null) { change(values[selected] + 12); } });
-      octaveUp.setAttribute("aria-label", "Raise string octave");
-      octaveLabel = node(document, "span", "");
-      octaves.appendChild(octaveDown); octaves.appendChild(octaveLabel); octaves.appendChild(octaveUp); picker.appendChild(octaves);
-    }
     function close() {
       if (!active || selected === null) { return; }
       var previous = selected; selected = null; refresh(); badges[previous].focus();
@@ -113,12 +104,8 @@
       picker.setAttribute("aria-label", "Edit string " + (selected + 1) + " tuning");
       notes.forEach(function (choice, notePc) {
         pressed(choice, pc(value) === notePc);
-        choice.disabled = !!options.octaves && Math.floor(value / 12) * 12 + notePc > 127;
+        choice.disabled = !!options.midi && Math.floor(value / 12) * 12 + notePc > 127;
       });
-      if (options.octaves) {
-        octaveDown.disabled = value < 12; octaveUp.disabled = value + 12 > 127;
-        octaveLabel.textContent = "Octave " + (Math.floor(value / 12) - 1);
-      }
     }
     refresh();
     return {
