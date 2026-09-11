@@ -773,7 +773,7 @@
   stringControls = MusicToolControls.mountStringNotes(document.getElementById("scalar-tuning-strings"), document.getElementById("scalar-tuning-picker"), {
     id: "scalar-string-note-picker",
     values: GuitarTuning.pitches(tuning),
-    octaves: false,
+    midi: false,
     onChange: changeTuning
   });
   function closeTuning() {

@@ -330,7 +330,7 @@
       neck.appendChild(frets); scroll.appendChild(neck); diagram.appendChild(scroll); form.appendChild(diagram);
       var pickerHost = el("div"); form.appendChild(pickerHost);
       var stringControls = controls.mountStringNotes(badges, pickerHost, {
-        id: "notebook-string-picker", values: settingsDraft.tuningMidi, octaves: true,
+        id: "notebook-string-picker", values: settingsDraft.tuningMidi, midi: true,
         keyAttribute: "data-settings-key",
         noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
         onChange: function (values) { settingsDraft.tuningMidi = values; refresh(); }

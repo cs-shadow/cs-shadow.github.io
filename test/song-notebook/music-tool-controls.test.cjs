@@ -2,11 +2,11 @@
 const test = require("node:test"), assert = require("node:assert/strict");
 const Controls = require("../../site/assets/js/music-tool-controls.js");
 const {documentFixture} = require("./dom-fixture.cjs");
-function setup(octaves = false) {
+function setup(midi = false) {
   const document = documentFixture(), badges = document.createElement("div"), picker = document.createElement("div");
   document.body.append(badges, picker);
-  const original = octaves ? [64,59,55,50,45,40] : [4,11,7,2,9,4], changes = [];
-  const control = Controls.mountStringNotes(badges, picker, {id:"tuning-picker", values:original, octaves, onChange(value) {changes.push(value); control.update(value);}});
+  const original = midi ? [64,59,55,50,45,40] : [4,11,7,2,9,4], changes = [];
+  const control = Controls.mountStringNotes(badges, picker, {id:"tuning-picker", values:original, midi, onChange(value) {changes.push(value); control.update(value);}});
   const key = name => document.querySelector('[data-tuning-key="'+name+'"]');
   return {document, badges, picker, original, changes, control, key};
 }
@@ -25,10 +25,10 @@ test("pitch-class picker delegates changes without mutating host data and restor
 test("MIDI picker preserves register and prevents edits outside MIDI bounds", () => {
   const {control,key,changes} = setup(true);
   key("string-0").click(); key("note-2").click(); assert.equal(changes.at(-1)[0],62);
-  key("octave-down").click(); assert.equal(changes.at(-1)[0],50);
-  control.update([127,59,55,50,45,40]); assert.equal(key("octave-up").disabled,true); assert.equal(key("note-8").disabled,true);
-  key("note-8").click(); assert.equal(changes.length,2);
-  control.update([0,59,55,50,45,40]); assert.equal(key("octave-down").disabled,true);
+  assert.equal(key("octave-down"),null); assert.equal(key("octave-up"),null);
+  control.update([127,59,55,50,45,40]); assert.equal(key("note-8").disabled,true);
+  key("note-8").click(); assert.equal(changes.length,1);
+  control.update([0,59,55,50,45,40]);
   assert.equal(key("string-0").getAttribute("aria-label"),"String 1, C-1, edit tuning");
 });
 test("preset tiles show low-to-high notes and compare exact host values", () => {
