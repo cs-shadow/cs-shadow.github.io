@@ -49,6 +49,8 @@
   var triadTarget = document.getElementById("triad-list");
   var selectedStringSetId = "strings-1-2-3";
   var selectedFingeringStyle = "triads";
+  var hiddenChordDegrees = new Set();
+  var chordSelectionKey = "";
   var tuning = GuitarTuning.defaultTuning();
   var capo = 0;
   var history = [];
@@ -763,6 +765,8 @@
       var item = document.createElement("article");
       var heading = document.createElement("header");
       item.className = "triad-card";
+      item.id = "chord-fingerings-" + triad.degree;
+      item.hidden = hiddenChordDegrees.has(triad.degree);
 
       heading.className = "triad-card-heading";
       heading.innerHTML = "<h3>" + triad.roman + " " + triad.name + "</h3><p>" + triad.notes.map(function (note) {
@@ -802,11 +806,25 @@
     triads.forEach(function (triad) {
       var item = document.createElement("li");
       var degree = document.createElement("span");
-      var name = document.createElement("strong");
+      var name = document.createElement("button");
       var notes = document.createElement("small");
 
       degree.textContent = triad.roman;
+      name.type = "button";
+      name.setAttribute("aria-pressed", String(!hiddenChordDegrees.has(triad.degree)));
+      name.setAttribute("aria-controls", "chord-fingerings-" + triad.degree);
       name.textContent = triad.name;
+      name.addEventListener("click", function () {
+        if (hiddenChordDegrees.has(triad.degree)) {
+          hiddenChordDegrees.delete(triad.degree);
+        } else {
+          hiddenChordDegrees.add(triad.degree);
+        }
+        var selected = !hiddenChordDegrees.has(triad.degree);
+        name.setAttribute("aria-pressed", String(selected));
+        document.getElementById("chord-fingerings-" + triad.degree).hidden = !selected;
+        document.getElementById("chord-selection-empty").hidden = hiddenChordDegrees.size !== triads.length;
+      });
       notes.textContent = triad.notes.map(function (note) {
         return note.name;
       }).join(" - ");
@@ -827,6 +845,12 @@
       var notes = resolvedSelection.notes;
       var triads = buildTriads(notes);
       var scaleNoteNames = noteNamesByPitch(notes);
+      var selectionKey = resolvedSelection.root + ":" + selection.scale.id;
+      if (chordSelectionKey !== selectionKey) {
+        hiddenChordDegrees.clear();
+        chordSelectionKey = selectionKey;
+      }
+      document.getElementById("chord-selection-empty").hidden = hiddenChordDegrees.size !== triads.length;
 
       error.textContent = "";
       if (notice) {
