@@ -83,9 +83,14 @@ permalink: /tools/scalar-triads/
 
     <section class="result-section" aria-labelledby="triads-heading">
       <div class="result-heading">
-        <h2 id="triads-heading">Triad fingerings</h2>
+        <h2 id="triads-heading">Chord fingerings</h2>
       </div>
-      <div class="string-set-selector" id="string-set-selector" aria-label="String set">
+      <div class="fingering-style-selector" id="fingering-style-selector" role="group" aria-label="Fingering style" aria-describedby="fingering-style-hint">
+        <button type="button" data-fingering-style="triads" aria-pressed="true">Triads · 3 strings</button>
+        <button type="button" data-fingering-style="fuller" aria-pressed="false">Fuller · 4–6 strings</button>
+      </div>
+      <p class="fingering-style-hint" id="fingering-style-hint">Three-note shapes on your selected string set.</p>
+      <div class="string-set-selector" id="string-set-selector" role="group" aria-label="String set">
         <button type="button" data-string-set="strings-1-2-3" aria-pressed="true">E-B-G</button>
         <button type="button" data-string-set="strings-2-3-4" aria-pressed="false">B-G-D</button>
         <button type="button" data-string-set="strings-3-4-5" aria-pressed="false">G-D-A</button>

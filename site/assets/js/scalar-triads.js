@@ -17,7 +17,7 @@
   var MAX_FRET = 15;
   var MAX_TRIAD_SPAN = 3;
   var HISTORY_KEY = "cs-shadow.scalar-triads.recent-settings.v1";
-  var HISTORY_VERSION = 3;
+  var HISTORY_VERSION = 4;
   var HISTORY_LIMIT = 5;
   var HISTORY_SAVE_DELAY = 1500;
   var SCALE_GROUPS = ["Major Modes", "Pentatonic & Blues", "Minor & Exotic"];
@@ -37,6 +37,8 @@
   var fretboardTarget = document.getElementById("scale-fretboard");
   var chordSummaryTarget = document.getElementById("chord-summary");
   var stringSetSelector = document.getElementById("string-set-selector");
+  var fingeringStyleSelector = document.getElementById("fingering-style-selector");
+  var fingeringStyleHint = document.getElementById("fingering-style-hint");
   var tuningToggle = document.getElementById("scalar-tuning-toggle");
   var tuningPanel = document.getElementById("scalar-tuning-panel");
   var tuningControls;
@@ -46,6 +48,7 @@
   var clearHistoryButton = document.getElementById("scale-clear-history");
   var triadTarget = document.getElementById("triad-list");
   var selectedStringSetId = "strings-1-2-3";
+  var selectedFingeringStyle = "triads";
   var tuning = GuitarTuning.defaultTuning();
   var capo = 0;
   var history = [];
@@ -151,6 +154,7 @@
       root: rootSelect.value,
       scaleId: scaleSelect.value,
       stringSetId: selectedStringSetId,
+      fingeringStyle: selectedFingeringStyle,
       tuning: GuitarTuning.pitches(tuning),
       capo: capo
     };
@@ -160,6 +164,7 @@
     return candidate &&
       typeof candidate.root === "string" && ROOTS.indexOf(candidate.root) !== -1 &&
       typeof candidate.scaleId === "string" && Boolean(SCALE_BY_ID[candidate.scaleId]) &&
+      (candidate.fingeringStyle === "triads" || candidate.fingeringStyle === "fuller") &&
       typeof candidate.stringSetId === "string" && GuitarTuning.stringSets(GuitarTuning.defaultTuning()).some(function (stringSet) {
         return stringSet.id === candidate.stringSetId;
       }) &&
@@ -170,6 +175,7 @@
   function snapshotsMatch(left, right) {
     return left.capo === right.capo && left.root === right.root &&
       left.scaleId === right.scaleId &&
+      left.fingeringStyle === right.fingeringStyle &&
       left.stringSetId === right.stringSetId && left.tuning.every(function (pitch, index) {
         return pitch === right.tuning[index];
       });
@@ -179,7 +185,8 @@
     var stringSet = GuitarTuning.stringSets(GuitarTuning.fromPitches(entry.tuning)).filter(function (set) {
       return set.id === entry.stringSetId;
     })[0];
-    return entry.root + " " + SCALE_BY_ID[entry.scaleId].name + " · " + stringSet.label + " · " + GuitarTuning.label(GuitarTuning.fromPitches(entry.tuning)) + " · " + (entry.capo ? "Capo " + entry.capo : "No capo");
+    var fingeringLabel = entry.fingeringStyle === "fuller" ? "Fuller" : "Triads · " + stringSet.label;
+    return entry.root + " " + SCALE_BY_ID[entry.scaleId].name + " · " + fingeringLabel + " · " + GuitarTuning.label(GuitarTuning.fromPitches(entry.tuning)) + " · " + (entry.capo ? "Capo " + entry.capo : "No capo");
   }
 
   function renderHistoryControls() {
@@ -212,6 +219,7 @@
     rootSelect.value = entry.root;
     scaleSelect.value = entry.scaleId;
     selectedStringSetId = entry.stringSetId;
+    selectedFingeringStyle = entry.fingeringStyle;
     tuning = GuitarTuning.fromPitches(entry.tuning);
     capo = entry.capo;
     if (tuningControls) { closeTuning(false); }
@@ -580,6 +588,16 @@
     target.appendChild(row);
   }
 
+  function updateFingeringStyleControls() {
+    Array.prototype.forEach.call(fingeringStyleSelector.querySelectorAll("button[data-fingering-style]"), function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-fingering-style") === selectedFingeringStyle ? "true" : "false");
+    });
+    stringSetSelector.hidden = selectedFingeringStyle === "fuller";
+    fingeringStyleHint.textContent = selectedFingeringStyle === "fuller"
+      ? "The same chords, with chord tones repeated across 4–6 strings. ○ Open string · × Muted string."
+      : "Three-note shapes on your selected string set.";
+  }
+
   function updateStringSetSelector() {
     var buttons = stringSetSelector.querySelectorAll("button[data-string-set]");
     var stringSets = GuitarTuning.stringSets(tuning);
@@ -601,7 +619,142 @@
     tuningDescription.textContent = GuitarTuning.label(tuning) + " tuning · " + (capo ? "Capo " + capo + ", relative frets 0-" : "No capo, frets 0-") + maxRelativeFret();
   }
 
+  var fullerRequest = null;
+
+  // Scalar stores pitch classes. Resolve their registers nearest each standard
+  // string, using the same lower-octave tie break as Chordinator's migration.
+  function fullerTuningMidi() {
+    return tuning.map(function (string, index) {
+      var standard = SongNotebookMusic.defaultTuning[index];
+      var lower = standard - normalizePitch(standard - string.pitch);
+      return standard - lower <= lower + 12 - standard ? lower : lower + 12;
+    });
+  }
+
+  function renderFullerShape(shape, chord, preferFlats, scaleNoteNames) {
+    var wrapper = document.createElement("div");
+    wrapper.className = "fuller-fingering";
+    wrapper.setAttribute("data-frets", JSON.stringify(shape.frets));
+    var strip = document.createElement("div");
+    strip.className = "triad-strip fuller-strip";
+    var positive = shape.frets.filter(function (fret) { return fret !== null && fret > 0; });
+    var first = positive.length ? Math.min.apply(Math, positive) : 0;
+    var start = first <= 1 ? 0 : first;
+    var end = Math.min(maxRelativeFret(), Math.max(start + 3, positive.length ? Math.max.apply(Math, positive) : 0));
+    strip.style.setProperty("--fret-count", end - start + 1);
+    var descriptions = [];
+    tuning.forEach(function (string, index) {
+      var fret = shape.frets[index];
+      var played = fret === null ? null : fretNote(string, fret, preferFlats, scaleNoteNames);
+      var description = "String " + string.guitarString + ": " + (played ? (fret === 0 ? "open" : "fret " + fret) + ", " + played.name : "muted");
+      descriptions.push(description);
+      var row = document.createElement("div");
+      row.className = "fretboard-row";
+      var label = document.createElement("div");
+      label.className = "string-label";
+      label.textContent = string.label;
+      label.setAttribute("title", description);
+      if (fret === null || fret === 0) {
+        var state = document.createElement("small");
+        state.className = "fuller-string-state";
+        state.textContent = fret === null ? "×" : "○ " + played.name;
+        label.appendChild(state);
+      }
+      row.appendChild(label);
+      for (var position = start; position <= end; position += 1) {
+        var cell = document.createElement("div");
+        cell.className = "fret-cell" + (position === 0 ? " open" : position === 1 ? " nut" : "");
+        if (played && fret === position) {
+          cell.className += " active" + (played.pitch === chord.root.pitch ? " root" : "");
+          var marker = document.createElement("span");
+          marker.textContent = played.name;
+          cell.appendChild(marker);
+        }
+        row.appendChild(cell);
+      }
+      strip.appendChild(row);
+    });
+    strip.setAttribute("role", "img");
+    strip.setAttribute("aria-label", chord.name + ". Frets relative to capo " + capo + ". " + descriptions.join(". "));
+    renderTriadFretNumbers(strip, start, end);
+    wrapper.appendChild(strip);
+    var code = document.createElement("p");
+    code.className = "fuller-shape-code";
+    code.textContent = shape.frets.slice().reverse().map(function (fret) { return fret === null ? "×" : String(fret); }).join(" · ");
+    code.setAttribute("aria-label", "Frets, strings 6 through 1: " + shape.frets.slice().reverse().map(function (fret) { return fret === null ? "muted" : String(fret); }).join(", "));
+    wrapper.appendChild(code);
+    return wrapper;
+  }
+
+  function renderFullerFingerings(item, chord, preferFlats, scaleNoteNames, request) {
+    var status = document.createElement("p");
+    status.className = "fuller-status";
+    status.setAttribute("role", "status");
+    status.textContent = "Finding fuller fingerings…";
+    item.appendChild(status);
+    item.setAttribute("aria-busy", "true");
+    var interpretation = { rootPc: chord.root.pitch, rootSpelling: chord.root.name, formulaId: chord.quality.name === "triad" ? null : chord.quality.suffix, bassPc: null, bassSpelling: null };
+    var settings = { tuningMidi: fullerTuningMidi(), capo: capo };
+    var options = { mode: "fuller", pitches: chord.pitches.slice(), maxFret: maxRelativeFret(), signal: request.signal };
+    Promise.resolve().then(function () {
+      return SongNotebookMusic.findVoicings(interpretation, settings, options);
+    }).then(function (result) {
+      if (request !== fullerRequest || request.signal.aborted) { return; }
+      if (result.cancelled) { throw new Error("Search stopped"); }
+      item.setAttribute("aria-busy", "false");
+      if (!result.shapes.length) {
+        status.textContent = "No fuller fingerings found for this guitar setup.";
+        return;
+      }
+      status.textContent = "";
+      var strips = document.createElement("div");
+      strips.className = "triad-strips";
+      strips.id = "fuller-shapes-" + chord.degree;
+      var shapes = result.shapes.slice(0, 8);
+      shapes.forEach(function (shape, index) {
+        var diagram = renderFullerShape(shape, chord, preferFlats, scaleNoteNames);
+        diagram.hidden = index >= 4;
+        strips.appendChild(diagram);
+      });
+      item.appendChild(strips);
+      if (shapes.length > 4) {
+        var more = document.createElement("button");
+        more.type = "button";
+        more.className = "fuller-more";
+        more.textContent = "Show more";
+        more.setAttribute("aria-expanded", "false");
+        more.setAttribute("aria-controls", strips.id);
+        more.setAttribute("aria-label", "Show more " + chord.name + " fingerings");
+        more.addEventListener("click", function () {
+          var expanded = more.getAttribute("aria-expanded") !== "true";
+          Array.prototype.forEach.call(strips.children, function (diagram, index) { diagram.hidden = !expanded && index >= 4; });
+          more.setAttribute("aria-expanded", String(expanded));
+          more.textContent = expanded ? "Show fewer" : "Show more";
+          more.setAttribute("aria-label", more.textContent + " " + chord.name + " fingerings");
+        });
+        item.appendChild(more);
+      }
+    }).catch(function () {
+      if (request !== fullerRequest || request.signal.aborted) { return; }
+      item.setAttribute("aria-busy", "false");
+      status.textContent = "Fuller fingerings could not be loaded.";
+      var retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = "Try again";
+      retry.addEventListener("click", function () {
+        item.removeChild(status);
+        item.removeChild(retry);
+        renderFullerFingerings(item, chord, preferFlats, scaleNoteNames, request);
+        item.setAttribute("tabindex", "-1");
+        item.focus();
+      });
+      item.appendChild(retry);
+    });
+  }
+
   function renderTriads(triads, preferFlats, scaleNoteNames) {
+    if (fullerRequest) { fullerRequest.abort(); }
+    fullerRequest = selectedFingeringStyle === "fuller" ? new AbortController() : null;
     var stringSet = currentStringSet();
     triadTarget.innerHTML = "";
     updateStringSetSelector();
@@ -609,7 +762,6 @@
     triads.forEach(function (triad) {
       var item = document.createElement("article");
       var heading = document.createElement("header");
-      var voicings = triadVoicings(triad, stringSet.strings, preferFlats, scaleNoteNames);
       item.className = "triad-card";
 
       heading.className = "triad-card-heading";
@@ -617,6 +769,13 @@
         return note.name;
       }).join(" - ") + " · " + triad.quality.name + "</p>";
       item.appendChild(heading);
+
+      if (selectedFingeringStyle === "fuller") {
+        renderFullerFingerings(item, triad, preferFlats, scaleNoteNames, fullerRequest);
+        triadTarget.appendChild(item);
+        return;
+      }
+      var voicings = triadVoicings(triad, stringSet.strings, preferFlats, scaleNoteNames);
 
       var strips = document.createElement("div");
       strips.className = "triad-strips";
@@ -683,6 +842,7 @@
       renderTuningControls();
       renderScaleFretboard(notes, rootPitch, preferFlats);
       renderChordSummary(triads);
+      updateFingeringStyleControls();
       renderTriads(triads, preferFlats, scaleNoteNames);
     } catch (err) {
       error.textContent = err.message;
@@ -710,6 +870,7 @@
           root: candidate.root,
           scaleId: candidate.scaleId,
           stringSetId: candidate.stringSetId,
+          fingeringStyle: candidate.fingeringStyle === undefined ? "triads" : candidate.fingeringStyle,
           tuning: candidate.tuning || GuitarTuning.pitches(GuitarTuning.defaultTuning()),
           capo: candidate.capo === undefined ? 0 : candidate.capo
         };
@@ -731,6 +892,15 @@
     recentSettings.schedule();
   });
   scaleSelect.addEventListener("change", function () {
+    render();
+    recentSettings.schedule();
+  });
+  fingeringStyleSelector.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-fingering-style]");
+    if (!button || selectedFingeringStyle === button.getAttribute("data-fingering-style")) {
+      return;
+    }
+    selectedFingeringStyle = button.getAttribute("data-fingering-style");
     render();
     recentSettings.schedule();
   });
