@@ -29,7 +29,10 @@
 .scalar-triads .chord-summary span { color: var(--music-muted); font-size: .8125rem; }
 .scalar-triads .chord-summary strong { font-size: 1.125rem; }
 .scalar-triads .chord-summary small { grid-column: 2; color: var(--music-muted); font-size: .75rem; }
-.scalar-triads .string-set-selector { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.scalar-triads .string-set-selector, .scalar-triads .fingering-style-selector { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.scalar-triads .fingering-style-selector { margin-bottom: .5rem; }
+.scalar-triads .string-set-selector[hidden] { display: none; }
+.scalar-triads .fingering-style-hint { margin: 0 0 1rem; color: var(--music-muted); font-size: .875rem; }
 .scalar-triads .triad-list { display: grid; min-width: 0; }
 .scalar-triads .triad-card { min-width: 0; padding: 1rem 0; border-top: 1px solid var(--music-border); }
 .scalar-triads .triad-card-heading { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; margin-bottom: 1rem; }
@@ -40,6 +43,16 @@
 .scalar-triads .triad-strip .fretboard-row, .scalar-triads .triad-strip .fret-number-row { grid-template-columns: 30px repeat(var(--fret-count), minmax(34px, 1fr)); }
 .scalar-triads .triad-strip .string-label, .scalar-triads .triad-strip .fret-cell, .scalar-triads .triad-strip .fret-number { min-height: 30px; }
 .scalar-triads .triad-strip .fret-cell.active span { width: 24px; height: 24px; font-size: .6875rem; }
+.scalar-triads .fuller-fingering { width: 220px; min-width: 0; }
+.scalar-triads .fuller-strip { margin: 0; }
+.scalar-triads .fuller-strip .fretboard-row, .scalar-triads .fuller-strip .fret-number-row { grid-template-columns: 30px repeat(var(--fret-count), minmax(0, 1fr)); }
+.scalar-triads .fuller-strip .string-label { flex-direction: column; line-height: 1.1; }
+.scalar-triads .fuller-string-state { display: block; font-size: .625rem; white-space: nowrap; }
+.scalar-triads .fuller-fingering[hidden], .scalar-triads .fuller-status:empty { display: none; }
+.scalar-triads .fuller-shape-code { margin: .5rem 0 0; text-align: center; color: var(--music-muted); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.scalar-triads .fuller-more { margin-top: .75rem; }
+.scalar-triads .fuller-more[hidden] { display: none; }
+.scalar-triads .fuller-status { margin: 0; color: var(--music-muted); font-size: .875rem; }
 @media (max-width: 1040px) {
   .scalar-triads .triad-strips { grid-auto-columns: 220px; grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; padding-bottom: .5rem; }
 }
