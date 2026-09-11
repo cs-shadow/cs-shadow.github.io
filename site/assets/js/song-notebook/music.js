@@ -283,15 +283,22 @@
     options = options || {};
     var signal = options.signal;
     if (signal && signal.aborted) { return Promise.resolve({ shapes: [], cancelled: true }); }
-    var target = interpretationPitches(interpretation);
+    var formulaPitches = interpretationPitches(interpretation);
+    // Explicit sounding pitch classes support unnamed scale-derived chords.
+    // Copy and normalize them now so later UI changes cannot alter this search.
+    var target = options.pitches === undefined ? formulaPitches :
+      Array.isArray(options.pitches) && options.pitches.every(Number.isInteger) ?
+        distinct(options.pitches.map(normalizePitch)) : [];
     var compact = options.mode === "compact";
-    if (!target.length || target.length > (compact ? 3 : 6)) { return Promise.resolve({ shapes: [], cancelled: false }); }
+    if (!interpretation || !target.length || target.length > (compact ? 3 : 6)) { return Promise.resolve({ shapes: [], cancelled: false }); }
     // Snapshot settings before yielding: later UI changes cannot modify this request.
     var tuning = settings.tuningMidi.slice();
     var capo = settings.capo;
     var bassPc = interpretation.bassPc === null && !compact ? interpretation.rootPc : interpretation.bassPc;
-    var maxFret = 14 - capo;
-    var familiar = compact ? new Set() : familiarShapes(interpretation, tuning, capo, maxFret);
+    // The optional limit is capo-relative; the guitar ends at physical fret 24.
+    // Existing consumers retain their physical-fret-14 search by default.
+    var maxFret = Number.isFinite(options.maxFret) ? Math.min(Math.max(0, Math.floor(options.maxFret)), 24 - capo) : 14 - capo;
+    var familiar = compact || target.join(",") !== formulaPitches.join(",") ? new Set() : familiarShapes(interpretation, tuning, capo, maxFret);
     function compare(a, b) {
       if (compact) { return compareShapes(a, b); }
       return Number(familiar.has(b.frets.join(","))) - Number(familiar.has(a.frets.join(","))) ||
@@ -304,7 +311,7 @@
     // Search each four-fret-span window once. Its minimum positive fret must
     // equal the window start; this removes overlap without an unbounded cache.
     function* search() {
-      for (var position = 1; position <= maxFret; position += 1) {
+      for (var position = 1; position <= Math.max(1, maxFret); position += 1) {
         for (var start = 0; start < (compact ? 4 : 1); start += 1) {
           var indexes = compact ? [start, start + 1, start + 2] : [0, 1, 2, 3, 4, 5];
           var choices = indexes.map(function (stringIndex) {
