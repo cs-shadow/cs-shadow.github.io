@@ -23,12 +23,12 @@ const familiarForms = {
 };
 // Enumerate all translations, independently of the production root/capo shift
 // calculation. The exhaustive oracle below validates their sounding pitches.
-function familiarKeys(interpretation, tuningSettings) {
+function familiarKeys(interpretation, tuningSettings, maxFret = 14 - tuningSettings.capo) {
   const keys = new Set();
   if (JSON.stringify(tuningSettings.tuningMidi) !== JSON.stringify(music.defaultTuning)) return keys;
   for (const [symbol, text] of Object.entries(familiarForms)) {
     if (parse(symbol).formulaId !== interpretation.formulaId) continue;
-    for (let shift = 0; shift <= 14; shift++) keys.add(JSON.stringify(form(text).map(fret => fret === null ? null : fret + shift)));
+    for (let shift = 0; shift <= maxFret; shift++) keys.add(JSON.stringify(form(text).map(fret => fret === null ? null : fret + shift)));
   }
   return keys;
 }
@@ -63,10 +63,12 @@ function checkShape(shape, interpretation, tuningSettings, mode) {
 // Deliberately independent exhaustive search: enumerate every allowed fret on
 // each string, then apply all constraints at the leaf. This verifies global
 // ranking and window boundaries, not just the implementation's returned shapes.
-function bruteVoicings(interpretation, tuningSettings, mode) {
-  const expected = music.interpretationPitches(interpretation);
-  const familiar = familiarKeys(interpretation, tuningSettings);
-  const choices = tuningSettings.tuningMidi.map(open => [null, ...Array.from({ length: 15 - tuningSettings.capo }, (_, fret) => fret)
+function bruteVoicings(interpretation, tuningSettings, mode, options = {}) {
+  const formula = music.interpretationPitches(interpretation);
+  const expected = options.pitches ? pcs(options.pitches) : formula;
+  const maxFret = options.maxFret === undefined ? 14 - tuningSettings.capo : Math.min(options.maxFret, 24 - tuningSettings.capo);
+  const familiar = JSON.stringify(expected) === JSON.stringify(formula) ? familiarKeys(interpretation, tuningSettings, maxFret) : new Set();
+  const choices = tuningSettings.tuningMidi.map(open => [null, ...Array.from({ length: maxFret + 1 }, (_, fret) => fret)
     .filter(fret => expected.includes((open + tuningSettings.capo + fret) % 12))]);
   const shapes = [];
   const frets = [];
@@ -343,6 +345,62 @@ test("compact triads still include inversions, while explicit bass requests are 
   const slash = await music.findVoicings(parse("C/E"), settings, { mode:"compact" });
   assert.ok(slash.shapes.length > 0);
   slash.shapes.forEach(shape => checkShape(shape, parse("C/E"), settings, "compact"));
+});
+
+test("explicit scale pitches retain exact coverage and root bass without substituting a formula", async () => {
+  for (const pitches of [[0,4,9], [0,3,5], [0,4,7]]) {
+    const options = deepFreeze({ mode:"fuller", pitches });
+    const interpretation = parse("C");
+    const result = await music.findVoicings(interpretation, settings, options);
+    assert.ok(result.shapes.length > 0);
+    assert.deepEqual(result.shapes, bruteVoicings(interpretation, settings, "fuller", options));
+    for (const shape of result.shapes) {
+      const played = music.notesForShape(settings.tuningMidi, 0, shape.frets);
+      assert.ok(played.length >= 4 && played.length <= 6);
+      assert.deepEqual(pcs(played.map(note => note.midi)), pitches);
+      assert.equal(Math.min(...played.map(note => note.midi)) % 12, 0);
+    }
+  }
+  const unnamed = { rootPc:0, bassPc:null };
+  const explicit = await music.findVoicings(unnamed, settings, { pitches:[12,3,17,0], mode:"fuller" });
+  assert.deepEqual(explicit.shapes, bruteVoicings(unnamed, settings, "fuller", { pitches:[0,3,5] }));
+  for (const pitches of [[], [0,NaN,7], [0,"4",7]]) {
+    assert.deepEqual(await music.findVoicings(parse("C"), settings, { pitches }), { shapes:[], cancelled:false });
+  }
+});
+
+test("explicit formulas keep familiar priority and relative fret limits respect capo and fret 24", async () => {
+  for (const capo of [0, 2, 12]) {
+    const tuningSettings = { tuningMidi:music.defaultTuning, capo };
+    const interpretation = parse("D");
+    const options = { mode:"fuller", pitches:[2,6,9], maxFret:14 };
+    const result = await music.findVoicings(interpretation, tuningSettings, options);
+    assert.deepEqual(result.shapes, bruteVoicings(interpretation, tuningSettings, "fuller", options));
+    assert.ok(result.shapes.every(shape => shape.frets.every(fret => fret === null || fret <= 14 && fret + capo <= 24)));
+    if (capo === 2) assert.deepEqual(result.shapes[0].frets, form("x32010"));
+  }
+  const capoSettings = { tuningMidi:music.defaultTuning, capo:12 };
+  const options = { mode:"fuller", pitches:[9,1,4], maxFret:99 };
+  const result = await music.findVoicings(parse("A"), capoSettings, options);
+  assert.deepEqual(result.shapes, bruteVoicings(parse("A"), capoSettings, "fuller", options));
+  assert.ok(result.shapes.some(shape => shape.frets.includes(12)), "physical fret 24 remains available");
+  assert.ok(result.shapes.every(shape => shape.frets.every(fret => fret === null || fret <= 12)));
+  const openSettings = { tuningMidi:music.presets[3].tuningMidi, capo:0 };
+  const open = await music.findVoicings(parse("D"), openSettings, { maxFret:0 });
+  assert.deepEqual(open.shapes, bruteVoicings(parse("D"), openSettings, "fuller", { maxFret:0 }));
+  assert.deepEqual(open.shapes[0].frets, [0,0,0,0,0,0]);
+});
+
+test("explicit voicing pitches and settings are snapshotted before asynchronous search", async () => {
+  const options = { mode:"fuller", pitches:[0,3,5], maxFret:14 };
+  const tuningSettings = { tuningMidi:music.defaultTuning.slice(), capo:2 };
+  const expected = bruteVoicings(parse("C"), tuningSettings, "fuller", options);
+  const pending = music.findVoicings(parse("C"), tuningSettings, options);
+  options.pitches.splice(0, 3, 0, 4, 7);
+  options.maxFret = 0;
+  tuningSettings.tuningMidi.fill(0);
+  tuningSettings.capo = 12;
+  assert.deepEqual((await pending).shapes, expected);
 });
 
 test("voicing search supports extended complete coverage, register extremes, open strings and empty results", async () => {
