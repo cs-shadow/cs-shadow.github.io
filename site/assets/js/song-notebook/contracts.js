@@ -14,6 +14,7 @@
     revision: 1,
     libraryKey: "cs-shadow.guitar-chordinator.library.v1",
     draftsKey: "cs-shadow.guitar-chordinator.drafts.v1",
+    fingeringStyleKey: "cs-shadow.guitar-chordinator.fingering-style.v1",
     legacyKey: "cs-shadow.guitar-chordinator.recent-settings.v1",
     exportFormat: "cs-shadow.guitar-chordinator.song",
     version: 1,

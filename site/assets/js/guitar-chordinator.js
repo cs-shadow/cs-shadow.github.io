@@ -14,6 +14,8 @@
     var cancel = options.cancel || function (timer) { clearTimeout(timer); };
     var effect = options.onEffect || function () {};
     var loaded = storage.loadLibrary(), loadedDrafts = storage.loadDrafts();
+    var lastVoicingMode = storage.loadFingeringStyle ? storage.loadFingeringStyle() : null;
+    if (lastVoicingMode !== "compact" && lastVoicingMode !== "fuller") { lastVoicingMode = "compact"; }
     var firstSong = loaded.data ? null : model.createSong();
     var library = loaded.data || { version: 1, activeSongId: firstSong.id, songs: [firstSong] };
     var drafts = loadedDrafts.data ? loadedDrafts.data.drafts : [];
@@ -28,7 +30,10 @@
     function view() {
       var current = song();
       if (!views[current.id]) {
-        views[current.id] = { activeSectionId: current.sections[0].id, selectedOccurrenceId: null, inspectedChordId: null, inspectionOrigin: null, panel: null, mode: "edit", exploreState: { tab: "browse", tonicPc: 0, tonicSpelling: "C", scaleId: "major", selectedInterpretation: null, selectedFrets: null, voicingMode: "compact" } };
+        views[current.id] = { activeSectionId: current.sections[0].id, selectedOccurrenceId: null, inspectedChordId: null, inspectionOrigin: null, panel: null, mode: "edit", exploreState: { tab: "browse", tonicPc: 0, tonicSpelling: "C", scaleId: "major", selectedInterpretation: null, selectedFrets: null, voicingMode: lastVoicingMode } };
+      }
+      if (views[current.id].exploreState.voicingMode !== lastVoicingMode) {
+        views[current.id].exploreState.voicingMode = lastVoicingMode; views[current.id].exploreState.selectedFrets = null;
       }
       return views[current.id];
     }
@@ -177,6 +182,11 @@
           discardDraft(action.chordId); problem = openDraft(Object.assign({ chordId: action.chordId }, origin)); shouldSave = true; break;
         case "draft.apply": problem = applyDraft(action); shouldSave = true; break;
         case "explore.set":
+          if (action.patch.voicingMode !== undefined) {
+            if (action.patch.voicingMode !== "compact" && action.patch.voicingMode !== "fuller") { problem = failure("INVALID_FINGERING_STYLE", "Choose compact or fuller fingerings."); break; }
+            lastVoicingMode = action.patch.voicingMode;
+            if (storage.saveFingeringStyle) { storage.saveFingeringStyle(lastVoicingMode); }
+          }
           if (action.patch.selectedInterpretation !== undefined || action.patch.voicingMode !== undefined) { current.exploreState.selectedFrets = null; }
           Object.assign(current.exploreState, clone(action.patch)); break;
         case "explore.capture": problem = captureExploreChord(action); shouldSave = true; break;

@@ -20,6 +20,9 @@
 .notebook-explore .notebook-explore-voicings > li { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .5rem; }
 .notebook-explore .notebook-explore-preview { min-width: 0; border: 1px solid var(--notebook-border); border-radius: .35rem; padding: .75rem; }
 .notebook-explore .notebook-explore-preview > h3 { font-size: 1.25rem; }
+.notebook-explore-fingerings { border-top: 1px solid var(--notebook-border); padding-top: .75rem; }
+.notebook-explore-fingerings h4 { font-size: 1rem; margin: 0 0 .75rem; }
+.notebook-explore .notebook-explore-actions:empty { display: none; }
 .notebook-explore .notebook-explore-shape { width: 100%; table-layout: fixed; border-collapse: collapse; margin: .75rem 0; font-size: .8rem; }
 .notebook-explore .notebook-explore-shape caption { text-align: left; margin-bottom: .5rem; }
 .notebook-explore .notebook-explore-shape th, .notebook-explore .notebook-explore-shape td { padding: .35rem .1rem; text-align: center; border-bottom: 1px solid var(--notebook-border); overflow-wrap: anywhere; }

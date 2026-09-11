@@ -210,8 +210,15 @@ Expandable work area: chord details / shape editor / explore
   including extensions and alterations, not just triads.
 - Group results into triads/power chords, sevenths, suspended/added-note/sixths,
   and extended/altered chords. Select a result to show tones, relationship, and
-  on-demand fingerings. Keep chord and Keep & add actions work before choosing a
+  automatically updated fingerings. Keep chord and Keep & add actions work before choosing a
   fingering. Identical pitch sets with different named formulas remain available.
+- Keep Find a guitar fingering visible for every selected chord, without a
+  disclosure or search form. Search immediately on chord, style, tuning, or capo
+  changes; preserve focus, cancel stale requests, and reuse completed results for
+  unchanged inputs. Remember the last-used style across songs and reloads as a
+  local preference, defaulting to compact when absent or unavailable. Keep
+  name-only/manual actions available while loading or when no shapes fit; offer
+  Try again only after a search failure.
 - Offer compact three-adjacent-string and fuller guitar shapes. Search current
   tuning/capo, require every distinct chord pitch (and requested slash bass),
   exclude other pitches, and rank at most eight distinct shapes per mode. Suggested
