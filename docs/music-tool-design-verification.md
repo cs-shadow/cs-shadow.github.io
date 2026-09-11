@@ -16,11 +16,13 @@ legacy fallback visibility, or print CSS precedence.
 Both pages load `music-tool.css` before their component styles and load
 `music-tool-controls.js` before their controllers. Shared controls receive host
 values and report changes; persistence and draft semantics remain in each tool.
-Existing song, draft, history, and export formats are unchanged.
+Existing song, draft, and export formats are unchanged. Scalar history retains
+its storage key and pitch-class tuning arrays; version 3 adds capo, with older
+entries normalized to capo 0.
 
 ## Automated checks
 
-- Node suite: 174 tests passed, including shared control lifecycle, MIDI bounds,
+- Node suite: 178 tests passed, including shared control lifecycle, MIDI bounds,
   focus restoration, notebook Apply/Cancel isolation, Scalar history restoration,
   legacy history, and unavailable storage.
 - Ruby site rendering: 3 tests / 52 assertions passed, including rendered shared
@@ -47,10 +49,13 @@ within the viewport on the tested pages and expanded panels. Browser checks foun
 and corrected the fixed site logo overlapping tool headers at narrow and tablet
 widths.
 
-- Scalar: preset and custom string edits immediately update the tuning summary,
-  fretboard, and string-set labels. Done/Escape return focus to the string badge.
-  Custom tuning survives reload. Restoring an existing history entry restores
-  root, scale, tuning, and string-set labels.
+- Scalar: the shared tuning/capo panel uses the same preset tiles, six string
+  badges, inline note picker, capo neck and sounding summary as Chordinator.
+  Apply commits tuning and capo; Cancel discards edits. Done/Escape return focus
+  to the string badge. Applied Drop D with capo 2 survives reload, sounds F# on
+  the first open string, and preserves the selected A major scale and chords.
+  Restoring history restores root, scale, tuning, capo, and string-set labels.
+  History selection retains focus even when it closes an open string picker.
 - Scalar: long scale/history labels fit on phones. Six strings tuned to C produce
   the existing empty-fingering message without page overflow. Root markers and
   pale tone markers are distinct on the scale map and compact triad diagrams.
@@ -63,6 +68,21 @@ widths.
 - Notebook: reading includes the composed section and the saved chord diagram.
   A long song title wraps without overflowing at 375px. Only one main workspace
   is displayed, and the 800px composition view retains its two-column layout.
+
+## Shared capo follow-up
+
+A subagent extracted the complete shared tuning/capo panel and migrated the
+notebook; the primary agent integrated Scalar drafts, capo calculations and
+history. A fresh reviewer identified the history-focus issue above; its fix and
+regression test were verified. No remaining review findings.
+
+Both expanded panels were rechecked at 375, 800 and 1280px without page overflow.
+String controls are 44px high and capo targets at least 44px wide. Keyboard End
+selects capo 12 and scrolls its fret into view while string badges remain visible.
+Capo 12 limits Scalar diagrams to relative fret 12 (physical fret 24). Behavioral
+tests check every note in the rendered A-major fingerings against the applied
+capo, along with draft isolation, old history defaults and invalid capo rejection.
+No octave adjustment controls are present in either tool.
 
 ## Print limitation
 

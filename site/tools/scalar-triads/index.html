@@ -28,13 +28,15 @@ permalink: /tools/scalar-triads/
         </div>
       </div>
 
-      <button type="button" id="scalar-tuning-toggle" class="scalar-tuning-summary" aria-expanded="false" aria-controls="scalar-tuning-panel">Standard tuning · E · A · D · G · B · E</button>
+      <button type="button" id="scalar-tuning-toggle" class="scalar-tuning-summary" aria-expanded="false" aria-controls="scalar-tuning-panel">Standard tuning · No capo</button>
       <section id="scalar-tuning-panel" class="scalar-tuning-panel" aria-labelledby="scalar-tuning-heading" hidden>
-        <h2 id="scalar-tuning-heading">Guitar tuning</h2>
-        <div id="scalar-tuning-presets"></div>
-        <p class="scalar-string-hint">Select a string to change its open note. Strings run from 1 (highest) to 6 (lowest).</p>
-        <div id="scalar-tuning-strings"></div>
-        <div id="scalar-tuning-picker"></div>
+        <h2 id="scalar-tuning-heading">Guitar tuning and capo</h2>
+        <div id="scalar-tuning-controls"></div>
+        <p class="music-settings-hint">Frets are relative to the capo. Tuning and capo changes update the map and fingerings after Apply; the selected scale stays the same.</p>
+        <div class="scalar-tuning-actions">
+          <button type="button" id="scalar-tuning-apply" class="music-primary">Apply settings</button>
+          <button type="button" id="scalar-tuning-cancel">Cancel</button>
+        </div>
       </section>
 
       <details class="scalar-history">

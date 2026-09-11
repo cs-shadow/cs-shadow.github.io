@@ -17,7 +17,7 @@
   var MAX_FRET = 15;
   var MAX_TRIAD_SPAN = 3;
   var HISTORY_KEY = "cs-shadow.scalar-triads.recent-settings.v1";
-  var HISTORY_VERSION = 2;
+  var HISTORY_VERSION = 3;
   var HISTORY_LIMIT = 5;
   var HISTORY_SAVE_DELAY = 1500;
   var SCALE_GROUPS = ["Major Modes", "Pentatonic & Blues", "Minor & Exotic"];
@@ -39,14 +39,15 @@
   var stringSetSelector = document.getElementById("string-set-selector");
   var tuningToggle = document.getElementById("scalar-tuning-toggle");
   var tuningPanel = document.getElementById("scalar-tuning-panel");
-  var presetControls;
-  var stringControls;
+  var tuningControls;
+  var tuningDraft = null;
   var tuningDescription = document.getElementById("scale-tuning-description");
   var recentSettingsSelect = document.getElementById("scale-recent-settings");
   var clearHistoryButton = document.getElementById("scale-clear-history");
   var triadTarget = document.getElementById("triad-list");
   var selectedStringSetId = "strings-1-2-3";
   var tuning = GuitarTuning.defaultTuning();
+  var capo = 0;
   var history = [];
   var recentSettings;
 
@@ -150,7 +151,8 @@
       root: rootSelect.value,
       scaleId: scaleSelect.value,
       stringSetId: selectedStringSetId,
-      tuning: GuitarTuning.pitches(tuning)
+      tuning: GuitarTuning.pitches(tuning),
+      capo: capo
     };
   }
 
@@ -161,11 +163,12 @@
       typeof candidate.stringSetId === "string" && GuitarTuning.stringSets(GuitarTuning.defaultTuning()).some(function (stringSet) {
         return stringSet.id === candidate.stringSetId;
       }) &&
-      GuitarTuning.isValidPitches(candidate.tuning);
+      GuitarTuning.isValidPitches(candidate.tuning) &&
+      Number.isInteger(candidate.capo) && candidate.capo >= 0 && candidate.capo <= 12;
   }
 
   function snapshotsMatch(left, right) {
-    return left.root === right.root &&
+    return left.capo === right.capo && left.root === right.root &&
       left.scaleId === right.scaleId &&
       left.stringSetId === right.stringSetId && left.tuning.every(function (pitch, index) {
         return pitch === right.tuning[index];
@@ -176,7 +179,7 @@
     var stringSet = GuitarTuning.stringSets(GuitarTuning.fromPitches(entry.tuning)).filter(function (set) {
       return set.id === entry.stringSetId;
     })[0];
-    return entry.root + " " + SCALE_BY_ID[entry.scaleId].name + " · " + stringSet.label + " · " + GuitarTuning.label(GuitarTuning.fromPitches(entry.tuning));
+    return entry.root + " " + SCALE_BY_ID[entry.scaleId].name + " · " + stringSet.label + " · " + GuitarTuning.label(GuitarTuning.fromPitches(entry.tuning)) + " · " + (entry.capo ? "Capo " + entry.capo : "No capo");
   }
 
   function renderHistoryControls() {
@@ -210,6 +213,8 @@
     scaleSelect.value = entry.scaleId;
     selectedStringSetId = entry.stringSetId;
     tuning = GuitarTuning.fromPitches(entry.tuning);
+    capo = entry.capo;
+    if (tuningControls) { closeTuning(false); }
   }
 
   function scaleNotes(root, scale) {
@@ -367,8 +372,11 @@
     return names;
   }
 
+  // Fret zero is the capo. Never extend past physical fret 24.
+  function maxRelativeFret() { return Math.min(MAX_FRET, 24 - capo); }
+
   function fretNote(string, fret, preferFlats, scaleNoteNames) {
-    var pitch = normalizePitch(string.pitch + fret);
+    var pitch = normalizePitch(string.pitch + capo + fret);
 
     return {
       string: string.name,
@@ -407,7 +415,7 @@
     var scaleNoteNames = noteNamesByPitch(notes);
 
     fretboardTarget.innerHTML = "";
-    fretboardTarget.style.setProperty("--fret-count", MAX_FRET + 1);
+    fretboardTarget.style.setProperty("--fret-count", maxRelativeFret() + 1);
 
     tuning.forEach(function (string) {
       var row = document.createElement("div");
@@ -416,11 +424,11 @@
       var label = document.createElement("div");
       label.className = "string-label scalar-triads-string-label";
       label.textContent = string.label;
-      label.title = "String " + string.guitarString + ", open " + string.label;
+      label.title = "String " + string.guitarString + ", tuning " + string.label + (capo ? ", with capo " + pitchName(string.pitch + capo, preferFlats) : "");
       label.setAttribute("aria-label", label.title);
       row.appendChild(label);
 
-      for (var fret = 0; fret <= MAX_FRET; fret += 1) {
+      for (var fret = 0; fret <= maxRelativeFret(); fret += 1) {
         var cell = document.createElement("div");
         var note = fretNote(string, fret, preferFlats, scaleNoteNames);
         var inScale = scalePitches.indexOf(note.pitch) !== -1;
@@ -449,7 +457,7 @@
     spacer.className = "string-label";
     row.appendChild(spacer);
 
-    for (var fret = 0; fret <= MAX_FRET; fret += 1) {
+    for (var fret = 0; fret <= maxRelativeFret(); fret += 1) {
       var cell = document.createElement("div");
       cell.className = "fret-number";
       cell.textContent = fret;
@@ -463,7 +471,7 @@
     return strings.map(function (string) {
       var matches = [];
 
-      for (var fret = 0; fret <= MAX_FRET; fret += 1) {
+      for (var fret = 0; fret <= maxRelativeFret(); fret += 1) {
         var note = fretNote(string, fret, preferFlats, scaleNoteNames);
 
         if (chordPitches.indexOf(note.pitch) !== -1) {
@@ -519,7 +527,7 @@
   function renderTriadStrip(voicing, strings, rootPitch) {
     var strip = document.createElement("div");
     var startFret = voicing.minFret === 0 ? 0 : voicing.minFret;
-    var endFret = Math.min(MAX_FRET, Math.max(startFret + 3, voicing.maxFret));
+    var endFret = Math.min(maxRelativeFret(), Math.max(startFret + 3, voicing.maxFret));
     strip.className = "triad-strip";
     strip.style.setProperty("--fret-count", endFret - startFret + 1);
 
@@ -588,11 +596,9 @@
   }
 
   function renderTuningControls() {
-    var pitches = GuitarTuning.pitches(tuning);
-    presetControls.update(pitches);
-    stringControls.update(pitches);
-    tuningToggle.textContent = GuitarTuning.label(tuning) + " tuning · " + tuning.slice().reverse().map(function (string) { return string.label; }).join(" · ");
-    tuningDescription.textContent = GuitarTuning.label(tuning) + " tuning, frets 0-15";
+    if (tuningControls) { tuningControls.update(tuningDraft || { values: GuitarTuning.pitches(tuning), capo: capo }); }
+    tuningToggle.textContent = GuitarTuning.label(tuning) + " tuning · " + (capo ? "Capo " + capo : "No capo");
+    tuningDescription.textContent = GuitarTuning.label(tuning) + " tuning · " + (capo ? "Capo " + capo + ", relative frets 0-" : "No capo, frets 0-") + maxRelativeFret();
   }
 
   function renderTriads(triads, preferFlats, scaleNoteNames) {
@@ -622,7 +628,7 @@
       if (!voicings.length) {
         var empty = document.createElement("p");
         empty.className = "empty-state";
-        empty.textContent = "No compact " + stringSet.label + " voicings found in frets 0-15.";
+        empty.textContent = "No compact " + stringSet.label + " voicings found in frets 0-" + maxRelativeFret() + ".";
         strips.appendChild(empty);
       }
 
@@ -699,12 +705,13 @@
     delay: HISTORY_SAVE_DELAY,
     snapshot: snapshot,
     normalize: function (candidate) {
-      if (candidate && !candidate.tuning) {
+      if (candidate) {
         candidate = {
           root: candidate.root,
           scaleId: candidate.scaleId,
           stringSetId: candidate.stringSetId,
-          tuning: GuitarTuning.pitches(GuitarTuning.defaultTuning())
+          tuning: candidate.tuning || GuitarTuning.pitches(GuitarTuning.defaultTuning()),
+          capo: candidate.capo === undefined ? 0 : candidate.capo
         };
       }
       return isValidSnapshot(candidate) ? candidate : null;
@@ -757,36 +764,44 @@
   clearHistoryButton.addEventListener("click", function () {
     recentSettings.clear();
   });
-  function changeTuning(pitches) {
-    tuning = GuitarTuning.fromPitches(pitches);
-    render();
-    recentSettings.schedule();
-  }
-  presetControls = MusicToolControls.mountPresets(document.getElementById("scalar-tuning-presets"), {
+  tuningControls = MusicToolControls.mountTuning(document.getElementById("scalar-tuning-controls"), {
+    id: "scalar-string-note-picker",
     presets: Object.keys(GuitarTuning.presets).map(function (key) {
       var preset = GuitarTuning.presets[key];
       return { id: key, label: preset.label, values: preset.pitches };
     }),
-    values: GuitarTuning.pitches(tuning),
-    onChange: changeTuning
+    values: GuitarTuning.pitches(tuning), capo: capo, midi: false,
+    onChange: function (next) {
+      if (!tuningDraft) { return; }
+      tuningDraft = { values: next.values.slice(), capo: next.capo };
+      tuningControls.update(tuningDraft);
+    }
   });
-  stringControls = MusicToolControls.mountStringNotes(document.getElementById("scalar-tuning-strings"), document.getElementById("scalar-tuning-picker"), {
-    id: "scalar-string-note-picker",
-    values: GuitarTuning.pitches(tuning),
-    midi: false,
-    onChange: changeTuning
-  });
-  function closeTuning() {
-    stringControls.close();
+  function closeTuning(restoreFocus) {
+    var previousFocus = document.activeElement;
+    tuningControls.closePicker();
+    tuningDraft = null;
     tuningPanel.hidden = true;
     tuningToggle.setAttribute("aria-expanded", "false");
-    tuningToggle.focus();
+    if (restoreFocus !== false || tuningPanel.contains(previousFocus)) { tuningToggle.focus(); }
+    else if (previousFocus) { previousFocus.focus(); }
   }
   tuningToggle.addEventListener("click", function () {
     if (!tuningPanel.hidden) { closeTuning(); return; }
+    tuningDraft = { values: GuitarTuning.pitches(tuning), capo: capo };
+    tuningControls.update(tuningDraft);
     tuningPanel.hidden = false;
     tuningToggle.setAttribute("aria-expanded", "true");
   });
+  document.getElementById("scalar-tuning-apply").addEventListener("click", function () {
+    if (!tuningDraft) { return; }
+    tuning = GuitarTuning.fromPitches(tuningDraft.values);
+    capo = tuningDraft.capo;
+    closeTuning();
+    render();
+    recentSettings.schedule();
+  });
+  document.getElementById("scalar-tuning-cancel").addEventListener("click", function () { closeTuning(); });
   tuningPanel.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !event.defaultPrevented) {
       event.preventDefault();
