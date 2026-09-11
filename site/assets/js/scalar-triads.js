@@ -37,7 +37,10 @@
   var fretboardTarget = document.getElementById("scale-fretboard");
   var chordSummaryTarget = document.getElementById("chord-summary");
   var stringSetSelector = document.getElementById("string-set-selector");
-  var presetSelect = document.getElementById("scalar-triads-preset");
+  var tuningToggle = document.getElementById("scalar-tuning-toggle");
+  var tuningPanel = document.getElementById("scalar-tuning-panel");
+  var presetControls;
+  var stringControls;
   var tuningDescription = document.getElementById("scale-tuning-description");
   var recentSettingsSelect = document.getElementById("scale-recent-settings");
   var clearHistoryButton = document.getElementById("scale-clear-history");
@@ -406,42 +409,22 @@
     fretboardTarget.innerHTML = "";
     fretboardTarget.style.setProperty("--fret-count", MAX_FRET + 1);
 
-    tuning.forEach(function (string, stringIndex) {
+    tuning.forEach(function (string) {
       var row = document.createElement("div");
       row.className = "fretboard-row";
 
       var label = document.createElement("div");
-      label.className = "string-label chordinator-string-label scalar-triads-string-label";
-      var name = document.createElement("span");
-      name.className = "chordinator-string-name";
-      name.textContent = string.label;
-      name.title = "String " + string.guitarString + ", open " + string.label;
-      var tuningSelect = document.createElement("select");
-      tuningSelect.id = "scalar-triads-string-" + string.guitarString;
-      tuningSelect.setAttribute("aria-label", "String " + string.guitarString + " tuning, currently " + string.label);
-      GuitarTuning.notes.forEach(function (note, pitch) {
-        var option = document.createElement("option");
-        option.value = pitch;
-        option.textContent = note;
-        tuningSelect.appendChild(option);
-      });
-      tuningSelect.value = string.pitch;
-      tuningSelect.addEventListener("change", function (event) {
-        var pitches = GuitarTuning.pitches(tuning);
-        pitches[stringIndex] = Number(event.currentTarget.value);
-        tuning = GuitarTuning.fromPitches(pitches);
-        render();
-        recentSettings.schedule();
-      });
-      label.appendChild(name);
-      label.appendChild(tuningSelect);
+      label.className = "string-label scalar-triads-string-label";
+      label.textContent = string.label;
+      label.title = "String " + string.guitarString + ", open " + string.label;
+      label.setAttribute("aria-label", label.title);
       row.appendChild(label);
 
       for (var fret = 0; fret <= MAX_FRET; fret += 1) {
         var cell = document.createElement("div");
         var note = fretNote(string, fret, preferFlats, scaleNoteNames);
         var inScale = scalePitches.indexOf(note.pitch) !== -1;
-        cell.className = "fret-cell" + (inScale ? " active" : "") + (note.pitch === rootPitch ? " root" : "");
+        cell.className = "fret-cell" + (fret === 0 ? " open" : fret === 1 ? " nut" : "") + (inScale ? " active" : "") + (note.pitch === rootPitch ? " root" : "");
         cell.setAttribute("aria-label", string.name + " string fret " + fret + (inScale ? " " + note.name : ""));
 
         if (inScale) {
@@ -533,7 +516,7 @@
       .slice(0, 8);
   }
 
-  function renderTriadStrip(voicing, strings) {
+  function renderTriadStrip(voicing, strings, rootPitch) {
     var strip = document.createElement("div");
     var startFret = voicing.minFret === 0 ? 0 : voicing.minFret;
     var endFret = Math.min(MAX_FRET, Math.max(startFret + 3, voicing.maxFret));
@@ -552,11 +535,11 @@
       for (var fret = startFret; fret <= endFret; fret += 1) {
         var cell = document.createElement("div");
         var voicingNote = voicing.notes[stringIndex];
-        cell.className = "fret-cell";
+        cell.className = "fret-cell" + (fret === 0 ? " open" : fret === 1 ? " nut" : "");
 
         if (voicingNote.fret === fret) {
           var marker = document.createElement("span");
-          cell.className += " active";
+          cell.className += " active" + (voicingNote.pitch === rootPitch ? " root" : "");
           marker.textContent = voicingNote.name;
           cell.appendChild(marker);
         }
@@ -605,7 +588,10 @@
   }
 
   function renderTuningControls() {
-    presetSelect.value = GuitarTuning.presetKey(tuning);
+    var pitches = GuitarTuning.pitches(tuning);
+    presetControls.update(pitches);
+    stringControls.update(pitches);
+    tuningToggle.textContent = GuitarTuning.label(tuning) + " tuning · " + tuning.slice().reverse().map(function (string) { return string.label; }).join(" · ");
     tuningDescription.textContent = GuitarTuning.label(tuning) + " tuning, frets 0-15";
   }
 
@@ -630,7 +616,7 @@
       strips.className = "triad-strips";
 
       voicings.forEach(function (voicing) {
-        strips.appendChild(renderTriadStrip(voicing, stringSet.strings));
+        strips.appendChild(renderTriadStrip(voicing, stringSet.strings, triad.root.pitch));
       });
 
       if (!voicings.length) {
@@ -771,15 +757,43 @@
   clearHistoryButton.addEventListener("click", function () {
     recentSettings.clear();
   });
-  presetSelect.addEventListener("change", function (event) {
-    var preset = GuitarTuning.presets[event.currentTarget.value];
-    if (!preset) {
-      return;
-    }
-    tuning = GuitarTuning.fromPitches(preset.pitches);
+  function changeTuning(pitches) {
+    tuning = GuitarTuning.fromPitches(pitches);
     render();
     recentSettings.schedule();
+  }
+  presetControls = MusicToolControls.mountPresets(document.getElementById("scalar-tuning-presets"), {
+    presets: Object.keys(GuitarTuning.presets).map(function (key) {
+      var preset = GuitarTuning.presets[key];
+      return { id: key, label: preset.label, values: preset.pitches };
+    }),
+    values: GuitarTuning.pitches(tuning),
+    onChange: changeTuning
   });
+  stringControls = MusicToolControls.mountStringNotes(document.getElementById("scalar-tuning-strings"), document.getElementById("scalar-tuning-picker"), {
+    id: "scalar-string-note-picker",
+    values: GuitarTuning.pitches(tuning),
+    octaves: false,
+    onChange: changeTuning
+  });
+  function closeTuning() {
+    stringControls.close();
+    tuningPanel.hidden = true;
+    tuningToggle.setAttribute("aria-expanded", "false");
+    tuningToggle.focus();
+  }
+  tuningToggle.addEventListener("click", function () {
+    if (!tuningPanel.hidden) { closeTuning(); return; }
+    tuningPanel.hidden = false;
+    tuningToggle.setAttribute("aria-expanded", "true");
+  });
+  tuningPanel.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !event.defaultPrevented) {
+      event.preventDefault();
+      closeTuning();
+    }
+  });
+  form.addEventListener("submit", function (event) { event.preventDefault(); });
   renderHistoryControls();
   render();
 }());
