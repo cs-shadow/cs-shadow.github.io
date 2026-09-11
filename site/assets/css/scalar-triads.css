@@ -1,0 +1,50 @@
+/* Scalar layout; the companion tools share controls and diagram styling. */
+.scalar-triads .scale-tool { margin-bottom: 1.5rem; }
+.scalar-triads .scale-form { display: grid; gap: .75rem; }
+.scalar-triads .scale-controls { display: grid; grid-template-columns: minmax(5rem, .65fr) minmax(0, 1.65fr); gap: .75rem; max-width: 36rem; }
+.scalar-triads .scale-controls label, .scalar-triads .recent-settings-control label { display: block; margin-bottom: .375rem; font-size: .875rem; font-weight: 700; color: var(--music-muted); }
+.scalar-triads .scale-controls select { width: 100%; }
+.scalar-triads .scalar-tuning-summary { justify-self: start; text-align: left; }
+.scalar-triads .scalar-tuning-summary::after { content: " ▾"; }
+.scalar-triads .scalar-tuning-summary[aria-expanded="true"]::after { content: " ▴"; }
+.scalar-triads .scalar-tuning-panel { padding: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.scalar-triads .scalar-tuning-panel h2 { margin: 0 0 .75rem; }
+.scalar-triads .scalar-string-hint { margin: 1rem 0 .75rem; font-size: .875rem; }
+.scalar-triads .scalar-history summary { display: list-item; width: fit-content; padding: .65rem 0; min-height: 44px; cursor: pointer; color: var(--music-muted); font-size: .875rem; }
+.scalar-triads .recent-settings-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem .75rem; padding: .75rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.scalar-triads .recent-settings-control label { grid-column: 1 / -1; margin: 0; }
+.scalar-triads .recent-settings-control select { width: 100%; min-width: 0; }
+.scalar-triads .scale-error, .scalar-triads .scale-notice { margin: 0; font-size: .875rem; }
+.scalar-triads .scale-error { color: var(--music-error); }
+.scalar-triads .scale-notice { color: var(--music-muted); }
+.scalar-triads .scale-error:empty, .scalar-triads .scale-notice:empty { display: none; }
+.scalar-triads .mode-feel { display: grid; gap: .25rem; margin-top: .75rem; }
+.scalar-triads .mode-feel strong { font-size: .875rem; }
+.scalar-triads .mode-feel span { color: var(--music-muted); font-size: .9375rem; }
+.scalar-triads .fretboard { --fret-count: 16; min-width: 716px; }
+.scalar-triads .fretboard-row, .scalar-triads .fret-number-row { display: grid; grid-template-columns: 44px repeat(var(--fret-count), minmax(42px, 1fr)); }
+.scalar-triads .string-label, .scalar-triads .fret-cell, .scalar-triads .fret-number { min-height: 34px; }
+.scalar-triads .chord-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.scalar-triads .chord-summary li { display: grid; grid-template-columns: auto 1fr; gap: .125rem .5rem; align-items: baseline; margin: 0; padding: .5rem 0; }
+.scalar-triads .chord-summary span { color: var(--music-muted); font-size: .8125rem; }
+.scalar-triads .chord-summary strong { font-size: 1.125rem; }
+.scalar-triads .chord-summary small { grid-column: 2; color: var(--music-muted); font-size: .75rem; }
+.scalar-triads .string-set-selector { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.scalar-triads .triad-list { display: grid; min-width: 0; }
+.scalar-triads .triad-card { min-width: 0; padding: 1rem 0; border-top: 1px solid var(--music-border); }
+.scalar-triads .triad-card-heading { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; margin-bottom: 1rem; }
+.scalar-triads .triad-card-heading h3, .scalar-triads .triad-card-heading p { margin: 0; }
+.scalar-triads .triad-card-heading p { font-size: .875rem; }
+.scalar-triads .triad-strips { display: grid; grid-template-columns: repeat(auto-fill, 220px); gap: .75rem; }
+.scalar-triads .triad-strip { width: 220px; min-width: 0; padding: .5rem; overflow-x: auto; }
+.scalar-triads .triad-strip .fretboard-row, .scalar-triads .triad-strip .fret-number-row { grid-template-columns: 30px repeat(var(--fret-count), minmax(34px, 1fr)); }
+.scalar-triads .triad-strip .string-label, .scalar-triads .triad-strip .fret-cell, .scalar-triads .triad-strip .fret-number { min-height: 30px; }
+.scalar-triads .triad-strip .fret-cell.active span { width: 24px; height: 24px; font-size: .6875rem; }
+@media (max-width: 1040px) {
+  .scalar-triads .triad-strips { grid-auto-columns: 220px; grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; padding-bottom: .5rem; }
+}
+@media (max-width: 639px) {
+  .scalar-triads .recent-settings-control { grid-template-columns: minmax(0, 1fr); }
+  .scalar-triads .triad-card-heading { flex-direction: column; }
+  .scalar-triads .scalar-tuning-panel { padding: .75rem; }
+}
