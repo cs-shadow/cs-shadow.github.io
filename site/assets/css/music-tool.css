@@ -60,6 +60,10 @@
 .music-tool .music-note-option, .music-tool .music-octave-controls button { min-width: 44px; }
 .music-tool .music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
 .music-tool .music-note-picker > button { justify-self: start; }
+@media (max-width: 1100px) {
+  /* Clear the fixed site logo while the centered content sits near its edge. */
+  .content.music-tool { padding-top: 4.5rem; }
+}
 @media (max-width: 799px) {
   /* Leave room below the site navigation logo fixed at the top left. */
   .content.music-tool { padding: 4.5rem 1rem 2rem; }
