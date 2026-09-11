@@ -26,42 +26,111 @@
   --music-space-6: 1.5rem;
   --music-space-8: 2rem;
 }
-.content.music-tool { width: 100%; max-width: 1040px; min-width: 0; margin: 0 auto; padding: 2.5rem 2rem 3rem; color: var(--music-text); font-size: 1rem; line-height: 1.5; }
+.content.music-tool { width: 100%; max-width: 1040px; min-width: 0; margin: 0 auto; padding: 2.5rem 2rem 3rem; color: var(--music-text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif; font-size: 1rem; line-height: 1.5; }
 .music-tool *, .music-tool *::before, .music-tool *::after { box-sizing: border-box; }
 .music-tool [hidden], .music-tool[hidden] { display: none !important; }
 .music-tool > .tool-header { margin-bottom: 1.5rem; }
 .music-tool > .tool-header h1 { margin: 0 0 .5rem; font-size: 2rem; line-height: 1.15; }
-.music-tool h2 { font-size: 1.15rem; line-height: 1.3; }
-.music-tool h3 { font-size: 1rem; line-height: 1.4; }
-.music-tool p { color: var(--music-muted); overflow-wrap: anywhere; }
+.music-tool h2 { margin: 0; font-size: 1.15rem; line-height: 1.3; }
+.music-tool h3 { margin: 0; font-size: 1rem; line-height: 1.4; }
+.music-tool p { margin: 0; color: var(--music-muted); overflow-wrap: anywhere; }
 .music-tool button, .music-tool input, .music-tool select, .music-tool textarea { font: inherit; color: inherit; }
 .music-tool button, .music-tool input, .music-tool select { min-height: 44px; }
 .music-tool button, .music-tool input, .music-tool select, .music-tool textarea { max-width: 100%; border: 1px solid var(--music-border); border-radius: var(--music-radius); padding: var(--music-control-padding); background: var(--music-surface); }
-.music-tool button { cursor: pointer; line-height: 1.3; }
+.music-tool button { min-width: 44px; cursor: pointer; line-height: 1.3; }
 .music-tool button:hover:not(:disabled) { background: var(--music-selected); }
 .music-tool button:disabled { opacity: .5; cursor: default; }
 .music-tool :focus-visible { outline: 3px solid var(--music-focus); outline-offset: 3px; }
 .music-tool .music-primary { background: var(--music-accent); border-color: var(--music-accent); color: var(--music-surface); }
 .music-tool .music-primary:hover:not(:disabled) { background: var(--music-accent-strong); }
 .music-tool button[aria-pressed="true"], .music-tool [role="tab"][aria-selected="true"] { border-color: var(--music-accent); background: var(--music-selected); color: var(--music-accent-strong); box-shadow: inset 0 0 0 1px var(--music-accent); }
-.music-tuning-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .5rem; }
+.music-tool .music-tuning-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .5rem; }
 .music-tool .music-tuning-preset { display: grid; align-content: start; gap: .35rem; padding: .75rem; text-align: left; min-width: 0; }
-.music-preset-notes { font-size: .8rem; color: var(--music-muted); }
-.music-tuning-preset[aria-pressed="true"] strong::after { content: " ✓"; }
-.music-string-badges { display: flex; flex-wrap: wrap; gap: .5rem; }
+.music-tool .music-preset-notes { font-size: .8rem; color: var(--music-muted); }
+.music-tool .music-tuning-preset[aria-pressed="true"] strong::after { content: " ✓"; }
+.music-tool .music-string-badges { display: flex; flex-wrap: wrap; gap: .5rem; }
 .music-tool .music-string-badge { display: flex; justify-content: space-between; align-items: center; gap: .5rem; min-width: 4.5rem; }
-.music-string-number { font-size: .75rem; color: var(--music-muted); }
-.music-string-pitch { white-space: nowrap; }
+.music-tool .music-string-number { font-size: .75rem; color: var(--music-muted); }
+.music-tool .music-string-pitch { white-space: nowrap; }
 .music-tool .music-string-badge[aria-expanded="true"] { background: var(--music-selected); border-color: var(--music-accent); box-shadow: inset 0 0 0 1px var(--music-accent); }
-.music-string-badge[aria-expanded="true"] .music-string-pitch { text-decoration: underline; text-underline-offset: .25rem; }
-.music-note-picker { display: grid; gap: .75rem; padding: 1rem; margin-top: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.music-tool .music-string-badge[aria-expanded="true"] .music-string-pitch { text-decoration: underline; text-underline-offset: .25rem; }
+.music-tool .music-note-picker { display: grid; gap: .75rem; padding: 1rem; margin-top: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
 .music-tool .music-note-picker h3 { margin: 0; font-size: 1rem; }
-.music-note-options, .music-octave-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.music-tool .music-note-option, .music-octave-controls button { min-width: 44px; }
-.music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
-.music-note-picker > button { justify-self: start; }
+.music-tool .music-note-options, .music-tool .music-octave-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.music-tool .music-note-option, .music-tool .music-octave-controls button { min-width: 44px; }
+.music-tool .music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
+.music-tool .music-note-picker > button { justify-self: start; }
 @media (max-width: 799px) {
   .content.music-tool { padding: 1.5rem 1rem 2rem; }
-  .music-tuning-presets { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
-  .music-note-picker { padding: .75rem; }
+  .music-tool .music-tuning-presets { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .music-tool .music-note-picker { padding: .75rem; }
+}
+
+/* Shared page rhythm and passive results. */
+.music-tool .tool-eyebrow { margin-bottom: .5rem; font-size: .875rem; text-transform: uppercase; letter-spacing: .0625rem; }
+.music-tool .tool-eyebrow a { color: var(--music-muted); text-decoration: none; }
+.music-tool .tool-eyebrow a:hover { text-decoration: underline; }
+.music-tool summary { min-height: 44px; padding: .625rem 0; cursor: pointer; font-weight: 600; }
+.music-tool label { color: var(--music-muted); font-size: .875rem; font-weight: 600; }
+.music-tool .result-section { min-width: 0; margin-bottom: 2rem; }
+.music-tool .result-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+.music-tool .result-heading p { font-size: .875rem; }
+.music-tool .note-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.music-tool .note-pills li { min-width: 2rem; margin: 0; padding: .375rem .625rem; border: 1px solid var(--music-border); border-radius: .25rem; background: var(--music-panel); font-size: .875rem; line-height: 1.25; text-align: center; }
+.music-tool .note-pills .root-note { border-color: var(--music-accent-strong); background: var(--music-accent); color: var(--music-surface); box-shadow: 0 0 0 1px var(--music-accent-strong); font-weight: 700; }
+.music-tool .empty-state { padding: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); font-size: .875rem; }
+.music-tool .empty-note { min-width: 0; color: var(--music-muted); }
+
+/* Horizontal guitar diagrams: geometry is supplied by each tool. */
+.music-tool .fretboard-scroll { max-width: 100%; overflow-x: auto; padding-bottom: .5rem; }
+.music-tool .string-label { position: sticky; left: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: var(--music-surface); color: var(--music-muted); font-size: .8125rem; font-weight: 700; }
+.music-tool .fret-cell { position: relative; display: flex; align-items: center; justify-content: center; border: 0; border-right: 1px solid var(--music-fret); border-radius: 0; background: var(--music-neck); }
+.music-tool .fret-cell::before { content: ""; position: absolute; z-index: 0; left: 0; right: 0; top: 50%; height: 1px; background: var(--music-wire); pointer-events: none; }
+.music-tool .fret-cell.open { background: var(--music-panel); }
+.music-tool .fret-cell.nut { border-left: 3px solid var(--music-nut); }
+.music-tool .fret-cell span { position: relative; z-index: 1; }
+.music-tool .fret-cell.active span { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--music-selected); color: var(--music-accent-strong); font-size: .75rem; font-weight: 700; }
+.music-tool .fret-cell.root span { background: var(--music-accent); color: var(--music-surface); outline: 2px solid var(--music-accent-strong); outline-offset: 1px; }
+.music-tool .fret-number { display: flex; align-items: center; justify-content: center; color: var(--music-muted); font-size: .75rem; }
+
+/* Chordinator's original editor remains available if notebook startup fails. */
+.music-tool .chordinator-tool { margin-bottom: 1rem; padding: 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-panel); }
+.music-tool .chordinator-tool .result-heading { margin-bottom: 1rem; }
+.music-tool .chordinator-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.music-tool .chordinator-actions > button:first-child { border-color: var(--music-accent); background: var(--music-accent); color: var(--music-surface); }
+.music-tool .chordinator-actions > button:first-child:hover { background: var(--music-accent-strong); }
+.music-tool .chordinator-preset-control, .music-tool .chordinator-recent-settings-control { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.music-tool .chordinator-preset-control { margin-left: auto; }
+.music-tool .chordinator-recent-settings-control select { min-width: 190px; }
+.music-tool .chordinator-fretboard { --fret-count: 16; min-width: 848px; }
+.music-tool .chordinator-fretboard .fretboard-row, .music-tool .chordinator-fretboard .fret-number-row { display: grid; grid-template-columns: 144px repeat(var(--fret-count), minmax(44px, 1fr)); }
+.music-tool .chordinator-fretboard .string-label, .music-tool .chordinator-fretboard .fret-number { min-height: 44px; }
+.music-tool .chordinator-string-label { justify-content: flex-start; gap: .375rem; }
+.music-tool .chordinator-string-name { flex: 0 0 15px; }
+.music-tool .chordinator-string-label select { width: 60px; min-width: 60px; padding: .25rem; font-size: .8125rem; }
+.music-tool .string-mute { flex: 0 0 44px; width: 44px; padding: 0; border-radius: 50%; font-size: .875rem; }
+.music-tool .chordinator-fret { width: 100%; min-height: 44px; padding: 0; }
+.music-tool .chordinator-fret:focus-visible { z-index: 3; }
+.music-tool .chordinator-fret span { display: none; }
+.music-tool .chordinator-fret.selected span { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--music-accent); color: var(--music-surface); font-size: .75rem; font-weight: 700; }
+.music-tool .chordinator-fret.selected.open span { border: 2px solid var(--music-accent); background: var(--music-selected); color: var(--music-accent-strong); }
+.music-tool .chordinator-fret[data-fret="0"] { background: var(--music-panel); }
+.music-tool .chordinator-fret[data-fret="1"] { border-left: 3px solid var(--music-nut); }
+.music-tool .chordinator-selected-summary { margin-bottom: 0; padding-top: 1rem; border-top: 1px solid var(--music-border); }
+.music-tool .chordinator-selected-summary .result-heading { align-items: center; margin-bottom: .5rem; }
+.music-tool .chordinator-selected-summary .result-heading p { font-weight: 700; letter-spacing: .04em; }
+.music-tool .chord-matches { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: .75rem; }
+.content.music-tool .chord-match { padding: .75rem 1rem; border: 1px solid var(--music-border); border-radius: var(--music-panel-radius); background: var(--music-surface); }
+.music-tool .chord-match p { margin-top: .375rem; font-size: .875rem; }
+.music-tool .chord-match-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.music-tool .chord-match-heading span { flex: 0 0 auto; padding: .25rem .5rem; border-radius: .25rem; background: var(--music-selected); color: var(--music-accent-strong); font-size: .75rem; font-weight: 700; }
+.music-tool .close-match .chord-match-heading span { background: var(--music-warning-surface); color: var(--music-warning); }
+.music-tool .match-difference { color: var(--music-warning); }
+@media (max-width: 640px) {
+  .music-tool .result-heading, .music-tool .chord-match-heading { display: block; }
+  .music-tool .result-heading p { margin-top: .375rem; }
+  .music-tool .chord-match-heading span { display: inline-block; margin-top: .375rem; }
+  .music-tool .chordinator-preset-control { margin-left: 0; }
+  .music-tool .chordinator-recent-settings-control { width: 100%; align-items: stretch; }
+  .music-tool .chordinator-recent-settings-control select, .music-tool .chordinator-recent-settings-control button { width: 100%; }
 }
