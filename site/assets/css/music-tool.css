@@ -60,6 +60,63 @@
 .music-tool .music-note-option { min-width: 44px; }
 .music-tool .music-note-option[aria-pressed="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; }
 .music-tool .music-note-picker > button { justify-self: start; }
+/* Tuning and capo geometry shared by both tools. */
+.music-tool .music-tuning-name { margin: .65rem 0 .25rem; font-weight: 600; }
+.music-tool .music-settings-hint { margin: .3rem 0 .85rem; color: var(--music-muted); font-size: .875rem; }
+.music-tool .music-capo-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1rem 0 .5rem; }
+.music-tool .music-capo-label { color: var(--music-accent); font-size: .9rem; }
+.music-tool .music-no-capo[aria-pressed="true"]::before { content: "✓ "; }
+.music-tool .music-tuning-diagram { display: grid; grid-template-columns: 5.25rem minmax(0, 1fr); gap: .5rem; min-width: 0; }
+.music-tool .music-neck-badges { display: grid; grid-template-rows: 36px 288px; align-items: center; }
+.music-tool .music-neck-badges > span { color: var(--music-muted); font-size: .75rem; padding-left: .4rem; }
+.music-tool .music-neck-badges .music-string-badges { display: grid; grid-template-rows: repeat(6, 48px); gap: 0; align-items: center; }
+.music-tool .music-neck-badges .music-string-badge { height: 44px; min-width: 0; padding: .4rem .55rem; }
+.music-tool .music-neck-scroll { min-width: 0; overflow-x: auto; border-radius: var(--music-radius); overscroll-behavior-x: contain; }
+.music-tool .music-tuning-neck {
+  position: relative; height: 324px; min-width: 528px;
+  background: linear-gradient(to bottom, var(--music-panel) 36px, var(--music-neck) 36px);
+}
+.music-tool .music-tuning-neck::before {
+  content: ""; position: absolute; z-index: 2; left: 0; top: 36px; bottom: 0;
+  width: 4px; background: var(--music-nut); pointer-events: none;
+}
+.music-tool .music-neck-strings {
+  position: absolute; top: 36px; right: 0; bottom: 0; left: 0;
+  display: grid; grid-template-rows: repeat(6, 48px); pointer-events: none;
+}
+.music-tool .music-tuning-wire { position: relative; }
+.music-tool .music-tuning-wire::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--music-wire); }
+.music-tool .music-tuning-wire[data-string="2"]::before { height: 1.5px; }
+.music-tool .music-tuning-wire[data-string="3"]::before { height: 2px; }
+.music-tool .music-tuning-wire[data-string="4"]::before { height: 2.5px; }
+.music-tool .music-tuning-wire[data-string="5"]::before { height: 3px; }
+.music-tool .music-tuning-wire[data-string="6"]::before { height: 3.5px; }
+.music-tool .music-capo-frets { display: grid; grid-template-columns: repeat(12, minmax(44px, 1fr)); height: 100%; }
+.music-tool .music-capo-fret {
+  position: relative; height: 100%; min-width: 44px; padding: 0;
+  border: 0; border-radius: 0; background: transparent;
+}
+.music-tool .music-capo-fret::after {
+  content: ""; position: absolute; right: 0; top: 36px; bottom: 0;
+  width: 2px; background: var(--music-fret); pointer-events: none;
+}
+.music-tool .music-capo-fret[aria-pressed="true"] { background: transparent; box-shadow: none; }
+.music-tool .music-capo-fret:hover { background: rgb(255 253 249 / 30%); }
+.music-tool .music-capo-fret:focus-visible { outline-offset: -3px; z-index: 3; }
+.music-tool .music-fret-number {
+  position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
+  display: grid; place-items: center; width: 30px; height: 30px;
+  color: var(--music-muted); font-size: .8rem; border-radius: 50%;
+}
+.music-tool .music-fret-marker { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); color: var(--music-wire); font-size: 1rem; }
+.music-tool .music-capo-fret[aria-pressed="true"]::before {
+  content: ""; position: absolute; top: 48px; bottom: 12px; left: 50%; transform: translateX(-50%);
+  width: 14px; z-index: 1; border: 2px solid var(--music-accent-strong); border-radius: 7px;
+  background: var(--music-accent); box-shadow: 2px 2px 3px rgb(48 44 40 / 20%);
+}
+.music-tool .music-capo-fret[aria-pressed="true"] .music-fret-number { color: var(--music-surface); background: var(--music-accent); font-weight: 700; }
+.music-tool .music-sounding-tuning { margin: .85rem 0; font-size: .875rem; color: var(--music-accent); }
+
 @media (max-width: 1100px) {
   /* Clear the fixed site logo while the centered content sits near its edge. */
   .content.music-tool { padding-top: 4.5rem; }

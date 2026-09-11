@@ -85,7 +85,7 @@
     picker.appendChild(noteGroup);
     function close() {
       if (!active || selected === null) { return; }
-      var previous = selected; selected = null; refresh(); badges[previous].focus();
+      var previous = selected; selected = null; refresh(); badges[previous].focus(); return true;
     }
     picker.appendChild(button(document, options, "picker-done", "Done", "", close));
     function keyboard(event) { if (event.key === "Escape" && selected !== null) { event.preventDefault(); close(); } }
@@ -114,5 +114,86 @@
       destroy: function () { active = false; picker.removeEventListener("keydown", keyboard); badgeGroup.remove(); picker.remove(); }
     };
   }
-  return { mountPresets: mountPresets, mountStringNotes: mountStringNotes };
+  // A common tuning-and-capo view; each host retains draft/apply semantics.
+  // update({values, capo}) preserves the picker and focus. onChange receives
+  // copied values in string 1–6 order, never values transposed by the capo.
+  function mountTuning(host, options) {
+    var document = host.ownerDocument, active = true;
+    var values = options.values.slice(), capo = options.capo, capoButtons = [];
+    var name = options.noteName || function (value) { return NOTES[pc(value)]; };
+    function pitch(value) { return name(value) + (options.midi ? Math.floor(value / 12) - 1 : ""); }
+    var view = node(document, "div", null, { class: "music-tuning-controls" });
+    function hint(text) { view.appendChild(node(document, "p", text, { class: "music-settings-hint" })); }
+    function change(nextValues, nextCapo) {
+      if (active) { options.onChange({ values: nextValues.slice(), capo: nextCapo }); }
+    }
+    function chooseCapo(fret, focus) {
+      change(values, fret);
+      if (focus && active) { capoButtons[fret].focus(); }
+    }
+    function capoControl(fret, text, className) {
+      var control = button(document, options, "capo-" + fret, text, className, function () { chooseCapo(fret, false); });
+      control.setAttribute("aria-label", fret ? "Capo at fret " + fret : "No capo");
+      control.addEventListener("keydown", function (event) {
+        var next = { ArrowLeft: Math.max(0, fret - 1), ArrowRight: Math.min(12, fret + 1), Home: 0, End: 12 }[event.key];
+        if (active && next !== undefined) { event.preventDefault(); chooseCapo(next, true); }
+      });
+      capoButtons[fret] = control; return control;
+    }
+    hint("Choose a tuning, or tap a string note to customise it. Preset notes run low to high.");
+    var presetControls = mountPresets(view, {
+      presets: options.presets, values: values, keyAttribute: options.keyAttribute, noteName: name,
+      onChange: function (next) { change(next, capo); }
+    });
+    var tuningName = node(document, "p", null, { class: "music-tuning-name" }); view.appendChild(tuningName);
+    var toolbar = node(document, "div", null, { class: "music-capo-toolbar" });
+    toolbar.appendChild(capoControl(0, "No capo", "music-no-capo"));
+    var capoLabel = node(document, "strong", null, { class: "music-capo-label" }); toolbar.appendChild(capoLabel); view.appendChild(toolbar);
+    hint("Tuning before capo · string 1 is at the top. Tap a fret to place the capo across all six strings.");
+    var diagram = node(document, "div", null, { class: "music-tuning-diagram" });
+    var badges = node(document, "div", null, { class: "music-neck-badges" }); badges.appendChild(node(document, "span", "String"));
+    diagram.appendChild(badges);
+    var scroll = node(document, "div", null, { class: "music-neck-scroll", role: "region", "aria-label": "Guitar neck; scroll horizontally for capo frets" });
+    var neck = node(document, "div", null, { class: "music-tuning-neck" });
+    var wires = node(document, "div", null, { class: "music-neck-strings", "aria-hidden": "true" });
+    for (var string = 1; string <= 6; string += 1) { wires.appendChild(node(document, "span", null, { class: "music-tuning-wire", "data-string": string })); }
+    neck.appendChild(wires);
+    var frets = node(document, "div", null, { class: "music-capo-frets", role: "group", "aria-label": "Capo fret" });
+    for (var fret = 1; fret <= 12; fret += 1) {
+      var fretButton = capoControl(fret, null, "music-capo-fret");
+      fretButton.appendChild(node(document, "span", String(fret), { class: "music-fret-number" }));
+      fretButton.appendChild(node(document, "span", fret === 12 ? "••" : [3, 5, 7, 9].includes(fret) ? "•" : "", { class: "music-fret-marker", "aria-hidden": "true" }));
+      frets.appendChild(fretButton);
+    }
+    neck.appendChild(frets); scroll.appendChild(neck); diagram.appendChild(scroll); view.appendChild(diagram);
+    var stringControls = mountStringNotes(badges, view, {
+      id: options.id, values: values, midi: options.midi, keyAttribute: options.keyAttribute, noteName: name,
+      onChange: function (next) { change(next, capo); }
+    });
+    function keyboard(event) {
+      if (event.key === "Escape" && !event.defaultPrevented && stringControls.close()) { event.preventDefault(); }
+    }
+    view.addEventListener("keydown", keyboard);
+    var sounding = node(document, "p", null, { class: "music-sounding-tuning" }); view.appendChild(sounding);
+    host.appendChild(view);
+    function update(next) {
+      if (!active) { return; }
+      values = next.values.slice(); capo = next.capo;
+      presetControls.update(values); stringControls.update(values);
+      var matched = options.presets.find(function (preset) {
+        return preset.values.length === values.length && preset.values.every(function (value, index) { return value === values[index]; });
+      });
+      tuningName.textContent = matched ? matched.label + " tuning" : "Custom tuning";
+      capoLabel.textContent = capo ? "Capo at fret " + capo : "Open strings · no capo";
+      capoButtons.forEach(function (control, index) { pressed(control, capo === index); control.setAttribute("tabindex", capo === index ? "0" : "-1"); });
+      sounding.textContent = (capo ? "With capo " + capo : "Open strings") + " · low to high: " +
+        values.slice().reverse().map(function (value) { return pitch(value + capo); }).join(" · ");
+    }
+    update({ values: values, capo: capo });
+    return {
+      update: update, closePicker: stringControls.close,
+      destroy: function () { active = false; view.removeEventListener("keydown", keyboard); presetControls.destroy(); stringControls.destroy(); view.remove(); }
+    };
+  }
+  return { mountPresets: mountPresets, mountStringNotes: mountStringNotes, mountTuning: mountTuning };
 }));

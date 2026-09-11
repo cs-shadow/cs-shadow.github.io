@@ -278,81 +278,25 @@
       hosts.settings.replaceChildren();
       var form = el("form", null, { class: "notebook-settings-form" });
       form.appendChild(el("h2", "Song tuning and capo"));
-      var capoButtons = [];
       function control(key, text, run, attributes) {
         return button(text, run, Object.assign({ "data-settings-key": key }, attributes || {}));
       }
-      function pitch(midi) { return music.pitchName(music.normalizePitch(midi)) + (Math.floor(midi / 12) - 1); }
-      function pressed(node, selected) { node.setAttribute("aria-pressed", String(selected)); }
-      function chooseCapo(fret, focus) {
-        settingsDraft.capo = fret; refresh();
-        if (focus) { capoButtons[fret].focus(); }
-      }
-      function capoKey(event, fret) {
-        var next = { ArrowLeft: Math.max(0, fret - 1), ArrowRight: Math.min(12, fret + 1), Home: 0, End: 12 }[event.key];
-        if (next !== undefined) { event.preventDefault(); chooseCapo(next, true); }
-      }
-      function capoControl(fret, text, className) {
-        var node = control("capo-" + fret, text, function () { chooseCapo(fret, false); }, {
-          class: className, "aria-label": fret ? "Capo at fret " + fret : "No capo"
-        });
-        node.addEventListener("keydown", function (event) { capoKey(event, fret); });
-        capoButtons[fret] = node; return node;
-      }
-      form.appendChild(el("p", "Choose a tuning, or tap a string note to customise it. Preset notes run low to high.", { class: "notebook-settings-hint" }));
-      var presets = el("div"); form.appendChild(presets);
-      var presetControls = controls.mountPresets(presets, {
+      var tuningControls = controls.mountTuning(form, {
+        id: "notebook-string-picker", values: settingsDraft.tuningMidi, midi: true, capo: settingsDraft.capo,
         presets: music.presets.map(function (item) { return { id: item.id, label: item.label, values: item.tuningMidi }; }),
-        values: settingsDraft.tuningMidi, keyAttribute: "data-settings-key",
-        noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
-        onChange: function (values) { settingsDraft.tuningMidi = values; refresh(); }
+        keyAttribute: "data-settings-key", noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
+        onChange: function (next) { settingsDraft.tuningMidi = next.values; settingsDraft.capo = next.capo; refresh(); }
       });
-      var tuningName = el("p", null, { class: "notebook-tuning-name" }); form.appendChild(tuningName);
-      var toolbar = el("div", null, { class: "notebook-capo-toolbar" });
-      toolbar.appendChild(capoControl(0, "No capo", "notebook-no-capo"));
-      var capoLabel = el("strong", null, { class: "notebook-capo-label" }); toolbar.appendChild(capoLabel); form.appendChild(toolbar);
-      form.appendChild(el("p", "Tuning before capo · string 1 is at the top. Tap a fret to place the capo across all six strings.", { class: "notebook-settings-hint" }));
-      var diagram = el("div", null, { class: "notebook-tuning-diagram" });
-      var badges = el("div", null, { class: "notebook-string-badges" }); badges.appendChild(el("span", "String"));
-      diagram.appendChild(badges);
-      var scroll = el("div", null, { class: "notebook-neck-scroll", role: "region", "aria-label": "Guitar neck; scroll horizontally for capo frets" });
-      var neck = el("div", null, { class: "notebook-tuning-neck" });
-      var wires = el("div", null, { class: "notebook-neck-strings", "aria-hidden": "true" });
-      for (var string = 1; string <= 6; string += 1) { wires.appendChild(el("span", null, { class: "notebook-tuning-wire", "data-string": string })); }
-      neck.appendChild(wires);
-      var frets = el("div", null, { class: "notebook-capo-frets", role: "group", "aria-label": "Capo fret" });
-      for (var fret = 1; fret <= 12; fret += 1) {
-        var fretButton = capoControl(fret, null, "notebook-capo-fret");
-        fretButton.appendChild(el("span", String(fret), { class: "notebook-fret-number" }));
-        fretButton.appendChild(el("span", fret === 12 ? "••" : [3, 5, 7, 9].includes(fret) ? "•" : "", { class: "notebook-fret-marker", "aria-hidden": "true" }));
-        frets.appendChild(fretButton);
-      }
-      neck.appendChild(frets); scroll.appendChild(neck); diagram.appendChild(scroll); form.appendChild(diagram);
-      var pickerHost = el("div"); form.appendChild(pickerHost);
-      var stringControls = controls.mountStringNotes(badges, pickerHost, {
-        id: "notebook-string-picker", values: settingsDraft.tuningMidi, midi: true,
-        keyAttribute: "data-settings-key",
-        noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
-        onChange: function (values) { settingsDraft.tuningMidi = values; refresh(); }
+      form.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !event.defaultPrevented && tuningControls.closePicker()) { event.preventDefault(); }
       });
-      form.addEventListener("keydown", function (event) { if (event.key === "Escape") { stringControls.close(); } });
-      var sounding = el("p", null, { class: "notebook-sounding-tuning" }); form.appendChild(sounding);
       form.appendChild(el("p", "Chord frets are relative to the capo. Changes affect the whole song after Apply.", { class: "notebook-settings-hint" }));
       var result = el("div", null, { class: "notebook-settings-preview", "aria-live": "polite" }); form.appendChild(result);
       var actions = el("div", null, { class: "notebook-settings-actions" });
       var apply = el("button", "Apply settings", { type: "submit", class: "music-primary", "data-settings-key": "apply" }); actions.appendChild(apply);
       actions.appendChild(control("cancel", "Cancel", function () { settingsOpen = false; settingsDraft = null; rerender(); })); form.appendChild(actions);
       function refresh() {
-        presetControls.update(settingsDraft.tuningMidi);
-        stringControls.update(settingsDraft.tuningMidi);
-        var matched = music.presets.find(function (item) {
-          return item.tuningMidi.every(function (midi, i) { return midi === settingsDraft.tuningMidi[i]; });
-        });
-        tuningName.textContent = matched ? matched.label + " tuning" : "Custom tuning";
-        capoLabel.textContent = settingsDraft.capo ? "Capo at fret " + settingsDraft.capo : "Open strings · no capo";
-        capoButtons.forEach(function (node, index) { pressed(node, settingsDraft.capo === index); node.setAttribute("tabindex", settingsDraft.capo === index ? "0" : "-1"); });
-        sounding.textContent = (settingsDraft.capo ? "With capo " + settingsDraft.capo : "Open strings") + " · low to high: " +
-          settingsDraft.tuningMidi.slice().reverse().map(function (midi) { return pitch(midi + settingsDraft.capo); }).join(" · ");
+        tuningControls.update({ values: settingsDraft.tuningMidi, capo: settingsDraft.capo });
         preview();
       }
       function preview() {
@@ -378,7 +322,7 @@
         }
       }
       form.addEventListener("submit", function (event) { event.preventDefault(); var outcome = dispatch(Object.assign({ type: "settings.apply" }, settingsDraft)); if (!outcome.error) { settingsOpen = false; settingsDraft = null; rerender(); } });
-      hosts.settings.appendChild(form); settingsView = { draft: settingsDraft, refresh: refresh, destroy: function () { presetControls.destroy(); stringControls.destroy(); } }; refresh();
+      hosts.settings.appendChild(form); settingsView = { draft: settingsDraft, refresh: refresh, destroy: function () { tuningControls.destroy(); } }; refresh();
     }
     function renderStatus(snapshot, state) {
       hosts.status.replaceChildren(); hosts.status.appendChild(el("span", snapshot.saveStatus === "saved" ? "Saved" : snapshot.saveStatus === "saving" ? "Saving…" : "Save failed"));
