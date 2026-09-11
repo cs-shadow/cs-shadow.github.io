@@ -146,7 +146,6 @@
         text("p", "preview-tones", "Tones: " + pitches(music.interpretationPitches(interpretation), interpretation, interpretation.rootSpelling)),
         text("p", "preview-relation", relation + " relative to " + state.tonicSpelling + " home · browsing " + currentScale.name, "notebook-explore-hint"),
         view.song.context ? text("p", "preview-song-relation", "Song home: " + music.romanLabel(interpretation, view.song.context) + " relative to " + view.song.context.tonicSpelling, "notebook-explore-hint") : null,
-        detail("roman-legend", "About Roman labels", [text("p", "roman-legend-text", "Degrees use a fixed major-scale reference, with lowercase for minor and diminished chords. For example, with A home, Am is i and C is ♭III. These labels describe relationships, not a required chord function.")]),
         state.selectedFrets ? shapePreview(state.selectedFrets) : text("p", "no-fingering", "Fingering not set. You can keep this chord by name.", "notebook-explore-hint"),
         el("div", "keep-actions", { class: "notebook-explore-actions" }, [button("keep", "Keep chord", function () { keep(false); }), button("keep-add", "Keep & add to " + (section.name || "Untitled section"), function () { keep(true); })]),
         el("section", "fingerings", { class: "notebook-explore-fingerings", "aria-label": "Find a guitar fingering", "aria-busy": request ? "true" : "false" }, [
