@@ -254,7 +254,7 @@
     return { render: function (viewState, readingOnly) { components.forEach(function (entry) { if (!readingOnly || entry.name === "Reading") { entry.component.render(viewState); } }); }, destroy: function () { components.forEach(function (entry) { entry.component.destroy(); }); } };
   }
   function mountHeader(hosts, store, options) {
-    var document = hosts.header.ownerDocument, music = options.music, model = options.model;
+    var document = hosts.header.ownerDocument, music = options.music, model = options.model, controls = options.controls;
     var libraryOpen = false, menuOpen = false, settingsOpen = false, contextOpen = false, songNotesOpen = false;
     var settingsDraft = null, settingsView = null, deleteSongId = null, renderedSongId = null, bodySignature = null;
     function el(tag, text, attributes) {
@@ -269,15 +269,16 @@
     function rerender() { render(store.snapshot(), store.state()); }
     function renderSettings(snapshot) {
       hosts.settings.hidden = !settingsOpen;
-      if (!settingsOpen) { hosts.settings.replaceChildren(); settingsView = null; return; }
+      if (!settingsOpen) { if (settingsView) { settingsView.destroy(); } hosts.settings.replaceChildren(); settingsView = null; return; }
       if (!settingsDraft) { settingsDraft = { tuningMidi: snapshot.song.tuningMidi.slice(), capo: snapshot.song.capo }; }
       // Keep the controls mounted while this draft is open, including across
       // unrelated header renders, so focus and the active string picker survive.
       if (settingsView && settingsView.draft === settingsDraft) { settingsView.refresh(); return; }
+      if (settingsView) { settingsView.destroy(); }
       hosts.settings.replaceChildren();
       var form = el("form", null, { class: "notebook-settings-form" });
       form.appendChild(el("h2", "Song tuning and capo"));
-      var selectedString = null, presetButtons = [], stringButtons = [], stringPitches = [], capoButtons = [], noteButtons = [];
+      var capoButtons = [];
       function control(key, text, run, attributes) {
         return button(text, run, Object.assign({ "data-settings-key": key }, attributes || {}));
       }
@@ -299,16 +300,13 @@
         capoButtons[fret] = node; return node;
       }
       form.appendChild(el("p", "Choose a tuning, or tap a string note to customise it. Preset notes run low to high.", { class: "notebook-settings-hint" }));
-      var presets = el("div", null, { class: "notebook-tuning-presets", role: "group", "aria-label": "Tuning presets" });
-      music.presets.forEach(function (item) {
-        var node = control("preset-" + item.id, null, function () { settingsDraft.tuningMidi = item.tuningMidi.slice(); refresh(); }, {
-          class: "notebook-tuning-preset", "aria-label": item.label + " tuning"
-        });
-        node.appendChild(el("strong", item.label));
-        node.appendChild(el("span", item.tuningMidi.slice().reverse().map(function (midi) { return music.pitchName(music.normalizePitch(midi)); }).join(" · "), { class: "notebook-preset-notes" }));
-        presets.appendChild(node); presetButtons.push(node);
+      var presets = el("div"); form.appendChild(presets);
+      var presetControls = controls.mountPresets(presets, {
+        presets: music.presets.map(function (item) { return { id: item.id, label: item.label, values: item.tuningMidi }; }),
+        values: settingsDraft.tuningMidi, keyAttribute: "data-settings-key",
+        noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
+        onChange: function (values) { settingsDraft.tuningMidi = values; refresh(); }
       });
-      form.appendChild(presets);
       var tuningName = el("p", null, { class: "notebook-tuning-name" }); form.appendChild(tuningName);
       var toolbar = el("div", null, { class: "notebook-capo-toolbar" });
       toolbar.appendChild(capoControl(0, "No capo", "notebook-no-capo"));
@@ -316,14 +314,6 @@
       form.appendChild(el("p", "Tuning before capo · string 1 is at the top. Tap a fret to place the capo across all six strings.", { class: "notebook-settings-hint" }));
       var diagram = el("div", null, { class: "notebook-tuning-diagram" });
       var badges = el("div", null, { class: "notebook-string-badges" }); badges.appendChild(el("span", "String"));
-      settingsDraft.tuningMidi.forEach(function (_, index) {
-        var node = control("string-" + index, null, function () {
-          selectedString = index; refresh(); noteButtons[music.normalizePitch(settingsDraft.tuningMidi[index])].focus();
-        }, { class: "notebook-string-badge", "aria-controls": "notebook-string-picker" });
-        node.appendChild(el("span", String(index + 1), { class: "notebook-string-number" }));
-        var note = el("strong", null, { class: "notebook-string-pitch" }); node.appendChild(note);
-        stringButtons.push(node); stringPitches.push(note); badges.appendChild(node);
-      });
       diagram.appendChild(badges);
       var scroll = el("div", null, { class: "notebook-neck-scroll", role: "region", "aria-label": "Guitar neck; scroll horizontally for capo frets" });
       var neck = el("div", null, { class: "notebook-tuning-neck" });
@@ -338,62 +328,29 @@
         frets.appendChild(fretButton);
       }
       neck.appendChild(frets); scroll.appendChild(neck); diagram.appendChild(scroll); form.appendChild(diagram);
-      var picker = el("div", null, { id: "notebook-string-picker", class: "notebook-note-picker", role: "region" });
-      var pickerTitle = el("h3", null); picker.appendChild(pickerTitle);
-      var notes = el("div", null, { class: "notebook-note-options", role: "group", "aria-label": "String note" });
-      for (var pc = 0; pc < 12; pc += 1) {
-        (function (notePc) {
-          var node = control("note-" + notePc, music.pitchName(notePc), function () {
-            if (selectedString === null) { return; }
-            var next = Math.floor(settingsDraft.tuningMidi[selectedString] / 12) * 12 + notePc;
-            if (next <= 127) { settingsDraft.tuningMidi[selectedString] = next; refresh(); }
-          }, { class: "notebook-note-option" });
-          notes.appendChild(node); noteButtons.push(node);
-        }(pc));
-      }
-      picker.appendChild(notes);
-      var octaves = el("div", null, { class: "notebook-octave-controls" });
-      function changeOctave(delta) {
-        if (selectedString === null) { return; }
-        var next = settingsDraft.tuningMidi[selectedString] + delta;
-        if (next >= 0 && next <= 127) { settingsDraft.tuningMidi[selectedString] = next; refresh(); }
-      }
-      var octaveDown = control("octave-down", "−", function () { changeOctave(-12); }, { "aria-label": "Lower string octave" });
-      var octaveLabel = el("span", null);
-      var octaveUp = control("octave-up", "+", function () { changeOctave(12); }, { "aria-label": "Raise string octave" });
-      octaves.appendChild(octaveDown); octaves.appendChild(octaveLabel); octaves.appendChild(octaveUp); picker.appendChild(octaves);
-      function closePicker() { var index = selectedString; selectedString = null; refresh(); if (index !== null) { stringButtons[index].focus(); } }
-      picker.appendChild(control("picker-done", "Done", closePicker)); form.appendChild(picker);
-      form.addEventListener("keydown", function (event) { if (event.key === "Escape" && selectedString !== null) { event.preventDefault(); closePicker(); } });
+      var pickerHost = el("div"); form.appendChild(pickerHost);
+      var stringControls = controls.mountStringNotes(badges, pickerHost, {
+        id: "notebook-string-picker", values: settingsDraft.tuningMidi, octaves: true,
+        keyAttribute: "data-settings-key",
+        noteName: function (value) { return music.pitchName(music.normalizePitch(value)); },
+        onChange: function (values) { settingsDraft.tuningMidi = values; refresh(); }
+      });
+      form.addEventListener("keydown", function (event) { if (event.key === "Escape") { stringControls.close(); } });
       var sounding = el("p", null, { class: "notebook-sounding-tuning" }); form.appendChild(sounding);
       form.appendChild(el("p", "Chord frets are relative to the capo. Changes affect the whole song after Apply.", { class: "notebook-settings-hint" }));
       var result = el("div", null, { class: "notebook-settings-preview", "aria-live": "polite" }); form.appendChild(result);
       var actions = el("div", null, { class: "notebook-settings-actions" });
-      var apply = el("button", "Apply settings", { type: "submit", "data-settings-key": "apply" }); actions.appendChild(apply);
+      var apply = el("button", "Apply settings", { type: "submit", class: "music-primary", "data-settings-key": "apply" }); actions.appendChild(apply);
       actions.appendChild(control("cancel", "Cancel", function () { settingsOpen = false; settingsDraft = null; rerender(); })); form.appendChild(actions);
       function refresh() {
-        var matched = null;
-        music.presets.forEach(function (item, index) {
-          var match = item.tuningMidi.every(function (midi, i) { return midi === settingsDraft.tuningMidi[i]; });
-          pressed(presetButtons[index], match); if (match) { matched = item; }
+        presetControls.update(settingsDraft.tuningMidi);
+        stringControls.update(settingsDraft.tuningMidi);
+        var matched = music.presets.find(function (item) {
+          return item.tuningMidi.every(function (midi, i) { return midi === settingsDraft.tuningMidi[i]; });
         });
         tuningName.textContent = matched ? matched.label + " tuning" : "Custom tuning";
         capoLabel.textContent = settingsDraft.capo ? "Capo at fret " + settingsDraft.capo : "Open strings · no capo";
         capoButtons.forEach(function (node, index) { pressed(node, settingsDraft.capo === index); node.setAttribute("tabindex", settingsDraft.capo === index ? "0" : "-1"); });
-        settingsDraft.tuningMidi.forEach(function (midi, index) {
-          stringPitches[index].textContent = pitch(midi);
-          stringButtons[index].setAttribute("aria-label", "String " + (index + 1) + ", " + pitch(midi) + ", edit tuning");
-          stringButtons[index].setAttribute("aria-expanded", String(selectedString === index));
-        });
-        picker.hidden = selectedString === null;
-        if (selectedString !== null) {
-          var midi = settingsDraft.tuningMidi[selectedString];
-          pickerTitle.textContent = "String " + (selectedString + 1) + " · " + pitch(midi);
-          picker.setAttribute("aria-label", "Edit string " + (selectedString + 1) + " tuning");
-          noteButtons.forEach(function (node, notePc) { pressed(node, music.normalizePitch(midi) === notePc); node.disabled = Math.floor(midi / 12) * 12 + notePc > 127; });
-          octaveLabel.textContent = "Octave " + (Math.floor(midi / 12) - 1);
-          octaveDown.disabled = midi < 12; octaveUp.disabled = midi + 12 > 127;
-        }
         sounding.textContent = (settingsDraft.capo ? "With capo " + settingsDraft.capo : "Open strings") + " · low to high: " +
           settingsDraft.tuningMidi.slice().reverse().map(function (midi) { return pitch(midi + settingsDraft.capo); }).join(" · ");
         preview();
@@ -421,7 +378,7 @@
         }
       }
       form.addEventListener("submit", function (event) { event.preventDefault(); var outcome = dispatch(Object.assign({ type: "settings.apply" }, settingsDraft)); if (!outcome.error) { settingsOpen = false; settingsDraft = null; rerender(); } });
-      hosts.settings.appendChild(form); settingsView = { draft: settingsDraft, refresh: refresh }; refresh();
+      hosts.settings.appendChild(form); settingsView = { draft: settingsDraft, refresh: refresh, destroy: function () { presetControls.destroy(); stringControls.destroy(); } }; refresh();
     }
     function renderStatus(snapshot, state) {
       hosts.status.replaceChildren(); hosts.status.appendChild(el("span", snapshot.saveStatus === "saved" ? "Saved" : snapshot.saveStatus === "saving" ? "Saving…" : "Save failed"));
@@ -531,12 +488,12 @@
       renderStatus(snapshot, state);
       renderSettings(snapshot);
     }
-    return { render: render, destroy: function () { hosts.header.replaceChildren(); hosts.status.replaceChildren(); hosts.settings.replaceChildren(); } };
+    return { render: render, destroy: function () { if (settingsView) { settingsView.destroy(); } hosts.header.replaceChildren(); hosts.status.replaceChildren(); hosts.settings.replaceChildren(); } };
   }
 
   function bootstrap(window, document) {
     var root = document.getElementById("song-notebook");
-    if (!root || !window.SongNotebookCompose || !window.SongNotebookEditor) { return null; }
+    if (!root || !window.MusicToolControls || !window.SongNotebookCompose || !window.SongNotebookEditor) { return null; }
     var music = window.SongNotebookMusic, model = window.SongNotebookModel.create({ music: music });
     var localStorage = null;
     try { localStorage = window.localStorage; } catch (error) { /* In-memory composition and JSON remain available. */ }
@@ -573,7 +530,7 @@
       return result;
     }
     var components = mountComponents(document, modules, { dispatch: dispatchComponent, music: music }, window.SongNotebookContracts);
-    var header = mountHeader({ header: document.getElementById("notebook-header"), status: document.getElementById("notebook-status"), settings: document.getElementById("notebook-settings") }, store, { music: music, model: model, storage: storage, readingAvailable: !!modules.Reading });
+    var header = mountHeader({ header: document.getElementById("notebook-header"), status: document.getElementById("notebook-status"), settings: document.getElementById("notebook-settings") }, store, { music: music, model: model, storage: storage, readingAvailable: !!modules.Reading, controls: window.MusicToolControls });
     var legacy = document.querySelector("main.guitar-chordinator"); if (legacy) { legacy.hidden = true; }
     root.hidden = false; if (modules.Reading) { document.body.classList.add("song-notebook-active"); }
     function beginPrint() { if (modules.Reading) { if (!printing) { printFocus = document.activeElement; } printing = true; root.classList.add("notebook-printing"); render(); } }

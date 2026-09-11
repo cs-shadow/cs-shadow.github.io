@@ -93,7 +93,7 @@ test("long song, section, chord and occurrence text is complete and uses splitta
 
 test("mobile structure has no editor controls or fixed page width; diagrams fit their own column",()=>{
  const e=harness();e.keep([0,1,0,2,3,null],"C");e.read();for(const tag of ["button","input","textarea","select","details"])assert.equal(e.root.querySelectorAll(tag).length,0);
- const css=fs.readFileSync(require.resolve("../../site/assets/css/song-notebook/reading.css"),"utf8");assert.match(css,/max-width: 799px/);assert.match(css,/grid-template-columns: minmax\(0, 1fr\)/);assert.match(css,/notebook-reading-diagram \{ width: 12.125rem; max-width: 100%/);assert.match(css,/var\(--notebook-border\)/);assert.match(css,/var\(--notebook-surface\)/);e.close();
+ const css=fs.readFileSync(require.resolve("../../site/assets/css/song-notebook/reading.css"),"utf8");assert.match(css,/max-width: 799px/);assert.match(css,/grid-template-columns: minmax\(0, 1fr\)/);assert.match(css,/notebook-reading-diagram \{ width: 12.125rem; max-width: 100%/);assert.match(css,/var\(--music-border\)/);assert.match(css,/var\(--music-surface\)/);e.close();
 });
 
 test("destroy is confined to the reading host and browser export needs no window effects",()=>{

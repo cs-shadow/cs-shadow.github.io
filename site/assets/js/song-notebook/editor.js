@@ -18,7 +18,7 @@
     function append(parent, tag, className, text) { var node = element(tag, className, text); parent.appendChild(node); return node; }
     function button(parent, label, key, handler, options) {
       options = options || {};
-      var node = append(parent, "button", options.primary ? "notebook-editor-primary" : "", label);
+      var node = append(parent, "button", options.primary ? "notebook-editor-primary music-primary" : "", label);
       node.type = "button"; node.dataset.editorKey = key; node.disabled = !!options.disabled;
       node.addEventListener("click", function () { if (!destroyed && !node.disabled) { handler(); } }); return node;
     }
@@ -98,8 +98,10 @@
               if (current.candidate.interpretation && JSON.stringify(changed) !== JSON.stringify(current.candidate.frets)) { changes.reviewRequired = true; changes.previousInterpretation = current.candidate.previousInterpretation || current.candidate.interpretation; }
               patch(chordId, changes);
             }, { disabled: !editable });
-            control.className = "notebook-editor-note"; control.setAttribute("aria-pressed", String(selected));
+            var isRoot = selected && !muted && candidate.interpretation && !candidate.reviewRequired && music.normalizePitch(settings.tuningMidi[stringIndex] + settings.capo + selectedFret) === candidate.interpretation.rootPc;
+            control.className = "notebook-editor-note" + (isRoot ? " notebook-editor-root" : ""); control.setAttribute("aria-pressed", String(selected));
             control.setAttribute("aria-label", "String " + (stringIndex + 1) + ", " + (muted ? "mute" : selectedFret === 0 ? "open, " + note : "fret " + selectedFret + ", " + note + (settings.capo ? ", physical fret " + (selectedFret + settings.capo) : "")));
+            if (isRoot) { control.setAttribute("aria-label", control.getAttribute("aria-label") + ", root"); }
             control.tabIndex = editable && stringIndex === 0 && selected ? 0 : -1;
             control.addEventListener("keydown", function (event) {
               var nextString = stringIndex, nextFret = selectedFret;

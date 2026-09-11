@@ -2,7 +2,7 @@
 const test=require("node:test"),assert=require("node:assert/strict");
 const Controller=require("../../site/assets/js/guitar-chordinator.js"),Music=require("../../site/assets/js/song-notebook/music.js"),Model=require("../../site/assets/js/song-notebook/model.js"),Storage=require("../../site/assets/js/song-notebook/storage.js"),Contracts=require("../../site/assets/js/song-notebook/contracts.js");
 const {notebookDocument}=require("./dom-fixture.cjs"),{memoryStorage}=require("./fixtures.cjs");
-function setup(realComponents=false,reading=false){const document=notebookDocument(),renders=[],handlers={},memory=memoryStorage();const component={mount:()=>({render:snapshot=>renders.push(snapshot),destroy(){}})};const window={SongNotebookMusic:Music,SongNotebookModel:Model,SongNotebookStorage:Storage,SongNotebookContracts:Contracts,SongNotebookCompose:realComponents?require("../../site/assets/js/song-notebook/compose.js"):component,SongNotebookExplore:realComponents?require("../../site/assets/js/song-notebook/explore.js"):undefined,SongNotebookReading:reading==="real"?require("../../site/assets/js/song-notebook/reading.js"):reading?component:undefined,print(){},SongNotebookEditor:realComponents?require("../../site/assets/js/song-notebook/editor.js"):component,localStorage:memory,addEventListener(type,handler){handlers[type]=handler;},removeEventListener(type){delete handlers[type];}};const app=Controller.bootstrap(window,document);return {app,window,document,renders,handlers,memory};}
+function setup(realComponents=false,reading=false){const document=notebookDocument(),renders=[],handlers={},memory=memoryStorage();const component={mount:()=>({render:snapshot=>renders.push(snapshot),destroy(){}})};const window={MusicToolControls:require("../../site/assets/js/music-tool-controls.js"),SongNotebookMusic:Music,SongNotebookModel:Model,SongNotebookStorage:Storage,SongNotebookContracts:Contracts,SongNotebookCompose:realComponents?require("../../site/assets/js/song-notebook/compose.js"):component,SongNotebookExplore:realComponents?require("../../site/assets/js/song-notebook/explore.js"):undefined,SongNotebookReading:reading==="real"?require("../../site/assets/js/song-notebook/reading.js"):reading?component:undefined,print(){},SongNotebookEditor:realComponents?require("../../site/assets/js/song-notebook/editor.js"):component,localStorage:memory,addEventListener(type,handler){handlers[type]=handler;},removeEventListener(type){delete handlers[type];}};const app=Controller.bootstrap(window,document);return {app,window,document,renders,handlers,memory};}
 function byText(root,tag,text){return root.querySelectorAll(tag).find(node=>node.textContent===text);}
 function settingsControl(settings,key){return settings.querySelector('[data-settings-key="'+key+'"]');}
 function openSettings(document){byText(document.getElementById("notebook-header"),"button","Standard tuning · No capo").click();return document.getElementById("notebook-settings");}
@@ -223,7 +223,7 @@ test("visual tuning presets preserve the draft capo and cancel without saving",(
 test("string notes preserve octave, identify matching presets, and preview sounding pitches",()=>{
  const {app,document}=setup(),settings=openSettings(document);
  settingsControl(settings,"string-5").click();
- const picker=settings.querySelector(".notebook-note-picker");
+ const picker=settings.querySelector(".music-note-picker");
  assert.equal(picker.hidden,false);assert.equal(picker.getAttribute("aria-label"),"Edit string 6 tuning");
  assert.match(picker.textContent,/Octave 2/);
  settingsControl(settings,"note-2").click();
@@ -252,13 +252,13 @@ test("note and octave controls enforce the complete MIDI range",()=>{
  byText(header,"button","Custom tuning · No capo").click();
  const settings=document.getElementById("notebook-settings");
  settingsControl(settings,"string-0").click();
- assert.match(settings.querySelector(".notebook-note-picker").textContent,/Octave -1/);
+ assert.match(settings.querySelector(".music-note-picker").textContent,/Octave -1/);
  assert.equal(settingsControl(settings,"octave-down").disabled,true);
  assert.equal(settingsControl(settings,"octave-up").disabled,false);
  settingsControl(settings,"octave-down").click();
  assert.match(settingsControl(settings,"string-0").textContent,/C-1/);
  settingsControl(settings,"string-1").click();
- assert.match(settings.querySelector(".notebook-note-picker").textContent,/Octave 9/);
+ assert.match(settings.querySelector(".music-note-picker").textContent,/Octave 9/);
  assert.equal(settingsControl(settings,"octave-up").disabled,true);
  assert.equal(settingsControl(settings,"note-7").disabled,false);
  assert.equal(settingsControl(settings,"note-8").disabled,true);
@@ -294,12 +294,12 @@ test("capo keyboard navigation selects and focuses positions including both boun
 test("settings keep focused nodes and the active picker through draft updates and saves",()=>{
  const {app,document}=setup(),settings=openSettings(document),string=settingsControl(settings,"string-0");
  string.click();assert.equal(string.getAttribute("aria-expanded"),"true");
- const note=settingsControl(settings,"note-5"),picker=settings.querySelector(".notebook-note-picker");
+ const note=settingsControl(settings,"note-5"),picker=settings.querySelector(".music-note-picker");
  note.focus();note.click();
  assert.strictEqual(settingsControl(settings,"note-5"),note);assert.strictEqual(document.activeElement,note);
  app.store.flush();app.store.dispatch({type:"song.update",patch:{title:"Another title"}});
  assert.strictEqual(settingsControl(settings,"note-5"),note);assert.strictEqual(document.activeElement,note);
- assert.strictEqual(settings.querySelector(".notebook-note-picker"),picker);assert.equal(picker.hidden,false);
+ assert.strictEqual(settings.querySelector(".music-note-picker"),picker);assert.equal(picker.hidden,false);
  settingsControl(settings,"picker-done").click();
  assert.equal(picker.hidden,true);assert.strictEqual(document.activeElement,string);assert.equal(string.getAttribute("aria-expanded"),"false");
  string.click();note.focus();note.dispatchEvent({type:"keydown",key:"Escape",bubbles:true});
@@ -314,14 +314,14 @@ test("settings draft and picker survive Read but reset when changing songs",()=>
  byText(header,"button","Edit").click();assert.equal(settings.hidden,false);
  assert.equal(settingsControl(settings,"capo-2").getAttribute("aria-pressed"),"true");
  assert.equal(settingsControl(settings,"preset-drop-d").getAttribute("aria-pressed"),"true");
- assert.equal(settings.querySelector(".notebook-note-picker").hidden,false);
- assert.equal(settings.querySelector(".notebook-note-picker").getAttribute("aria-label"),"Edit string 6 tuning");
+ assert.equal(settings.querySelector(".music-note-picker").hidden,false);
+ assert.equal(settings.querySelector(".music-note-picker").getAttribute("aria-label"),"Edit string 6 tuning");
  const original=app.store.snapshot().song.id;
  app.store.dispatch({type:"library.create"});
  if(settings.hidden)openSettings(document);
  assert.equal(settingsControl(settings,"capo-0").getAttribute("aria-pressed"),"true");
  assert.equal(settingsControl(settings,"preset-standard").getAttribute("aria-pressed"),"true");
- assert.equal(settings.querySelector(".notebook-note-picker").hidden,true);
+ assert.equal(settings.querySelector(".music-note-picker").hidden,true);
  app.store.dispatch({type:"library.switch",songId:original});
  assert.deepEqual(app.store.snapshot().song.tuningMidi,Music.defaultTuning);assert.equal(app.store.snapshot().song.capo,0);
  app.destroy();
@@ -365,4 +365,11 @@ test("an open settings preview updates its warning when editor drafts appear or 
  app.store.dispatch({type:"draft.discard",chordId:null});
  assert.doesNotMatch(settings.textContent,/Your unapplied drafts/);
  app.destroy();
+});
+
+test("missing shared controls leaves the legacy fallback available",()=>{
+ const document=notebookDocument(),legacy=document.querySelector("main.guitar-chordinator");
+ legacy.hidden=false;
+ assert.equal(Controller.bootstrap({SongNotebookCompose:{},SongNotebookEditor:{}},document),null);
+ assert.equal(legacy.hidden,false);
 });
